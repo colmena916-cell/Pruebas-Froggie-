@@ -498,12 +498,12 @@
             <div class="field-group">
                 <label class="field-label">
                     Opening
-                    <span class="char-counter" id="firstMsgCounter">0 / 1500</span>
+                    <span class="char-counter" id="firstMsgCounter">0 / 5000</span>
                 </label>
                 <textarea id="charFirstMsg" rows="6"
                     placeholder="The first thing your character says when a chat begins."
-                    maxlength="1500"
-                    oninput="updateCounter('charFirstMsg', 'firstMsgCounter', 1500)"></textarea>
+                    maxlength="5000"
+                    oninput="updateCounter('charFirstMsg', 'firstMsgCounter', 5000)"></textarea>
                 <p class="field-hint">Written in character voice. Use *asterisks* for actions if you prefer that style.</p>
             </div>
         </div>
@@ -625,7 +625,7 @@
             setValue('charSubtitle', char.subtitle || '', 'subtitleCounter', 80);
             setValue('charDesc', char.description || '', 'descCounter', 400);
             setValue('charDefinition', char.definition || '', 'defCounter', 5000);
-            setValue('charFirstMsg', char.first_message || '', 'firstMsgCounter', 1500);
+            setValue('charFirstMsg', char.first_message || '', 'firstMsgCounter', 5000);
 
             // Visibilidad
             selectVisibility(char.visibility || 'public');
@@ -713,17 +713,6 @@
             if (uploadedPhotoFile) {
                 const ext = uploadedPhotoFile.name.split('.').pop();
                 const fileName = `${currentUserId}_${Date.now()}.${ext}`;
-
-                // Borrar la foto anterior si existe
-                if (currentPhotoUrl) {
-                    try {
-                        const oldFileName = currentPhotoUrl.split('/character-images/').pop().split('?')[0];
-                        if (oldFileName) {
-                            await _supabase.storage.from('character-images').remove([oldFileName]);
-                        }
-                    } catch (_) {}
-                }
-
                 const { error: uploadError } = await _supabase.storage
                     .from('character-images')
                     .upload(fileName, uploadedPhotoFile);
