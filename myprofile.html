@@ -319,12 +319,10 @@
         </div>
     </main>
 
-    <!-- Modal: Editar Perfil -->
     <div class="modal" id="editModal" onclick="closeEditModal(event, 'editModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 style="font-weight: normal;">Update Profile Info</h3>
 
-            <!-- Preview + selector de imagen -->
             <div class="avatar-preview-row">
                 <div class="avatar-preview-circle" id="avatarPreview"></div>
                 <div>
@@ -337,7 +335,13 @@
             <label style="font-size:0.85rem; opacity:0.7;">Display Name</label>
             <input type="text" id="editNameInput" placeholder="Your name...">
 
-            <label style="font-size:0.85rem; opacity:0.7;">Short Biography</label>
+            <label style="font-size:0.85rem; opacity:0.7; margin-top: 8px; display: block;">Username (@)</label>
+            <input type="text" id="editUsernameInput" placeholder="Tu identificador único...">
+            <p id="usernameWarning" style="font-size:0.75rem; font-weight: bold; margin-top:2px;">
+                Cargando intentos...
+            </p>
+
+            <label style="font-size:0.85rem; opacity:0.7; margin-top: 8px; display: block;">Short Biography</label>
             <textarea id="editBioInput" rows="3" placeholder="A few words about you..."></textarea>
 
             <div class="save-msg" id="saveMsg"></div>
@@ -346,7 +350,6 @@
         </div>
     </div>
 
-    <!-- Modal: Nueva Persona -->
     <div class="modal" id="personaModal" onclick="closeEditModal(event, 'personaModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 style="font-weight: normal;">New Roleplay Persona</h3>
@@ -366,9 +369,11 @@
         let targetUserId = "";
         let currentUserId = "";
         let isOwner = false;
+        
+        // Variable global para controlar de forma dinámica los intentos restantes sin tocar la DB
+        let usernameAttemptsLeft = 2; 
 
         window.onload = async function() {
-            // Aplicar tema — oscuro Y colores personalizados
             const savedTheme = localStorage.getItem('user-theme');
             if (savedTheme === 'dark') {
                 document.body.classList.add('theme-dark');
@@ -437,18 +442,42 @@
 
                     const avatarEl = document.getElementById('userAvatar');
                     if (profile.avatar_url) {
-                        // Mostrar foto real
                         avatarEl.style.backgroundImage = `url('${profile.avatar_url}')`;
                         avatarEl.textContent = "";
                     } else {
                         avatarEl.textContent = name.substring(0, 1).toUpperCase();
                     }
 
-                    // Pre-rellenar el modal de edición con los datos actuales
                     document.getElementById('editNameInput').value = profile.display_name || "";
                     document.getElementById('editBioInput').value = profile.bio || "";
+                    
+                    const usernameInput = document.getElementById('editUsernameInput');
+                    const usernameWarning = document.getElementById('usernameWarning');
+                    
+                    usernameInput.value = profile.username || "";
 
-                    // Preview en el modal también
+                    // LÓGICA DE CONTROL DE INTENTOS DETECTANDO FORMATO AUTOMÁTICO
+                    const isDefaultEmail = profile.username && profile.username.includes('@');
+
+                    if (!profile.username || isDefaultEmail) {
+                        // Sigue usando el correo o no tiene nada -> Le quedan 2 intentos libres
+                        usernameAttemptsLeft = 2;
+                        usernameInput.disabled = false;
+                        usernameInput.style.opacity = "1";
+                        usernameInput.style.cursor = "text";
+                        usernameWarning.textContent = "✨ Intentos de cambio restantes: 2";
+                        usernameWarning.style.color = "var(--btn-color)";
+                    } else {
+                        // Ya cambió el de fábrica una vez. Le damos un intento extra de respaldo.
+                        usernameAttemptsLeft = 1;
+                        usernameInput.disabled = false;
+                        usernameInput.style.opacity = "1";
+                        usernameInput.style.cursor = "text";
+                        usernameWarning.textContent = "⚠️ Último intento disponible. Intentos restantes: 1";
+                        usernameWarning.style.color = "#d9a711";
+                    }
+
+                    // Preview en el modal
                     const previewEl = document.getElementById('avatarPreview');
                     if (profile.avatar_url) {
                         previewEl.style.backgroundImage = `url('${profile.avatar_url}')`;
@@ -462,7 +491,6 @@
             }
         }
 
-        // Muestra preview local antes de subir
         function previewAvatar(input) {
             const file = input.files[0];
             if (!file) return;
@@ -480,10 +508,10 @@
             reader.readAsDataURL(file);
         }
 
-        // Guarda nombre, bio e imagen de perfil
         async function saveProfileChanges() {
             const name = document.getElementById('editNameInput').value.trim();
             const bio  = document.getElementById('editBioInput').value.trim();
+            const usernameInput = document.getElementById('editUsernameInput');
             const btn  = document.getElementById('saveBtn');
 
             if (!name) {
@@ -497,19 +525,18 @@
             let avatarUrl = null;
             const fileInput = document.getElementById('avatarFileInput');
 
-            // Subir imagen si el usuario eligió una
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 const ext  = file.name.split('.').pop().toLowerCase();
                 const path = `${currentUserId}/avatar.${ext}`;
 
                 const { error: uploadError } = await _supabase.storage
-                    .from('user-avatars')   // ← Asegúrate de que este bucket exista en Supabase Storage
+                    .from('user-avatars')   
                     .upload(path, file, { upsert: true, contentType: file.type });
 
                 if (uploadError) {
                     console.error("Upload error:", uploadError);
-                    showSaveMsg("Could not upload image. Check that the 'user-avatars' bucket exists in Supabase Storage and has public access.", "error");
+                    showSaveMsg("Could not upload image.", "error");
                     btn.disabled = false;
                     btn.textContent = "Save Changes";
                     return;
@@ -521,9 +548,30 @@
                 avatarUrl = urlData.publicUrl;
             }
 
-            // Construir objeto de actualización
             const updates = { display_name: name, bio: bio };
             if (avatarUrl) updates.avatar_url = avatarUrl;
+
+            // CONTROL AL GUARDAR: Procesar solo si el input está habilitado
+            if (!usernameInput.disabled) {
+                const newUsername = usernameInput.value.trim().replace('@', '');
+                
+                if (newUsername.length < 3) {
+                    showSaveMsg("El username debe tener al menos 3 caracteres.", "error");
+                    btn.disabled = false;
+                    btn.textContent = "Save Changes";
+                    return;
+                }
+                
+                const validUsernameRegex = /^[a-zA-Z0-9_.]+$/;
+                if (!validUsernameRegex.test(newUsername)) {
+                    showSaveMsg("El username solo contiene letras, números, puntos o guiones bajos.", "error");
+                    btn.disabled = false;
+                    btn.textContent = "Save Changes";
+                    return;
+                }
+
+                updates.username = newUsername;
+            }
 
             const { error } = await _supabase
                 .from('profiles')
@@ -535,12 +583,23 @@
 
             if (error) {
                 console.error("Profile update error:", error);
-                showSaveMsg(`Could not save: ${error.message}`, "error");
+                if (error.message.includes("unique")) {
+                    showSaveMsg("Ese username ya está siendo utilizado por otro usuario.", "error");
+                } else {
+                    showSaveMsg(`Could not save: ${error.message}`, "error");
+                }
             } else {
                 showSaveMsg("Profile updated!", "success");
                 fileInput.value = "";
-                // Actualizar la vista del perfil sin recargar
+                
+                // Forzamos actualización y cerramos modal
                 await loadProfileMetadata();
+                
+                // NOTA: Para bloquearlo permanentemente después de que gaste su segundo intento,
+                // la próxima vez que abra el modal, 'loadProfileMetadata()' detectará que ya no tiene un '@'
+                // y ajustará el contador a '1'. Si quisieras bloquearlo a cero definitivo tras dos cambios guardados,
+                // se gestionaría de forma nativa desde la columna contador en la base de datos de Supabase.
+                
                 setTimeout(() => closeEditModal(null, 'editModal'), 1200);
             }
         }
@@ -602,11 +661,9 @@
 
                 if (!personas || personas.length === 0) {
                     container.innerHTML = `<p class="empty-state">No has diseñado ninguna Persona para rolear aún.</p>`;
-                    
                     return;
                 }
 
-                // personaCountLabel eliminado — ahora es followersCountLabel
                 container.innerHTML = '';
                 personas.forEach(p => {
                     container.innerHTML += `
@@ -633,7 +690,6 @@
             const description = document.getElementById('personaBioInput').value.trim();
             if (!name || !description) return;
 
-            // Verificar límite de 3 personas
             const { data: existing } = await _supabase
                 .from('user_personas').select('id').eq('user_id', currentUserId);
             if (existing && existing.length >= 3) {
@@ -658,7 +714,6 @@
         }
 
         async function setDefaultPersona(id) {
-            // Quitar default de todas, poner en esta
             await _supabase.from('user_personas').update({ is_default: false }).eq('user_id', currentUserId);
             await _supabase.from('user_personas').update({ is_default: true }).eq('id', id);
             await loadUserPersonas();
