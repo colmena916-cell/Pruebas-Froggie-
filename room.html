@@ -338,7 +338,8 @@
 
         /* Mensajes en modo borrado */
         .msg-block { position: relative; }
-        body.delete-mode .msg-block.user { cursor: pointer; }
+        body.delete-mode .msg-block.user { cursor: not-allowed; }
+        body.delete-mode .msg-block.user.deletable { cursor: pointer; }
         body.delete-mode .msg-block.selected-pair::after {
             content: '';
             position: absolute;
@@ -351,7 +352,7 @@
         body.theme-dark.delete-mode .msg-block.selected-pair::after {
             background-color: rgba(0, 0, 0, 0.25);
         }
-        body.delete-mode .msg-block.user:not(.selected-pair):hover::after {
+        body.delete-mode .msg-block.user.deletable:not(.selected-pair):hover::after {
             content: '';
             position: absolute;
             inset: -6px -4px;
@@ -373,7 +374,7 @@
             z-index: 5; pointer-events: none;
         }
         .msg-select-check svg { width: 11px; height: 11px; fill: white; display: none; }
-        body.delete-mode .msg-block.user .msg-select-check { display: flex; }
+        body.delete-mode .msg-block.user.deletable .msg-select-check { display: flex; }
         body.delete-mode .msg-block.user.selected-pair .msg-select-check {
             background-color: #c97171; border-color: #c97171;
         }
@@ -1530,14 +1531,28 @@ NARRATIVE RULES:
         // ─── MODO BORRADO DE MENSAJES ─────────────────────────────
         let deleteSelectedUserBlock = null;
         let deleteSelectedBotBlock  = null;
+        let deletableUserBlock      = null; // único bloque elegible
 
         function enterDeleteMode() {
             toggleMenu();
+
+            // Identificar el último mensaje de usuario (el único elegible)
+            const allUserBlocks = document.querySelectorAll('.msg-block.user');
+            deletableUserBlock = allUserBlocks.length > 0
+                ? allUserBlocks[allUserBlocks.length - 1]
+                : null;
+
+            // Si no hay ningún mensaje de usuario, no entrar al modo
+            if (!deletableUserBlock) return;
+
             document.body.classList.add('delete-mode');
             document.querySelector('.chat-input-area').style.display = 'none';
             document.getElementById('deleteBar').classList.add('show');
             deleteSelectedUserBlock = null;
             deleteSelectedBotBlock  = null;
+
+            // Marcar visualmente solo el elegible
+            deletableUserBlock.classList.add('deletable');
             updateDeleteConfirmBtn();
         }
 
@@ -1545,16 +1560,20 @@ NARRATIVE RULES:
             document.body.classList.remove('delete-mode');
             document.querySelector('.chat-input-area').style.display = '';
             document.getElementById('deleteBar').classList.remove('show');
-            // Quitar resaltado
             document.querySelectorAll('.msg-block.selected-pair').forEach(el => el.classList.remove('selected-pair'));
+            document.querySelectorAll('.msg-block.deletable').forEach(el => el.classList.remove('deletable'));
             deleteSelectedUserBlock = null;
             deleteSelectedBotBlock  = null;
+            deletableUserBlock      = null;
         }
 
         function toggleSelectMessage(userBlock) {
             if (!document.body.classList.contains('delete-mode')) return;
 
-            // Si ya estaba seleccionado, deseleccionar
+            // Solo permitir interacción con el último mensaje de usuario
+            if (userBlock !== deletableUserBlock) return;
+
+            // Toggle selección
             if (userBlock.classList.contains('selected-pair')) {
                 userBlock.classList.remove('selected-pair');
                 if (deleteSelectedBotBlock) deleteSelectedBotBlock.classList.remove('selected-pair');
@@ -1564,11 +1583,6 @@ NARRATIVE RULES:
                 return;
             }
 
-            // Deseleccionar el anterior si había uno
-            if (deleteSelectedUserBlock) deleteSelectedUserBlock.classList.remove('selected-pair');
-            if (deleteSelectedBotBlock)  deleteSelectedBotBlock.classList.remove('selected-pair');
-
-            // Seleccionar el nuevo
             userBlock.classList.add('selected-pair');
             deleteSelectedUserBlock = userBlock;
 
