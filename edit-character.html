@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Froggie AI - Edit Character</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-main: #FFFDF9;
+            --bg-accent: #EBF29B;
+            --text-dark: #3E532B;
+            --btn-color: #5D7038;
+            --btn-hover: #455329;
+            --border: rgba(62, 83, 43, 0.25);
+            --font-serif: 'Georgia', serif;
+        }
+
+        body.theme-dark {
+            --bg-main: #483C25;
+            --bg-accent: #372E1C;
+            --text-dark: #9ea93f;
+            --btn-color: #9ea93f;
+            --btn-hover: #7E8732;
+            --border: rgba(158, 169, 63, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background-color: var(--bg-accent);
+            padding: 14px 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            opacity: 0.75;
+            transition: opacity 0.2s;
+            text-decoration: none;
+        }
+        .btn-back:hover { opacity: 1; }
+
+        .icon-svg { width: 22px; height: 22px; fill: currentColor; }
+
+        header h1 {
+            font-size: 1.2rem;
+            font-weight: normal;
+            letter-spacing: 0.5px;
+        }
+
+        /* Etiqueta de danger zone en header */
+        .danger-header-btn {
+            margin-left: auto;
+            background: none;
+            border: 1px solid rgba(180, 60, 60, 0.4);
+            color: #8b2e2e;
+            font-family: var(--font-serif);
+            font-size: 0.82rem;
+            padding: 5px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            opacity: 0.75;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+        .danger-header-btn:hover { opacity: 1; background-color: rgba(180, 60, 60, 0.07); }
+
+        main {
+            max-width: 680px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 36px 20px 100px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .form-section {
+            border-bottom: 1px dashed var(--border);
+            padding: 28px 0;
+        }
+        .form-section:last-of-type { border-bottom: none; }
+
+        .section-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            opacity: 0.45;
+            margin-bottom: 18px;
+        }
+
+        .photo-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .photo-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background-color: var(--bg-accent);
+            border: 2px dashed var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            background-size: cover;
+            background-position: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+        .photo-preview:hover { border-color: var(--btn-color); }
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .photo-preview .upload-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.45;
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
+        .photo-upload-info { font-size: 0.88rem; line-height: 1.6; opacity: 0.7; }
+        .photo-upload-info span { display: block; font-size: 0.78rem; opacity: 0.6; margin-top: 4px; }
+
+        .btn-upload {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 7px 18px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .btn-upload:hover { background-color: var(--bg-accent); border-color: var(--btn-color); }
+
+        #photoInput { display: none; }
+
+        .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+        .field-group:last-child { margin-bottom: 0; }
+
+        .field-label {
+            font-size: 0.9rem;
+            font-style: italic;
+            opacity: 0.8;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .char-counter {
+            font-size: 0.78rem;
+            opacity: 0.45;
+            font-style: normal;
+        }
+
+        .field-group input,
+        .field-group textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 0.97rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            resize: none;
+            line-height: 1.55;
+        }
+
+        .field-group input:focus,
+        .field-group textarea:focus {
+            border-color: var(--btn-color);
+            box-shadow: 0 0 0 3px rgba(93, 112, 56, 0.1);
+        }
+
+        .field-hint {
+            font-size: 0.78rem;
+            opacity: 0.45;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .char-counter.warning { color: #b85c38; opacity: 1; }
+
+        .visibility-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .vis-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: none;
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .vis-btn.selected {
+            background-color: var(--bg-accent);
+            border-color: var(--btn-color);
+            font-weight: bold;
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            margin-top: 40px;
+            padding: 20px;
+            border: 1px dashed rgba(180, 60, 60, 0.35);
+            border-radius: 10px;
+        }
+        .danger-zone h3 {
+            font-size: 0.85rem;
+            font-weight: normal;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #8b2e2e;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+        .danger-zone p {
+            font-size: 0.85rem;
+            opacity: 0.65;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+        .btn-delete {
+            background: none;
+            border: 1px solid rgba(180, 60, 60, 0.5);
+            color: #8b2e2e;
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            padding: 9px 22px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-delete:hover { background-color: rgba(180, 60, 60, 0.07); }
+
+        .bottom-bar {
+            position: fixed;
+            bottom: 0; left: 0;
+            width: 100%;
+            background-color: var(--bg-main);
+            border-top: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .btn-cancel {
+            padding: 11px 26px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-cancel:hover { opacity: 1; }
+
+        .btn-save {
+            padding: 11px 32px;
+            background-color: var(--btn-color);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-save:hover { background-color: var(--btn-hover); }
+        .btn-save:active { transform: scale(0.97); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .save-message {
+            font-size: 0.85rem;
+            align-self: center;
+            display: none;
+        }
+        .save-message.error { display: block; color: #8b2e2e; }
+        .save-message.success { display: block; color: var(--btn-color); }
+
+        /* Modal de confirmación de borrado */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .modal-box h3 { font-weight: normal; font-size: 1.2rem; }
+        .modal-box p { font-size: 0.9rem; opacity: 0.7; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 6px; }
+
+        @media (max-width: 600px) {
+            .photo-upload-area { flex-direction: column; align-items: flex-start; }
+            .bottom-bar { padding: 12px 16px; }
+            .btn-cancel { padding: 10px 18px; }
+            .btn-save { padding: 10px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="btn-back" onclick="goBack()">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            Back
+        </button>
+        <h1>Edit Character</h1>
+        <button class="danger-header-btn" onclick="openDeleteModal()">Delete</button>
+    </header>
+
+    <main>
+
+        <!-- FOTO -->
+        <div class="form-section">
+            <p class="section-label">Identity</p>
+            <div class="photo-upload-area">
+                <div class="photo-preview" id="photoPreview" onclick="document.getElementById('photoInput').click()">
+                    <img id="previewImg" alt="Character photo">
+                    <div class="upload-icon" id="uploadIcon">
+                        <svg style="width:28px;height:28px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        <span>Photo</span>
+                    </div>
+                </div>
+                <div class="photo-upload-info">
+                    Replace or keep the current portrait.
+                    <span>JPG, PNG or WEBP · Max 2MB</span>
+                    <button class="btn-upload" onclick="document.getElementById('photoInput').click()">Choose image</button>
+                </div>
+            </div>
+            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" onchange="handlePhotoChange(event)">
+        </div>
+
+        <!-- NOMBRE Y SUBTÍTULO -->
+        <div class="form-section">
+            <p class="section-label">Presentation</p>
+
+            <div class="field-group">
+                <label class="field-label">
+                    Name
+                    <span class="char-counter" id="nameCounter">0 / 50</span>
+                </label>
+                <input type="text" id="charName" placeholder="The Wandering Bard" maxlength="50"
+                    oninput="updateCounter('charName', 'nameCounter', 50)">
+            </div>
+
+            <div class="field-group">
+                <label class="field-label">
+                    Subtitle
+                    <span class="char-counter" id="subtitleCounter">0 / 80</span>
+                </label>
+                <input type="text" id="charSubtitle" placeholder="Brooding Victorian poet with a secret" maxlength="80"
+                    oninput="updateCounter('charSubtitle', 'subtitleCounter', 80)">
+                <p class="field-hint">One line shown under the name on character cards.</p>
+            </div>
+        </div>
+
+        <!-- DESCRIPCIÓN PÚBLICA -->
+        <div class="form-section">
+            <p class="section-label">Public Description</p>
+            <div class="field-group">
+                <label class="field-label">
+                    Description
+                    <span class="char-counter" id="descCounter">0 / 400</span>
+                </label>
+                <textarea id="charDesc" rows="4"
+                    placeholder="What users will read before starting a chat."
+                    maxlength="400"
+                    oninput="updateCounter('charDesc', 'descCounter', 400)"></textarea>
+                <p class="field-hint">Visible to everyone. This is your character's first impression.</p>
+            </div>
+        </div>
+
+        <!-- DEFINICIÓN / PROMPT -->
+        <div class="form-section">
+            <p class="section-label">Definition — Private Prompt</p>
+            <div class="field-group">
+                <label class="field-label">
+                    Character Definition
+                    <span class="char-counter" id="defCounter">0 / 5000</span>
+                </label>
+                <textarea id="charDefinition" rows="10"
+                    placeholder="Only the AI reads this. Write who your character is in depth..."
+                    maxlength="5000"
+                    oninput="updateCounter('charDefinition', 'defCounter', 5000)"></textarea>
+                <p class="field-hint">Not visible to users. Write in second or third person — e.g. "You are..." or "{{char}} is..."</p>
+            </div>
+        </div>
+
+        <!-- PRIMER MENSAJE -->
+        <div class="form-section">
+            <p class="section-label">First Message</p>
+            <div class="field-group">
+                <label class="field-label">
+                    Opening
+                    <span class="char-counter" id="firstMsgCounter">0 / 1500</span>
+                </label>
+                <textarea id="charFirstMsg" rows="6"
+                    placeholder="The first thing your character says when a chat begins."
+                    maxlength="1500"
+                    oninput="updateCounter('charFirstMsg', 'firstMsgCounter', 1500)"></textarea>
+                <p class="field-hint">Written in character voice. Use *asterisks* for actions if you prefer that style.</p>
+            </div>
+        </div>
+
+        <!-- VISIBILIDAD -->
+        <div class="form-section">
+            <p class="section-label">Visibility</p>
+            <p class="field-hint" style="margin-bottom: 14px;">Who can find and chat with this character?</p>
+            <div class="visibility-toggle">
+                <button class="vis-btn selected" id="vis-public" onclick="selectVisibility('public')">
+                    <svg style="width:18px;height:18px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    Public
+                </button>
+                <button class="vis-btn" id="vis-private" onclick="selectVisibility('private')">
+                    <svg style="width:18px;height:18px;fill:currentColor;" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    Private
+                </button>
+            </div>
+            <p class="field-hint" style="margin-top: 10px;">Private characters only appear in your own chats.</p>
+        </div>
+
+        <!-- DANGER ZONE -->
+        <div class="danger-zone">
+            <h3>Danger Zone</h3>
+            <p>Deleting this character is permanent. All chat histories associated with it will also be removed.</p>
+            <button class="btn-delete" onclick="openDeleteModal()">Delete this character</button>
+        </div>
+
+    </main>
+
+    <!-- BARRA INFERIOR -->
+    <div class="bottom-bar">
+        <span class="save-message" id="saveMessage"></span>
+        <button class="btn-cancel" onclick="goBack()">Cancel</button>
+        <button class="btn-save" id="saveBtn" onclick="saveChanges()">Save Changes</button>
+    </div>
+
+    <!-- Modal: Confirmar borrado -->
+    <div class="modal-overlay" id="deleteModal" onclick="closeDeleteModal(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3>Delete character?</h3>
+            <p>This action cannot be undone. The character and all its associated chats will be permanently removed.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" style="padding: 10px 20px;" onclick="document.getElementById('deleteModal').classList.remove('show')">Cancel</button>
+                <button class="btn-delete" id="confirmDeleteBtn" onclick="deleteCharacter()">Yes, delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let selectedVisibility = 'public';
+        let uploadedPhotoFile = null;
+        let currentPhotoUrl = null;
+        let characterId = null;
+        let currentUserId = null;
+
+        window.onload = async function() {
+            // Tema
+            const saved = localStorage.getItem('user-theme');
+            if (saved === 'dark') document.body.classList.add('theme-dark');
+            else if (saved === 'custom') {
+                document.body.style.setProperty('--bg-main', localStorage.getItem('custom-bg') || '#FFFDF9');
+                document.body.style.setProperty('--text-dark', localStorage.getItem('custom-text') || '#3E532B');
+                document.body.style.setProperty('--btn-color', localStorage.getItem('custom-text') || '#3E532B');
+            }
+
+            // Sesión
+            const storedAccess = localStorage.getItem('froggie_access_token');
+            const storedRefresh = localStorage.getItem('froggie_refresh_token');
+            if (storedAccess && storedRefresh) {
+                await _supabase.auth.setSession({ access_token: storedAccess, refresh_token: storedRefresh });
+            }
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) { window.location.href = 'registro.html'; return; }
+            currentUserId = session.user.id;
+
+            // ID del personaje por URL
+            const params = new URLSearchParams(window.location.search);
+            characterId = params.get('id');
+            if (!characterId) {
+                showSaveMsg('No character selected. Returning to dashboard...', 'error');
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1800);
+                return;
+            }
+
+            await loadCharacterData();
+        }
+
+        async function loadCharacterData() {
+            const { data: char, error } = await _supabase
+                .from('characters')
+                .select('*')
+                .eq('id', characterId)
+                .single();
+
+            if (error || !char) {
+                showSaveMsg('Character not found.', 'error');
+                return;
+            }
+
+            // Verificar que el usuario es el dueño
+            if (char.creator_id !== currentUserId) {
+                showSaveMsg('You are not the creator of this character.', 'error');
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1800);
+                return;
+            }
+
+            // Rellenar todos los campos
+            setValue('charName', char.name, 'nameCounter', 50);
+            setValue('charSubtitle', char.subtitle || '', 'subtitleCounter', 80);
+            setValue('charDesc', char.description || '', 'descCounter', 400);
+            setValue('charDefinition', char.definition || '', 'defCounter', 5000);
+            setValue('charFirstMsg', char.first_message || '', 'firstMsgCounter', 1500);
+
+            // Visibilidad
+            selectVisibility(char.visibility || 'public');
+
+            // Foto actual
+            currentPhotoUrl = char.photo_url || null;
+            const preview = document.getElementById('photoPreview');
+            if (currentPhotoUrl) {
+                preview.style.backgroundImage = `url('${currentPhotoUrl}')`;
+                preview.style.fontSize = '0';
+                document.getElementById('uploadIcon').style.display = 'none';
+            } else {
+                preview.textContent = '';
+                const icon = document.createElement('div');
+                icon.className = 'upload-icon';
+                icon.id = 'uploadIcon';
+                icon.innerHTML = `<svg style="width:28px;height:28px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Photo</span>`;
+                preview.appendChild(icon);
+            }
+        }
+
+        function setValue(inputId, value, counterId, max) {
+            document.getElementById(inputId).value = value;
+            updateCounter(inputId, counterId, max);
+        }
+
+        function updateCounter(inputId, counterId, max) {
+            const val = document.getElementById(inputId).value.length;
+            const el = document.getElementById(counterId);
+            el.textContent = `${val} / ${max}`;
+            el.classList.toggle('warning', val >= max * 0.9);
+        }
+
+        function handlePhotoChange(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Image is too large. Maximum size is 2MB.');
+                return;
+            }
+            uploadedPhotoFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('photoPreview');
+                preview.style.backgroundImage = `url('${e.target.result}')`;
+                preview.style.fontSize = '0';
+                const icon = document.getElementById('uploadIcon');
+                if (icon) icon.style.display = 'none';
+                const img = document.getElementById('previewImg');
+                if (img) img.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function selectVisibility(val) {
+            selectedVisibility = val;
+            document.getElementById('vis-public').classList.toggle('selected', val === 'public');
+            document.getElementById('vis-private').classList.toggle('selected', val === 'private');
+        }
+
+        function showSaveMsg(text, type) {
+            const el = document.getElementById('saveMessage');
+            el.textContent = text;
+            el.className = `save-message ${type}`;
+        }
+
+        async function saveChanges() {
+            const name = document.getElementById('charName').value.trim();
+            const subtitle = document.getElementById('charSubtitle').value.trim();
+            const description = document.getElementById('charDesc').value.trim();
+            const definition = document.getElementById('charDefinition').value.trim();
+            const firstMessage = document.getElementById('charFirstMsg').value.trim();
+
+            if (!name) { showSaveMsg('Name is required.', 'error'); return; }
+            if (!definition) { showSaveMsg('Character definition cannot be empty.', 'error'); return; }
+            if (!firstMessage) { showSaveMsg('First message cannot be empty.', 'error'); return; }
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            let photoUrl = currentPhotoUrl;
+
+            // Subir nueva foto si cambió
+            if (uploadedPhotoFile) {
+                const ext = uploadedPhotoFile.name.split('.').pop();
+                const fileName = `${currentUserId}_${Date.now()}.${ext}`;
+                const { error: uploadError } = await _supabase.storage
+                    .from('character-images')
+                    .upload(fileName, uploadedPhotoFile);
+
+                if (uploadError) {
+                    showSaveMsg('Image upload failed. Changes saved without new photo.', 'error');
+                } else {
+                    const { data: urlData } = _supabase.storage
+                        .from('character-images')
+                        .getPublicUrl(fileName);
+                    photoUrl = urlData.publicUrl;
+                }
+            }
+
+            const { error } = await _supabase.from('characters').update({
+                name,
+                subtitle,
+                description,
+                definition,
+                first_message: firstMessage,
+                visibility: selectedVisibility,
+                photo_url: photoUrl,
+                updated_at: new Date().toISOString()
+            }).eq('id', characterId).eq('creator_id', currentUserId);
+
+            btn.disabled = false;
+            btn.textContent = 'Save Changes';
+
+            if (error) {
+                console.error(error);
+                showSaveMsg('Could not save changes. Try again.', 'error');
+            } else {
+                showSaveMsg('Saved!', 'success');
+                setTimeout(() => window.location.href = `character-profile.html?id=${characterId}`, 1000);
+            }
+        }
+
+        async function deleteCharacter() {
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.textContent = 'Deleting...';
+            btn.disabled = true;
+
+            // Borrar chats vinculados primero, luego el personaje
+            await _supabase.from('chats').delete().eq('character_id', characterId);
+            const { error } = await _supabase.from('characters').delete()
+                .eq('id', characterId)
+                .eq('creator_id', currentUserId);
+
+            if (error) {
+                btn.textContent = 'Yes, delete';
+                btn.disabled = false;
+                alert('Could not delete. Try again.');
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        function openDeleteModal() {
+            document.getElementById('deleteModal').classList.add('show');
+        }
+        function closeDeleteModal(e) {
+            if (e.target.id === 'deleteModal') document.getElementById('deleteModal').classList.remove('show');
+        }
+
+        function goBack() {
+            window.location.href = `character-profile.html?id=${characterId}`;
+        }
+    </script>
+
+</body>
+</html>

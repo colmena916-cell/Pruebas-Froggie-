@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Froggie AI - Enter the Pond</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #EBF29B;
+            --text-dark: #3E532B;
+            --btn-color: #5D7038;
+            --btn-hover: #455329;
+            --card-bg: #FFFDF9;
+            --font-serif: 'Georgia', serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(62, 83, 43, 0.25);
+            border-radius: 14px;
+            padding: 40px 35px;
+            width: 100%;
+            max-width: 430px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .frog-logo {
+            width: 48px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+
+        .auth-card h2 {
+            font-size: 2rem;
+            font-weight: normal;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .auth-card .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-bottom: 28px;
+            font-style: italic;
+        }
+
+        /* --- PESTAÑAS --- */
+        .tab-switcher {
+            display: flex;
+            border-bottom: 1px solid rgba(62, 83, 43, 0.2);
+            margin-bottom: 28px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 10px 0;
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            color: var(--text-dark);
+            opacity: 0.5;
+            cursor: pointer;
+            position: relative;
+            transition: opacity 0.2s;
+        }
+
+        .tab-btn.active {
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--btn-color);
+        }
+
+        /* --- FORMULARIOS --- */
+        .auth-form { display: none; flex-direction: column; gap: 18px; }
+        .auth-form.active { display: flex; }
+
+        .form-group { text-align: left; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-style: italic;
+            margin-bottom: 6px;
+            opacity: 0.85;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid rgba(62, 83, 43, 0.35);
+            border-radius: 7px;
+            background-color: var(--card-bg);
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--btn-color);
+            box-shadow: 0 0 0 3px rgba(93, 112, 56, 0.12);
+        }
+
+        .btn-submit {
+            background-color: var(--btn-color);
+            color: #fff;
+            border: none;
+            width: 100%;
+            padding: 13px;
+            font-family: var(--font-serif);
+            font-size: 1.05rem;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-submit:hover { background-color: var(--btn-hover); }
+        .btn-submit:active { transform: scale(0.98); }
+
+        .form-message {
+            font-size: 0.88rem;
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: none;
+            text-align: left;
+        }
+
+        .form-message.error {
+            display: block;
+            background-color: rgba(180, 60, 60, 0.08);
+            border: 1px solid rgba(180, 60, 60, 0.3);
+            color: #8b2e2e;
+        }
+
+        .form-message.success {
+            display: block;
+            background-color: rgba(62, 83, 43, 0.08);
+            border: 1px solid rgba(62, 83, 43, 0.3);
+            color: var(--btn-color);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 22px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover { opacity: 1; }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 28px 18px;
+                border: none;
+                background-color: transparent;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <img src="ranita.png" alt="Froggie Logo" class="frog-logo">
+        <h2>Enter the Pond</h2>
+        <p class="subtitle">Your stories are waiting.</p>
+
+        <div class="tab-switcher">
+            <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Log In</button>
+            <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Sign Up</button>
+        </div>
+
+        <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-message" id="loginMsg"></div>
+            <div class="form-group">
+                <label for="login-email">Email Address</label>
+                <input type="email" id="login-email" placeholder="your.email@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-submit">Log In</button>
+        </form>
+
+        <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+            <div class="form-message" id="registerMsg"></div>
+            <div class="form-group">
+                <label for="reg-email">Email Address</label>
+                <input type="email" id="reg-email" placeholder="your.email@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-password">Password</label>
+                <input type="password" id="reg-password" placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+                <label for="beta-key">Beta Invitation Key</label>
+                <input type="text" id="beta-key" placeholder="FRG-XXXXXX" required>
+            </div>
+            <button type="submit" class="btn-submit">Create Account</button>
+        </form>
+
+        <a href="index.html" class="back-link">← Return to home</a>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const VALID_BETA_KEY = "FRG-BETA01";
+
+        function switchTab(tab) {
+            document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+            document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+            document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+            document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+            
+            // Limpiar mensajes al cambiar de pestaña
+            document.getElementById('loginMsg').style.display = 'none';
+            document.getElementById('registerMsg').style.display = 'none';
+        }
+
+        function showMsg(id, text, type) {
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.className = `form-message ${type}`;
+            el.style.display = 'block';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = e.target.querySelector('.btn-submit');
+
+            btn.textContent = 'Entering...';
+            btn.disabled = true;
+
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                // Alerta explícita de error para saber si es por confirmación de mail
+                showMsg('loginMsg', error.message.includes("confirm") ? 
+                    "Please check your email to confirm your account first." : 
+                    "Invalid email or password. Please try again.", 'error');
+                btn.textContent = 'Log In';
+                btn.disabled = false;
+            } else {
+                showMsg('loginMsg', 'Welcome back! Redirecting...', 'success');
+                // Guardar sesion completa para que dashboard la lea directamente
+                localStorage.setItem('froggie_uid', data.user.id);
+                localStorage.setItem('froggie_access_token', data.session.access_token);
+                localStorage.setItem('froggie_refresh_token', data.session.refresh_token);
+                setTimeout(() => window.location.href = 'dashboard.html', 800);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const key = document.getElementById('beta-key').value.trim().toUpperCase();
+            const btn = e.target.querySelector('.btn-submit');
+
+            if (key !== VALID_BETA_KEY) {
+                showMsg('registerMsg', 'Invalid beta key. Check your invitation.', 'error');
+                return;
+            }
+
+            btn.textContent = 'Creating account...';
+            btn.disabled = true;
+
+            const { data, error } = await _supabase.auth.signUp({ email, password });
+
+            if (error) {
+                showMsg('registerMsg', error.message, 'error');
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+            } else {
+                showMsg('registerMsg', 'Account created successfully! Switching to login...', 'success');
+                
+                // Pasar el correo automáticamente al login para ahorrar trabajo
+                document.getElementById('login-email').value = email;
+                
+                // Mover al usuario a la pestaña de login después de 2 segundos
+                setTimeout(() => {
+                    switchTab('login');
+                    showMsg('loginMsg', 'Now enter your password to log in. (If it fails, remember to check your email inbox to confirm your account).', 'success');
+                    btn.textContent = 'Create Account';
+                    btn.disabled = false;
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>

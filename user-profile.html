@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Froggie AI - User Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-main: #FFFDF9;
+            --bg-accent: #EBF29B;
+            --text-dark: #3E532B;
+            --btn-color: #5D7038;
+            --btn-hover: #455329;
+            --border: rgba(62, 83, 43, 0.15);
+            --font-serif: 'Georgia', serif;
+        }
+
+        body.theme-dark {
+            --bg-main: #483C25;
+            --bg-accent: #372E1C;
+            --text-dark: #9ea93f;
+            --btn-color: #9ea93f;
+            --btn-hover: #7E8732;
+            --border: rgba(158, 169, 63, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        .btn-back:hover { background-color: rgba(62, 83, 43, 0.08); }
+
+        .profile-container {
+            max-width: 750px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px 16px 60px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Tarjeta de perfil */
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            background-color: rgba(62, 83, 43, 0.02);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .profile-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background-color: var(--bg-accent);
+            border: 2px solid var(--btn-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .profile-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-grow: 1;
+        }
+        .profile-details h2 { font-size: 1.5rem; font-weight: normal; }
+        .profile-username { font-size: 0.9rem; opacity: 0.6; font-family: sans-serif; }
+        .profile-bio { font-size: 1rem; line-height: 1.5; opacity: 0.9; margin-top: 6px; font-style: italic; }
+
+        .profile-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        .stat-item { opacity: 0.8; }
+        .stat-item strong { color: var(--btn-color); }
+
+        /* Indicador: eres tú mismo */
+        .own-profile-hint {
+            font-size: 0.82rem;
+            opacity: 0.55;
+            font-style: italic;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .btn-go-myprofile {
+            font-family: var(--font-serif);
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 18px;
+            cursor: pointer;
+            border: 1px solid var(--btn-color);
+            background: none;
+            color: var(--text-dark);
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-go-myprofile:hover { background-color: rgba(93,112,56,0.08); }
+
+        /* Tabs */
+        .tabs-navigation {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            gap: 20px;
+        }
+        .tab-nav-btn {
+            background: none;
+            border: none;
+            font-family: var(--font-serif);
+            font-size: 1.05rem;
+            color: var(--text-dark);
+            padding: 8px 4px;
+            cursor: pointer;
+            opacity: 0.5;
+            position: relative;
+            transition: opacity 0.2s;
+        }
+        .tab-nav-btn.active { opacity: 1; }
+        .tab-nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--btn-color);
+        }
+
+        .tab-content-panel { display: none; }
+        .tab-content-panel.active { display: block; }
+
+        /* Grid de personajes */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .char-card {
+            background-color: rgba(62, 83, 43, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .char-card:hover {
+            border-color: rgba(93, 112, 56, 0.35);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .char-card-header { display: flex; align-items: center; gap: 12px; }
+        .char-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: var(--bg-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+        .char-info h4 { font-weight: normal; font-size: 1.05rem; }
+        .char-info span { font-size: 0.8rem; opacity: 0.6; }
+        .char-description { font-size: 0.9rem; line-height: 1.45; opacity: 0.75; }
+
+        /* Lista de comentarios del usuario */
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 12px;
+        }
+        .comment-item {
+            background-color: rgba(62, 83, 43, 0.03);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border-left: 3px solid var(--btn-color);
+        }
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-bottom: 6px;
+        }
+        .comment-char-link {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .comment-char-link:hover { color: var(--btn-color); }
+        .comment-content { font-size: 0.92rem; line-height: 1.4; }
+
+        .empty-state {
+            text-align: center;
+            font-style: italic;
+            opacity: 0.5;
+            padding: 32px;
+            font-size: 0.95rem;
+        }
+
+        /* Estado de carga */
+        .loading-pulse {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .skeleton {
+            height: 80px;
+            border-radius: 12px;
+            background: linear-gradient(90deg, rgba(62,83,43,0.05) 25%, rgba(62,83,43,0.1) 50%, rgba(62,83,43,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @media (max-width: 550px) {
+            .profile-card { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .profile-avatar { width: 70px; height: 70px; font-size: 1.5rem; }
+            .profile-details h2 { font-size: 1.2rem; }
+            .character-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="btn-back" onclick="goBack()">
+            <svg style="width:22px; height:22px; fill:currentColor;" viewBox="0 0 24 24">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+        </button>
+        <span id="headerTitle" style="font-size: 0.9rem; opacity: 0.7;">Author Profile</span>
+    </header>
+
+    <main class="profile-container">
+
+        <!-- Perfil del usuario -->
+        <section class="profile-card">
+            <div class="profile-avatar" id="userAvatar">--</div>
+            <div class="profile-details">
+                <h2 id="profileName">Loading...</h2>
+                <span class="profile-username" id="profileUsername">@username</span>
+                <p class="profile-bio" id="profileBio">Gathering ink and thoughts...</p>
+                <div class="profile-stats">
+                    <span class="stat-item"><strong id="botCountLabel">0</strong> Characters</span>
+                </div>
+                <p class="own-profile-hint" id="ownHint">
+                    This is your own profile. 
+                    <a href="myprofile.html" class="btn-go-myprofile" style="margin-left:6px;">Go to My Profile →</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- Tabs -->
+        <nav class="tabs-navigation">
+            <button class="tab-nav-btn active" onclick="switchTab(event, 'charactersTab')">Creations</button>
+            <button class="tab-nav-btn" onclick="switchTab(event, 'reviewsTab')">Reviews</button>
+        </nav>
+
+        <!-- Tab: Personajes creados -->
+        <div class="tab-content-panel active" id="charactersTab">
+            <div class="loading-pulse" id="charsLoading">
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </div>
+            <div class="character-grid" id="charactersContainer" style="display:none;"></div>
+        </div>
+
+        <!-- Tab: Reseñas escritas por el usuario -->
+        <div class="tab-content-panel" id="reviewsTab">
+            <div class="loading-pulse" id="reviewsLoading" style="display:none;">
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </div>
+            <div class="comments-list" id="reviewsContainer">
+                <p class="empty-state">No reviews written yet.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let targetUserId = "";
+        let currentUserId = "";
+        let reviewsLoaded = false;
+
+        window.onload = async function() {
+            if (localStorage.getItem('user-theme') === 'dark') document.body.classList.add('theme-dark');
+
+            const params = new URLSearchParams(window.location.search);
+            targetUserId = params.get('id');
+
+            if (!targetUserId) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // Restaurar sesión
+            const storedAccess = localStorage.getItem('froggie_access_token');
+            const storedRefresh = localStorage.getItem('froggie_refresh_token');
+            if (storedAccess && storedRefresh) {
+                await _supabase.auth.setSession({
+                    access_token: storedAccess,
+                    refresh_token: storedRefresh
+                });
+            }
+
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) {
+                currentUserId = session.user.id;
+                localStorage.setItem('froggie_access_token', session.access_token);
+                localStorage.setItem('froggie_refresh_token', session.refresh_token);
+            }
+
+            // Si es el propio perfil, mostrar aviso
+            if (currentUserId && targetUserId === currentUserId) {
+                document.getElementById('ownHint').style.display = 'block';
+                document.getElementById('headerTitle').textContent = 'Your Profile';
+            }
+
+            await loadProfileMetadata();
+            await loadUserCharacters();
+        }
+
+        async function loadProfileMetadata() {
+            try {
+                const { data: profile, error } = await _supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', targetUserId)
+                    .single();
+
+                if (error || !profile) {
+                    document.getElementById('profileName').textContent = 'Unknown Author';
+                    document.getElementById('profileUsername').textContent = '';
+                    document.getElementById('profileBio').textContent = 'This writer walks in shadow.';
+                    return;
+                }
+
+                const name = profile.display_name || profile.username || 'Author';
+                document.getElementById('profileName').textContent = name;
+                document.getElementById('profileUsername').textContent = `@${profile.username || ''}`;
+                document.getElementById('profileBio').textContent = profile.bio || 'No biography written yet.';
+
+                const avatarEl = document.getElementById('userAvatar');
+                if (profile.avatar_url) {
+                    avatarEl.style.backgroundImage = `url('${profile.avatar_url}')`;
+                    avatarEl.textContent = '';
+                } else {
+                    avatarEl.textContent = name.substring(0, 1).toUpperCase();
+                }
+
+                // Título de la pestaña del navegador
+                document.title = `${name} — Froggie AI`;
+
+            } catch (e) {
+                console.error('Error loading profile:', e);
+            }
+        }
+
+        async function loadUserCharacters() {
+            const container = document.getElementById('charactersContainer');
+            const loading = document.getElementById('charsLoading');
+
+            try {
+                const { data: characters, error } = await _supabase
+                    .from('characters')
+                    .select('id, name, description, subtitle, photo_url, visibility')
+                    .eq('creator_id', targetUserId)
+                    .eq('visibility', 'public')       // Solo públicos en el perfil ajeno
+                    .order('created_at', { ascending: false });
+
+                loading.style.display = 'none';
+                container.style.display = 'grid';
+
+                if (error || !characters || characters.length === 0) {
+                    container.innerHTML = `<p class="empty-state" style="grid-column:1/-1;">No public characters yet.</p>`;
+                    document.getElementById('botCountLabel').textContent = '0';
+                    return;
+                }
+
+                document.getElementById('botCountLabel').textContent = characters.length;
+                container.innerHTML = '';
+
+                characters.forEach(char => {
+                    const avatarStyle = char.photo_url ? `style="background-image:url('${char.photo_url}'); background-size:cover; background-position:center;"` : '';
+                    const avatarContent = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
+                    const description = char.description
+                        ? (char.description.length > 120 ? char.description.substring(0, 117) + '...' : char.description)
+                        : 'No description provided.';
+
+                    container.innerHTML += `
+                        <div class="char-card" onclick="window.location.href='character-profile.html?id=${char.id}'">
+                            <div class="char-card-header">
+                                <div class="char-avatar" ${avatarStyle}>${avatarContent}</div>
+                                <div class="char-info">
+                                    <h4>${escapeHTML(char.name)}</h4>
+                                    <span>${escapeHTML(char.subtitle || 'Character')}</span>
+                                </div>
+                            </div>
+                            <p class="char-description">${escapeHTML(description)}</p>
+                        </div>`;
+                });
+
+            } catch (e) {
+                loading.style.display = 'none';
+                container.style.display = 'grid';
+                container.innerHTML = `<p class="empty-state" style="grid-column:1/-1;">Could not load characters.</p>`;
+            }
+        }
+
+        async function loadUserReviews() {
+            if (reviewsLoaded) return;
+            reviewsLoaded = true;
+
+            const container = document.getElementById('reviewsContainer');
+            const loading = document.getElementById('reviewsLoading');
+
+            loading.style.display = 'flex';
+            container.innerHTML = '';
+
+            try {
+                const { data: comments, error } = await _supabase
+                    .from('comments')
+                    .select('*, characters(name, id)')
+                    .eq('user_id', targetUserId)
+                    .order('created_at', { ascending: false })
+                    .limit(30);
+
+                loading.style.display = 'none';
+
+                if (error || !comments || comments.length === 0) {
+                    container.innerHTML = `<p class="empty-state">No reviews written yet.</p>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                comments.forEach(c => {
+                    const date = new Date(c.created_at).toLocaleDateString();
+                    const charName = c.characters ? c.characters.name : 'Unknown Character';
+                    const charId = c.characters ? c.characters.id : null;
+                    const charLink = charId
+                        ? `<span class="comment-char-link" onclick="window.location.href='character-profile.html?id=${charId}'">${escapeHTML(charName)}</span>`
+                        : escapeHTML(charName);
+
+                    container.innerHTML += `
+                        <div class="comment-item">
+                            <div class="comment-meta">
+                                <span>On ${charLink}</span>
+                                <span>${date}</span>
+                            </div>
+                            <p class="comment-content">${escapeHTML(c.content)}</p>
+                        </div>`;
+                });
+
+            } catch (err) {
+                loading.style.display = 'none';
+                container.innerHTML = `<p class="empty-state">Reviews tab requires the 'comments' table in Supabase.</p>`;
+            }
+        }
+
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab-content-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+
+            // Carga lazy de reseñas solo cuando se abre esa tab
+            if (tabId === 'reviewsTab') loadUserReviews();
+        }
+
+        function goBack() {
+            if (document.referrer && !document.referrer.includes('user-profile')) {
+                history.back();
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>']/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;' }[t] || t));
+        }
+    </script>
+
+</body>
+</html>
