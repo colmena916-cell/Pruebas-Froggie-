@@ -69,10 +69,10 @@
             gap: 24px;
         }
 
-        /* Tarjeta de perfil */
+        /* Profile card */
         .profile-card {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 24px;
             background-color: rgba(62, 83, 43, 0.02);
             padding: 24px;
@@ -108,15 +108,50 @@
 
         .profile-stats {
             display: flex;
-            gap: 16px;
-            margin-top: 4px;
+            gap: 20px;
+            margin-top: 8px;
             font-size: 0.9rem;
             flex-wrap: wrap;
         }
-        .stat-item { opacity: 0.8; }
+        .stat-item { opacity: 0.8; cursor: default; }
         .stat-item strong { color: var(--btn-color); }
 
-        /* Indicador: eres tú mismo */
+        /* Follow button */
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-follow {
+            font-family: var(--font-serif);
+            padding: 8px 22px;
+            font-size: 0.92rem;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--btn-color);
+            background-color: var(--btn-color);
+            color: var(--bg-main);
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-follow:hover { background-color: var(--btn-hover); border-color: var(--btn-hover); }
+        .btn-follow.following {
+            background: none;
+            color: var(--text-dark);
+        }
+        .btn-follow.following:hover {
+            background-color: rgba(180, 60, 60, 0.08);
+            border-color: #b43c3c;
+            color: #b43c3c;
+        }
+        .btn-follow:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .own-profile-hint {
             font-size: 0.82rem;
             opacity: 0.55;
@@ -174,7 +209,7 @@
         .tab-content-panel { display: none; }
         .tab-content-panel.active { display: block; }
 
-        /* Grid de personajes */
+        /* Character grid */
         .character-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -219,7 +254,7 @@
         .char-info span { font-size: 0.8rem; opacity: 0.6; }
         .char-description { font-size: 0.9rem; line-height: 1.45; opacity: 0.75; }
 
-        /* Lista de comentarios del usuario */
+        /* Comments */
         .comments-list {
             display: flex;
             flex-direction: column;
@@ -254,7 +289,7 @@
             font-size: 0.95rem;
         }
 
-        /* Estado de carga */
+        /* Loading skeletons */
         .loading-pulse {
             display: flex;
             flex-direction: column;
@@ -271,6 +306,29 @@
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background-color: var(--btn-color);
+            color: var(--bg-main);
+            padding: 10px 22px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-family: var(--font-serif);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 999;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
         @media (max-width: 550px) {
@@ -294,18 +352,30 @@
 
     <main class="profile-container">
 
-        <!-- Perfil del usuario -->
+        <!-- Profile card -->
         <section class="profile-card">
             <div class="profile-avatar" id="userAvatar">--</div>
             <div class="profile-details">
                 <h2 id="profileName">Loading...</h2>
                 <span class="profile-username" id="profileUsername">@username</span>
                 <p class="profile-bio" id="profileBio">Gathering ink and thoughts...</p>
+
                 <div class="profile-stats">
                     <span class="stat-item"><strong id="botCountLabel">0</strong> Characters</span>
+                    <span class="stat-item"><strong id="followersCountLabel">0</strong> Followers</span>
+                    <span class="stat-item"><strong id="followingCountLabel">0</strong> Following</span>
                 </div>
+
+                <!-- Follow button (shown for other users only) -->
+                <div class="profile-actions" id="profileActions" style="display:none;">
+                    <button class="btn-follow" id="followBtn" onclick="toggleFollow()" disabled>
+                        <span id="followBtnText">Follow</span>
+                    </button>
+                </div>
+
+                <!-- Own profile hint -->
                 <p class="own-profile-hint" id="ownHint">
-                    This is your own profile. 
+                    This is your own profile.
                     <a href="myprofile.html" class="btn-go-myprofile" style="margin-left:6px;">Go to My Profile →</a>
                 </p>
             </div>
@@ -317,7 +387,7 @@
             <button class="tab-nav-btn" onclick="switchTab(event, 'reviewsTab')">Reviews</button>
         </nav>
 
-        <!-- Tab: Personajes creados -->
+        <!-- Tab: Characters -->
         <div class="tab-content-panel active" id="charactersTab">
             <div class="loading-pulse" id="charsLoading">
                 <div class="skeleton"></div>
@@ -327,7 +397,7 @@
             <div class="character-grid" id="charactersContainer" style="display:none;"></div>
         </div>
 
-        <!-- Tab: Reseñas escritas por el usuario -->
+        <!-- Tab: Reviews -->
         <div class="tab-content-panel" id="reviewsTab">
             <div class="loading-pulse" id="reviewsLoading" style="display:none;">
                 <div class="skeleton"></div>
@@ -340,6 +410,9 @@
 
     </main>
 
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
     <script>
         const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
         const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
@@ -347,11 +420,36 @@
 
         let targetUserId = "";
         let currentUserId = "";
+        let isFollowing = false;
         let reviewsLoaded = false;
 
-        window.onload = async function() {
-            if (localStorage.getItem('user-theme') === 'dark') document.body.classList.add('theme-dark');
+        // ── Theme restoration (same logic as dashboard) ──────────────────────
+        function applyThemeOnLoad() {
+            const saved = localStorage.getItem('user-theme');
+            if (saved === 'dark') {
+                document.body.classList.add('theme-dark');
+            } else if (saved === 'custom') {
+                const bg  = localStorage.getItem('custom-bg')   || '#FFFDF9';
+                const txt = localStorage.getItem('custom-text')  || '#3E532B';
+                document.body.classList.remove('theme-dark');
+                document.body.style.setProperty('--bg-main',    bg);
+                document.body.style.setProperty('--text-dark',  txt);
+                document.body.style.setProperty('--btn-color',  txt);
+                document.body.style.setProperty('--bg-accent',  adjustBrightness(bg, -12));
+            }
+            // 'classic' or nothing → default CSS vars, do nothing
+        }
 
+        function adjustBrightness(hex, pct) {
+            let n = parseInt(hex.replace('#',''), 16), a = Math.round(2.55 * pct);
+            let R = (n >> 16) + a, G = (n >> 8 & 0xFF) + a, B = (n & 0xFF) + a;
+            return '#' + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+        }
+
+        applyThemeOnLoad();
+
+        // ── Init ─────────────────────────────────────────────────────────────
+        window.onload = async function() {
             const params = new URLSearchParams(window.location.search);
             targetUserId = params.get('id');
 
@@ -360,12 +458,12 @@
                 return;
             }
 
-            // Restaurar sesión
-            const storedAccess = localStorage.getItem('froggie_access_token');
-            const storedRefresh = localStorage.getItem('froggie_refresh_token');
+            // Restore session
+            const storedAccess   = localStorage.getItem('froggie_access_token');
+            const storedRefresh  = localStorage.getItem('froggie_refresh_token');
             if (storedAccess && storedRefresh) {
                 await _supabase.auth.setSession({
-                    access_token: storedAccess,
+                    access_token:  storedAccess,
                     refresh_token: storedRefresh
                 });
             }
@@ -377,16 +475,25 @@
                 localStorage.setItem('froggie_refresh_token', session.refresh_token);
             }
 
-            // Si es el propio perfil, mostrar aviso
+            // Own profile?
             if (currentUserId && targetUserId === currentUserId) {
                 document.getElementById('ownHint').style.display = 'block';
                 document.getElementById('headerTitle').textContent = 'Your Profile';
+            } else if (currentUserId) {
+                // Show follow button for other users
+                document.getElementById('profileActions').style.display = 'flex';
             }
 
-            await loadProfileMetadata();
+            await Promise.all([
+                loadProfileMetadata(),
+                loadFollowCounts(),
+                currentUserId && targetUserId !== currentUserId ? checkFollowStatus() : Promise.resolve()
+            ]);
+
             await loadUserCharacters();
         }
 
+        // ── Profile metadata ─────────────────────────────────────────────────
         async function loadProfileMetadata() {
             try {
                 const { data: profile, error } = await _supabase
@@ -415,7 +522,6 @@
                     avatarEl.textContent = name.substring(0, 1).toUpperCase();
                 }
 
-                // Título de la pestaña del navegador
                 document.title = `${name} — Froggie AI`;
 
             } catch (e) {
@@ -423,16 +529,108 @@
             }
         }
 
+        // ── Follow counts ─────────────────────────────────────────────────────
+        async function loadFollowCounts() {
+            try {
+                const [followersRes, followingRes] = await Promise.all([
+                    _supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', targetUserId),
+                    _supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', targetUserId)
+                ]);
+
+                document.getElementById('followersCountLabel').textContent = followersRes.count ?? 0;
+                document.getElementById('followingCountLabel').textContent = followingRes.count ?? 0;
+            } catch (e) {
+                console.error('Error loading follow counts:', e);
+            }
+        }
+
+        // ── Check if current user follows target ─────────────────────────────
+        async function checkFollowStatus() {
+            try {
+                const { data, error } = await _supabase
+                    .from('follows')
+                    .select('id')
+                    .eq('follower_id', currentUserId)
+                    .eq('following_id', targetUserId)
+                    .maybeSingle();
+
+                isFollowing = !error && !!data;
+                updateFollowButton();
+                document.getElementById('followBtn').disabled = false;
+            } catch (e) {
+                console.error('Error checking follow status:', e);
+                document.getElementById('followBtn').disabled = false;
+            }
+        }
+
+        function updateFollowButton() {
+            const btn  = document.getElementById('followBtn');
+            const text = document.getElementById('followBtnText');
+            if (isFollowing) {
+                btn.classList.add('following');
+                text.textContent = 'Following ✓';
+                btn.onmouseenter = () => { text.textContent = 'Unfollow'; };
+                btn.onmouseleave = () => { text.textContent = 'Following ✓'; };
+            } else {
+                btn.classList.remove('following');
+                text.textContent = 'Follow';
+                btn.onmouseenter = null;
+                btn.onmouseleave = null;
+            }
+        }
+
+        // ── Toggle follow ─────────────────────────────────────────────────────
+        async function toggleFollow() {
+            if (!currentUserId) {
+                showToast('Sign in to follow authors.');
+                return;
+            }
+
+            const btn = document.getElementById('followBtn');
+            btn.disabled = true;
+
+            try {
+                if (isFollowing) {
+                    const { error } = await _supabase
+                        .from('follows')
+                        .delete()
+                        .eq('follower_id', currentUserId)
+                        .eq('following_id', targetUserId);
+
+                    if (error) throw error;
+                    isFollowing = false;
+                    showToast('Unfollowed.');
+                } else {
+                    const { error } = await _supabase
+                        .from('follows')
+                        .insert({ follower_id: currentUserId, following_id: targetUserId });
+
+                    if (error) throw error;
+                    isFollowing = true;
+                    showToast('Following!');
+                }
+
+                updateFollowButton();
+                await loadFollowCounts();   // Refresh counter
+            } catch (e) {
+                console.error('Error toggling follow:', e);
+                showToast('Something went wrong. Try again.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ── Characters ────────────────────────────────────────────────────────
         async function loadUserCharacters() {
             const container = document.getElementById('charactersContainer');
-            const loading = document.getElementById('charsLoading');
+            const loading   = document.getElementById('charsLoading');
 
             try {
                 const { data: characters, error } = await _supabase
                     .from('characters')
                     .select('id, name, description, subtitle, photo_url, visibility')
                     .eq('creator_id', targetUserId)
-                    .eq('visibility', 'public')       // Solo públicos en el perfil ajeno
+                    .eq('visibility', 'public')
                     .order('created_at', { ascending: false });
 
                 loading.style.display = 'none';
@@ -448,9 +646,9 @@
                 container.innerHTML = '';
 
                 characters.forEach(char => {
-                    const avatarStyle = char.photo_url ? `style="background-image:url('${char.photo_url}'); background-size:cover; background-position:center;"` : '';
+                    const avatarStyle   = char.photo_url ? `style="background-image:url('${char.photo_url}'); background-size:cover; background-position:center;"` : '';
                     const avatarContent = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
-                    const description = char.description
+                    const description   = char.description
                         ? (char.description.length > 120 ? char.description.substring(0, 117) + '...' : char.description)
                         : 'No description provided.';
 
@@ -474,12 +672,13 @@
             }
         }
 
+        // ── Reviews ───────────────────────────────────────────────────────────
         async function loadUserReviews() {
             if (reviewsLoaded) return;
             reviewsLoaded = true;
 
             const container = document.getElementById('reviewsContainer');
-            const loading = document.getElementById('reviewsLoading');
+            const loading   = document.getElementById('reviewsLoading');
 
             loading.style.display = 'flex';
             container.innerHTML = '';
@@ -501,9 +700,9 @@
 
                 container.innerHTML = '';
                 comments.forEach(c => {
-                    const date = new Date(c.created_at).toLocaleDateString();
+                    const date     = new Date(c.created_at).toLocaleDateString();
                     const charName = c.characters ? c.characters.name : 'Unknown Character';
-                    const charId = c.characters ? c.characters.id : null;
+                    const charId   = c.characters ? c.characters.id   : null;
                     const charLink = charId
                         ? `<span class="comment-char-link" onclick="window.location.href='character-profile.html?id=${charId}'">${escapeHTML(charName)}</span>`
                         : escapeHTML(charName);
@@ -524,13 +723,12 @@
             }
         }
 
+        // ── UI helpers ────────────────────────────────────────────────────────
         function switchTab(event, tabId) {
             document.querySelectorAll('.tab-content-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
-
-            // Carga lazy de reseñas solo cuando se abre esa tab
             if (tabId === 'reviewsTab') loadUserReviews();
         }
 
@@ -540,6 +738,15 @@
             } else {
                 window.location.href = 'dashboard.html';
             }
+        }
+
+        let toastTimer;
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
         }
 
         function escapeHTML(str) {
