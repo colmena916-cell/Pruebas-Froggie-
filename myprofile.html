@@ -288,7 +288,7 @@
                 <p class="profile-bio" id="profileBio">Gathering ink and thoughts...</p>
                 <div class="profile-stats">
                     <span class="stat-item"><strong id="botCountLabel">0</strong> Bots</span>
-                    <span class="stat-item"><strong id="personaCountLabel">0</strong> Personas</span>
+                    <span class="stat-item"><strong id="followersCountLabel">0</strong> Followers</span>
                 </div>
             </div>
             <div class="profile-actions">
@@ -418,6 +418,7 @@
             await loadProfileMetadata();
             await loadUserCharacters();
             await loadUserPersonas();
+            await loadFollowersCount();
         }
 
         async function loadProfileMetadata() {
@@ -601,11 +602,11 @@
 
                 if (!personas || personas.length === 0) {
                     container.innerHTML = `<p class="empty-state">No has diseñado ninguna Persona para rolear aún.</p>`;
-                    document.getElementById('personaCountLabel').textContent = "0";
+                    
                     return;
                 }
 
-                document.getElementById('personaCountLabel').textContent = personas.length;
+                // personaCountLabel eliminado — ahora es followersCountLabel
                 container.innerHTML = '';
                 personas.forEach(p => {
                     container.innerHTML += `
@@ -618,6 +619,10 @@
                                 </div>
                             </div>
                             <p class="char-description">${p.description}</p>
+                            <div style="display:flex; gap:8px; margin-top:4px;">
+                                ${!p.is_default ? `<button class="btn-action" style="font-size:0.75rem; padding:4px 10px;" onclick="setDefaultPersona('${p.id}')">Set as Default</button>` : '<span style="font-size:0.75rem; opacity:0.5; padding:4px 0;">Default persona</span>'}
+                                <button class="btn-action" style="font-size:0.75rem; padding:4px 10px; border-color:#c97171; color:#c97171;" onclick="deletePersona('${p.id}')">Delete</button>
+                            </div>
                         </div>`;
                 });
             } catch(e) {}
@@ -627,6 +632,14 @@
             const name = document.getElementById('personaNameInput').value.trim();
             const description = document.getElementById('personaBioInput').value.trim();
             if (!name || !description) return;
+
+            // Verificar límite de 3 personas
+            const { data: existing } = await _supabase
+                .from('user_personas').select('id').eq('user_id', currentUserId);
+            if (existing && existing.length >= 3) {
+                alert("You can only have up to 3 personas. Delete one before creating a new one.");
+                return;
+            }
 
             try {
                 await _supabase.from('user_personas').insert({
@@ -642,6 +655,29 @@
             } catch(e) {
                 alert("Error saving Persona.");
             }
+        }
+
+        async function setDefaultPersona(id) {
+            // Quitar default de todas, poner en esta
+            await _supabase.from('user_personas').update({ is_default: false }).eq('user_id', currentUserId);
+            await _supabase.from('user_personas').update({ is_default: true }).eq('id', id);
+            await loadUserPersonas();
+        }
+
+        async function deletePersona(id) {
+            if (!confirm("Delete this persona?")) return;
+            await _supabase.from('user_personas').delete().eq('id', id);
+            await loadUserPersonas();
+        }
+
+        async function loadFollowersCount() {
+            try {
+                const { count } = await _supabase
+                    .from('follows')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('following_id', targetUserId);
+                document.getElementById('followersCountLabel').textContent = count || 0;
+            } catch(_) {}
         }
 
         function switchTab(event, tabId) {

@@ -40,7 +40,7 @@
 
         /* --- HEADER --- */
         header {
-            background-color: var(--bg-accent);
+            background-color: var(--bg-main);
             padding: 14px 22px;
             display: flex;
             align-items: center;
@@ -467,8 +467,11 @@
                 const bg = localStorage.getItem('custom-bg') || '#FFFDF9';
                 const txt = localStorage.getItem('custom-text') || '#3E532B';
                 document.body.style.setProperty('--bg-main', bg);
+                document.body.style.setProperty('--bg-accent', bg);
                 document.body.style.setProperty('--text-dark', txt);
                 document.body.style.setProperty('--btn-color', txt);
+                document.body.style.setProperty('--btn-hover', txt);
+                document.body.style.setProperty('--border', `rgba(0,0,0,0.15)`);
             }
         }
 

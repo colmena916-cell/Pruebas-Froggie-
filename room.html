@@ -342,6 +342,10 @@
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
             Edit Character
         </button>
+        <button class="dropdown-btn" id="personaBtn" onclick="openPersonaSelector()">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            <span id="personaBtnTxt">Persona: <em>My Profile</em></span>
+        </button>
         <button class="dropdown-btn danger" onclick="confirmResetChat()">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
             Restart Chat
@@ -403,6 +407,18 @@
         </div>
     </footer>
 
+    <!-- Modal: Selector de Persona -->
+    <div class="report-modal-overlay" id="personaSelectorOverlay">
+        <div class="report-modal" style="max-width:400px;">
+            <h3 style="font-weight:normal; margin-bottom:8px;">Choose your Persona</h3>
+            <p style="font-size:0.85rem; opacity:0.7; margin-bottom:14px;">Who will you be in this story? Changes apply from your next message.</p>
+            <div id="personaList" style="display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto;"></div>
+            <div class="report-actions" style="margin-top:14px;">
+                <button class="btn-cancel-report" onclick="closePersonaSelector()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
         const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
@@ -420,6 +436,7 @@
         let isFavorite = false;
         let userAvatarUrl = "";
         let userDisplayName = "Me";
+        let activePersona = null; // { id, name, description } o null si usa su perfil
         let chatHistory = [];       
         let apiSettings = null;     
         let isSending = false;
@@ -469,6 +486,10 @@
 
             await loadHistory();
             await checkFavorite();
+            // Actualizar label del botón de persona en el dropdown
+            if (activePersona) {
+                document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${activePersona.name}</em>`;
+            }
         };
 
         // ─── TEMA ─────────────────────────────────────────────────
@@ -541,7 +562,7 @@
             }
         }
 
-        // ─── CARGAR PERFIL DE USUARIO ─────────────────────────────
+        // ─── CARGAR PERFIL DE USUARIO Y PERSONA ACTIVA ──────────
         async function loadUserProfile() {
             try {
                 const { data: profile } = await _supabase
@@ -551,6 +572,17 @@
                     userDisplayName = profile.display_name || 'Me';
                 }
             } catch (e) { /* sin perfil, usa defaults */ }
+
+            // Cargar persona marcada como default (si existe)
+            try {
+                const { data: persona } = await _supabase
+                    .from('user_personas')
+                    .select('id, name, description')
+                    .eq('user_id', currentUserId)
+                    .eq('is_default', true)
+                    .single();
+                if (persona) activePersona = persona;
+            } catch (_) {}
         }
 
         function setAvatar(elId, photoUrl, name) {
@@ -561,6 +593,16 @@
             } else {
                 el.textContent = name.substring(0, 2).toUpperCase();
             }
+        }
+
+        // ─── NOMBRE ACTIVO DEL USUARIO (persona o display name) ──
+        function activeUserName() {
+            return activePersona ? activePersona.name : userDisplayName;
+        }
+
+        // Reemplaza {{user}} por el nombre activo en cualquier texto
+        function resolveUserTag(text) {
+            return text.replace(/\{\{user\}\}/gi, activeUserName());
         }
 
         // ─── CARGAR AJUSTES DE API ────────────────────────────────
@@ -680,13 +722,14 @@
         // ─── RENDERIZAR MENSAJES ──────────────────────────────────
         function appendUserMessage(text) {
             const container = document.getElementById('chatScrollArea');
+            const displayName = activeUserName();
             const avatarStyle = userAvatarUrl ? `style="background-image:url('${userAvatarUrl}')"` : '';
-            const avatarText  = userAvatarUrl ? '' : userDisplayName.substring(0, 2).toUpperCase();
+            const avatarText  = userAvatarUrl ? '' : displayName.substring(0, 2).toUpperCase();
             container.innerHTML += `
                 <div class="msg-block user">
                     <div class="msg-avatar user-avatar" ${avatarStyle}>${avatarText}</div>
                     <div class="msg-body">
-                        <span class="msg-sender-name">${userDisplayName}</span>
+                        <span class="msg-sender-name">${displayName}</span>
                         <p class="msg-text">${formatNarrative(escapeHTML(text))}</p>
                     </div>
                 </div>`;
@@ -721,7 +764,7 @@
             currentBotBlockId = blockId;
 
             if (isLoaded) {
-                document.getElementById(`txt_${blockId}`).innerHTML = formatNarrative(text);
+                document.getElementById(`txt_${blockId}`).innerHTML = formatNarrative(resolveUserTag(text));
                 updateNavArrows(blockId);
             } else {
                 typeWriter(blockId, text);
@@ -733,6 +776,7 @@
             return new Promise(resolve => {
                 const el = document.getElementById(`txt_${blockId}`);
                 if (!el) { resolve(); return; }
+                text = resolveUserTag(text);
                 let i = 0;
                 const leftBtn = document.getElementById(`left_${blockId}`);
                 const rightBtn = document.getElementById(`right_${blockId}`);
@@ -838,6 +882,8 @@ Character definition and personality: "${characterDefinition}"
 
 STYLE REFERENCE — This is the opening message written by the character's creator. Study its tone, vocabulary, sentence rhythm, use of italics/actions, and level of formality. Your responses must match this style closely:
 "${characterGreeting}"
+
+USER PERSONA — The user you are interacting with goes by the name: ${activePersona ? activePersona.name : userDisplayName}.${activePersona && activePersona.description ? ' Their character description: "' + activePersona.description + '"' : ''} Always refer to them by this name when the story calls for it. When you see {{user}} in any text, replace it with this name.
 
 NARRATIVE RULES:
 - ACTIONS and scene descriptions go wrapped in *asterisks* like this: *she tilts her head slowly*
@@ -1213,6 +1259,66 @@ NARRATIVE RULES:
                 dropdown.classList.add('show');
                 overlay.classList.add('show');
             }
+        }
+
+        // ─── SELECTOR DE PERSONA ─────────────────────────────────
+        async function openPersonaSelector() {
+            toggleMenu();
+            const list = document.getElementById('personaList');
+            list.innerHTML = '<p style="opacity:0.5; font-size:0.9rem; text-align:center;">Loading...</p>';
+            document.getElementById('personaSelectorOverlay').classList.add('show');
+
+            try {
+                const { data: personas } = await _supabase
+                    .from('user_personas')
+                    .select('id, name, description, is_default')
+                    .eq('user_id', currentUserId)
+                    .order('created_at', { ascending: true });
+
+                list.innerHTML = '';
+
+                // Opción: usar perfil propio (sin persona)
+                const isNone = !activePersona;
+                list.innerHTML += `
+                    <button onclick="selectPersona(null)" style="
+                        text-align:left; background:${isNone ? 'rgba(93,112,56,0.12)' : 'none'};
+                        border:1px solid ${isNone ? 'var(--btn-color)' : 'var(--border)'};
+                        border-radius:10px; padding:10px 14px; cursor:pointer;
+                        font-family:var(--font-serif); color:var(--text-dark); width:100%;">
+                        <strong style="font-size:0.95rem;">${userDisplayName}</strong>
+                        <span style="display:block; font-size:0.8rem; opacity:0.6;">My profile ${isNone ? '· Active' : ''}</span>
+                    </button>`;
+
+                if (!personas || personas.length === 0) {
+                    list.innerHTML += '<p style="opacity:0.5; font-size:0.85rem; text-align:center; padding:8px;">No personas created yet. <a href="myprofile.html" style="color:var(--btn-color);">Create one</a></p>';
+                } else {
+                    personas.forEach(p => {
+                        const isActive = activePersona && activePersona.id === p.id;
+                        list.innerHTML += `
+                            <button onclick="selectPersona(${JSON.stringify(p).replace(/"/g, '&quot;')})" style="
+                                text-align:left; background:${isActive ? 'rgba(93,112,56,0.12)' : 'none'};
+                                border:1px solid ${isActive ? 'var(--btn-color)' : 'var(--border)'};
+                                border-radius:10px; padding:10px 14px; cursor:pointer;
+                                font-family:var(--font-serif); color:var(--text-dark); width:100%;">
+                                <strong style="font-size:0.95rem;">${p.name}</strong>
+                                <span style="display:block; font-size:0.8rem; opacity:0.6;">${p.description ? p.description.substring(0, 60) + (p.description.length > 60 ? '...' : '') : 'No description'} ${isActive ? '· Active' : ''}</span>
+                            </button>`;
+                    });
+                }
+            } catch(e) {
+                list.innerHTML = '<p style="opacity:0.5; font-size:0.85rem; text-align:center;">Could not load personas.</p>';
+            }
+        }
+
+        function selectPersona(persona) {
+            activePersona = persona; // null = usar perfil propio
+            const label = persona ? persona.name : 'My Profile';
+            document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${label}</em>`;
+            closePersonaSelector();
+        }
+
+        function closePersonaSelector() {
+            document.getElementById('personaSelectorOverlay').classList.remove('show');
         }
 
         function goBack() { window.location.href = 'chat.html'; }
