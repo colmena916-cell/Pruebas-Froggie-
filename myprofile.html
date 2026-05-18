@@ -530,6 +530,15 @@
                 const ext  = file.name.split('.').pop().toLowerCase();
                 const path = `${currentUserId}/avatar.${ext}`;
 
+                // Borrar cualquier avatar anterior (puede ser distinta extensión)
+                const { data: existing } = await _supabase.storage
+                    .from('user-avatars')
+                    .list(currentUserId);
+                if (existing && existing.length > 0) {
+                    const toDelete = existing.map(f => `${currentUserId}/${f.name}`);
+                    await _supabase.storage.from('user-avatars').remove(toDelete);
+                }
+
                 const { error: uploadError } = await _supabase.storage
                     .from('user-avatars')   
                     .upload(path, file, { upsert: true, contentType: file.type });

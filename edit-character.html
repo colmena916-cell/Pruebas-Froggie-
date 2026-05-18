@@ -713,6 +713,17 @@
             if (uploadedPhotoFile) {
                 const ext = uploadedPhotoFile.name.split('.').pop();
                 const fileName = `${currentUserId}_${Date.now()}.${ext}`;
+
+                // Borrar la foto anterior si existe
+                if (currentPhotoUrl) {
+                    try {
+                        const oldFileName = currentPhotoUrl.split('/character-images/').pop().split('?')[0];
+                        if (oldFileName) {
+                            await _supabase.storage.from('character-images').remove([oldFileName]);
+                        }
+                    } catch (_) {}
+                }
+
                 const { error: uploadError } = await _supabase.storage
                     .from('character-images')
                     .upload(fileName, uploadedPhotoFile);
