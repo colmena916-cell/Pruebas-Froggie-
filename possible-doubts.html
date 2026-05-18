@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Froggie AI - FAQ & Help</title>
+    <link rel="icon" href="ranita.png">
+    <style>
+        :root {
+            --bg-main: #FFFDF9;
+            --bg-accent: #EBF29B;
+            --text-dark: #3E532B;
+            --btn-color: #5D7038;
+            --btn-hover: #455329;
+            --border: rgba(62, 83, 43, 0.15);
+            --font-serif: 'Georgia', serif;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--bg-main);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        .btn-back:hover { 
+            background-color: rgba(62, 83, 43, 0.08); 
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: normal;
+        }
+
+        /* Top Navigation Menu */
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px;
+            background-color: rgba(62, 83, 43, 0.03);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 61px;
+            z-index: 99;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-accent);
+            border-color: var(--border);
+        }
+
+        /* Main Content Container */
+        .content-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 16px 64px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+
+        section {
+            padding-top: 40px; 
+            margin-top: -40px;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 32px;
+        }
+
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            font-weight: normal;
+            margin-bottom: 16px;
+            color: var(--btn-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: normal;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        p {
+            margin-bottom: 16px;
+            opacity: 0.95;
+            text-align: justify;
+        }
+
+        .highlight-box {
+            background-color: rgba(235, 242, 155, 0.25);
+            border-left: 4px solid var(--btn-color);
+            padding: 16px;
+            border-radius: 0 12px 12px 0;
+            margin: 16px 0;
+            font-style: italic;
+        }
+
+        /* Technical API Cards styles */
+        .api-card {
+            background-color: rgba(62, 83, 43, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .api-badge {
+            display: inline-block;
+            font-family: sans-serif;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .api-badge.active { background-color: #d2e7d6; color: #2e6930; }
+        .api-badge.disabled { background-color: #f7d6d6; color: #a63232; }
+
+        /* Guide steps and Image layouts */
+        .guide-step {
+            margin-top: 24px;
+            background-color: rgba(62, 83, 43, 0.01);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .image-container {
+            margin: 14px 0;
+            text-align: center;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+
+        .image-caption {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-top: 4px;
+            font-family: sans-serif;
+        }
+
+        ul, ol {
+            margin-left: 24px;
+            margin-bottom: 16px;
+            opacity: 0.95;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="btn-back" onclick="window.history.back()">
+            <svg style="width:22px; height:22px; fill:currentColor;" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <span class="header-title">Help Center & FAQ</span>
+    </header>
+
+    <nav class="nav-menu">
+        <a href="#about-project" class="nav-link">🐸 About the Project</a>
+        <a href="#api-keys" class="nav-link">🔑 Connecting APIs</a>
+        <a href="#create-bot" class="nav-link">✨ Character Creation</a>
+        <a href="#terms" class="nav-link">⚖️ Responsibility</a>
+    </nav>
+
+    <main class="content-container">
+
+        <section id="about-project">
+            <h2>About Froggie AI 🐸🌟</h2>
+            <p>Hello! It is an absolute joy to have you here exploring the backend of our little digital pond. The very first thing you should know is that <strong>Froggie AI is a completely independent, homemade project</strong> built from scratch by a single creator: an amateur "programmer" who often spends way more time fighting curly brackets `{}` than actually sleeping! 👩‍💻✨</p>
+            
+            <p>To be perfectly honest, my current technical knowledge is quite limited—I am learning entirely on the go through sheer curiosity, lots of coffee, and internet tutorials! 📚☕ However, my main goal is to actively keep learning and improving this website so we can all have a beautiful, cozy space to write, interact, and roleplay.</p>
+
+            <div class="highlight-box">
+                <strong>Reality Check / Spoiler Alert:</strong> Due to regular adult life challenges (balancing a day job, limited free time, and the actual hosting costs of keeping servers alive 💸⏱️), there is a natural possibility that continuing the project might get tricky at times. But let's not get discouraged! If our little frog receives enough love, support, and a nice community base, I will do everything humanly possible to complete the project and expand the features. 💚
+            </div>
+
+            <p>Since this is a brand new platform built entirely by one person, you will definitely stumble upon a weird behavior or a stray bug here and there 🐞 (just think of them as special custom features of the house!). I am completely open to hearing everyone's opinions, bug reports, suggestions, or even just a warm hello to help keep polishing the app. Let's make this pond grow together! 💬🤝</p>
+        </section>
+
+
+        <section id="api-keys">
+            <h2>Under the Hood: Connection & Intelligence (API Keys) 🔑🤖</h2>
+            <p>Currently, Froggie AI does not host its own large language model due to the high costs of server infrastructure. Instead, the platform acts as a bridge, utilizing <strong>API Keys</strong> that you provide to connect with some of the best AI models on the market. While our ultimate long-term dream is to host a dedicated, custom-tuned model optimized for roleplay, here is a quick summary of how to connect each provider from your settings panel:</p>
+
+            <div class="api-card">
+                <span class="api-badge active">✓ Recommended</span>
+                <h3>1. OpenRouter (Advanced Roleplay Models)</h3>
+                <p>This is the absolute star of the house if you are looking for an immersive narrative experience. It allows you to invoke amazing models like <em>Mythomax</em> or <em>Anthropic's Claude</em> variants. To set it up:</p>
+                <ul>
+                    <li>Create an account at <a href="https://openrouter.ai" target="_blank" style="color:var(--btn-color);">openrouter.ai</a>.</li>
+                    <li>Generate a new API Key in your dashboard and paste it into the designated field inside Froggie AI.</li>
+                    <li>Don't forget to type the exact model identifier you want to call (e.g., <code>gryphe/mythomax-l2-13b</code>) in your settings panel so it routes properly!</li>
+                </ul>
+            </div>
+
+            <div class="api-card">
+                <span class="api-badge active">✓ Available</span>
+                <h3>2. OpenAI (GPT-3.5 / GPT-4)</h3>
+                <p>Perfect for fast, highly structured responses with great logic. It requires you to generate a token (starting with <code>sk-...</code>) from your OpenAI developer console and ensure your billing account has an active balance to prevent quota limit errors.</p>
+            </div>
+
+            <div class="api-card">
+                <span class="api-badge disabled">⚠ Currently Unavailable</span>
+                <h3>3. Google Gemini (Under Maintenance)</h3>
+                <p>While you will see the visual fields ready to receive Google Gemini keys in the user interface, we want to clarify that <strong>this model is currently not active within the chat rooms</strong>. We are restructuring our backend code to integrate it properly without disrupting the prompt parameters. We'll let you know as soon as it's ready to jump into action!</p>
+            </div>
+        </section>
+
+
+        <section id="create-bot">
+            <h2>Step-by-Step Guide: Bringing a Character to Life 🎨✍️</h2>
+            <p>Designing a bot on Froggie AI is a magical process, but it requires structure to help the AI accurately capture the exact persona you have in mind. Here is a breakdown of our official creation form:</p>
+
+            <div class="guide-step">
+                <h3>Step 1: Basic Identity & Visuals</h3>
+                <p>The very first thing other users will see. Here, you need to define your character's avatar or photo (we highly recommend using a direct, stable image URL), assign their official name, and write a brief subtitle that summarizes who they are in a single sentence. These initial fields have strict character limits to keep the card layouts clean.</p>
+                
+                <div class="image-container">
+                    <img src="primera parte del bot.png" alt="Basic Identity Form Area">
+                    <div class="image-caption">Reference Image: primera parte del bot.png</div>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3>Step 2: Public Description</h3>
+                <p>This section is visible to the entire public browsing your character profile. But don't let that stop your creativity! Its main purpose is to hook readers by highlighting the bot's core essence using short, impactful, and descriptive words. It has a comfortable character limit layout.</p>
+                
+                <div class="image-container">
+                    <img src="segunda parte.png" alt="Public Description Area">
+                    <div class="image-caption">Reference Image: segunda parte.png</div>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3>Step 3: Deep System Definition (The Soul of the Bot)</h3>
+                <p>This is the most critical and hidden part of the setup form. Here, your writing needs to be <strong>extremely clear, direct, and detailed</strong>. Use explicit attributes and lore traits to guide the AI on how to act, its backstory, relationship to the user, speech mannerisms, and psychological traits.</p>
+                <p>Structuring this section with clear trait lists or system blocks helps the underlying language model absorb the character personality without getting confused during long chats.</p>
+                
+                <div class="image-container">
+                    <img src="tercera parte.png" alt="System Definition Part 1" style="margin-bottom:8px;">
+                    <img src="cuarta parte.png" alt="System Definition Part 2" style="margin-bottom:8px;">
+                    <img src="quinta parte.png" alt="System Definition Part 3">
+                    <div class="image-caption">Sequential Reference Images: tercera parte.png, cuarta parte.png, and quinta parte.png</div>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3>Step 4: First Message & Visibility</h3>
+                <p>To wrap things up, you must write the bot's <strong>First Message / Greeting</strong>. This is vital because it not only triggers the roleplay session, but it also subtly dictates the writing style to the AI (for example, if it should use asterisks <code>*actions*</code> for physical movements or quotation marks for dialogue speech).</p>
+                <p>Lastly, select the privacy setting: <strong>Public</strong> (so it appears on the global community feed) or <strong>Private</strong> (exclusively accessible for you to chat from your profile layout).</p>
+                
+                <div class="image-container">
+                    <img src="ultima parte.png" alt="First Message and Privacy Options">
+                    <div class="image-caption">Reference Image: ultima parte.png</div>
+                </div>
+            </div>
+
+            <p style="margin-top: 20px; font-style: italic; text-align: center;">💡 <strong>Quick Pro-Tip:</strong> While this structure is highly recommended to prevent bots from losing their memory tracking, Froggie AI is all about creative freedom! Anyone is welcome to experiment with different definition styles and prompt formats to discover unique interactions.</p>
+        </section>
+
+
+        <section id="terms">
+            <h2>Platform Responsibility & Community Terms ⚖️💚</h2>
+            <p>To ensure that our digital pond remains a safe and pleasant environment for creative storytelling, it's important to clarify that <strong>Froggie AI acts strictly as an open platform for creative tools and custom bridging</strong>. Because this is an open environment where individual users insert their own custom API configurations and narratives, the site administration holds no responsibility for the external use, themes, or private dialogues that any user chooses to build inside their respective chat rooms or custom characters.</p>
+
+            <p>We trust the maturity and creative spirit of our community, and we truly hope Froggie receives a warm, respectful, and artistic welcome from all of you.</p>
+
+            <div class="highlight-box" style="border-left-color: #c97171; background-color: rgba(201, 113, 113, 0.05);">
+                🚨 <strong>Friendly Beta Reminder:</strong> Please keep in mind that you are participating in a very enclosed and basic closed beta phase. Many features will be continuously built, modified, or temporarily broken as I learn more advanced software development. Thank you so much for your incredible patience and for keeping me company on this coding adventure!
+            </div>
+        </section>
+
+    </main>
+
+    <footer style="text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 0.85rem; opacity: 0.5; margin-top: auto;">
+        Froggie AI · Made with love, amateur code, and little frog legs 🐸
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
+
+</body>
+</html>
