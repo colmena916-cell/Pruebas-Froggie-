@@ -653,7 +653,7 @@
                         : 'No description provided.';
 
                     container.innerHTML += `
-                        <div class="char-card" onclick="window.location.href='character-profile.html?id=${char.id}'">
+                        <div class="char-card" onclick="window.location.href='character-profile.html?id=${char.id}&from=user-profile'">
                             <div class="char-card-header">
                                 <div class="char-avatar" ${avatarStyle}>${avatarContent}</div>
                                 <div class="char-info">
@@ -704,7 +704,7 @@
                     const charName = c.characters ? c.characters.name : 'Unknown Character';
                     const charId   = c.characters ? c.characters.id   : null;
                     const charLink = charId
-                        ? `<span class="comment-char-link" onclick="window.location.href='character-profile.html?id=${charId}'">${escapeHTML(charName)}</span>`
+                        ? `<span class="comment-char-link" onclick="window.location.href='character-profile.html?id=${charId}&from=user-profile'">${escapeHTML(charName)}</span>`
                         : escapeHTML(charName);
 
                     container.innerHTML += `
@@ -733,7 +733,10 @@
         }
 
         function goBack() {
-            if (document.referrer && !document.referrer.includes('user-profile')) {
+            const from = new URLSearchParams(window.location.search).get('from');
+            if (from === 'character-profile') {
+                history.back();
+            } else if (from === 'room') {
                 history.back();
             } else {
                 window.location.href = 'dashboard.html';

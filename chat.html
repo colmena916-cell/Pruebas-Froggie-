@@ -564,7 +564,7 @@
             try {
                 const { data: activeChats, error } = await _supabase
                     .from('conversations')
-                    .select('id, character_id, updated_at, characters(name)')
+                    .select('id, character_id, updated_at, characters(name, photo_url)')
                     .eq('user_id', userId)
                     .order('updated_at', { ascending: false });
 
@@ -576,10 +576,14 @@
                 container.innerHTML = '';
                 activeChats.forEach(chat => {
                     const charName = chat.characters?.name || 'Unknown';
+                    const charPhoto = chat.characters?.photo_url || '';
                     const timeString = new Date(chat.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const avatarHtml = charPhoto
+                        ? `<div class="chat-avatar" style="background-image:url('${charPhoto}');background-size:cover;background-position:center;"></div>`
+                        : `<div class="chat-avatar">${charName.substring(0,2).toUpperCase()}</div>`;
                     container.innerHTML += `
                         <a href="room.html?id=${chat.character_id}" class="chat-history-item">
-                            <div class="chat-avatar">${charName.substring(0,2).toUpperCase()}</div>
+                            ${avatarHtml}
                             <div class="chat-item-content">
                                 <div class="chat-item-meta">
                                     <h4>${charName}</h4>

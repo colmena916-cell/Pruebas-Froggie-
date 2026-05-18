@@ -426,7 +426,7 @@
         // 6. Viajar al perfil del creador
         function goToCreator() {
             if (botCreatorId) {
-                window.location.href = `user-profile.html?id=${botCreatorId}`;
+                window.location.href = `user-profile.html?id=${botCreatorId}&from=character-profile`;
             }
         }
 
@@ -452,7 +452,7 @@
                     container.innerHTML += `
                         <div class="comment-item">
                             <div class="comment-meta">
-                                <span class="comment-user" onclick="window.location.href='user-profile.html?id=${c.user_id}'">@${c.username || 'anonymous'}</span>
+                                <span class="comment-user" onclick="window.location.href='user-profile.html?id=${c.user_id}&from=character-profile'">@${c.username || 'anonymous'}</span>
                                 <span>${date}</span>
                             </div>
                             <p class="comment-content">${escapeHTML(c.content)}</p>
@@ -497,9 +497,15 @@
         }
 
         function goBack() {
-            // Intenta regresar al chat abierto, si no, va al Dashboard global
-            if (document.referrer.includes('room.html')) {
+            const from = new URLSearchParams(window.location.search).get('from');
+            if (from === 'room') {
                 window.location.href = `room.html?id=${characterId}`;
+            } else if (from === 'favorites') {
+                window.location.href = 'favorites.html';
+            } else if (from === 'mycharacters') {
+                window.location.href = 'mycharacters.html';
+            } else if (from === 'user-profile') {
+                history.back();
             } else {
                 window.location.href = 'dashboard.html';
             }

@@ -1322,8 +1322,8 @@ NARRATIVE RULES:
         }
 
         function goBack() { window.location.href = 'chat.html'; }
-        function goToCharacterProfile() { window.location.href = `character-profile.html?id=${characterId}`; }
-        function goToCreatorProfile(e) { e.stopPropagation(); if (botCreatorId) window.location.href = `user-profile.html?id=${botCreatorId}`; }
+        function goToCharacterProfile() { window.location.href = `character-profile.html?id=${characterId}&from=room`; }
+        function goToCreatorProfile(e) { e.stopPropagation(); if (botCreatorId) window.location.href = `user-profile.html?id=${botCreatorId}&from=room`; }
         
         function editCharacter() {
             toggleMenu(); 
