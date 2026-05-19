@@ -297,7 +297,7 @@
         .char-card-body {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
             min-width: 0;
             flex-grow: 1;
         }
@@ -310,21 +310,62 @@
             text-overflow: ellipsis;
         }
 
+        .char-creator {
+            font-size: 0.68rem;
+            opacity: 0.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
         .char-subtitle-text {
             font-size: 0.78rem;
             opacity: 0.55;
             line-height: 1.3;
-            white-space: nowrap;
+            white-space: normal;
+            word-break: break-word;
             overflow: hidden;
-            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
 
-        .char-creator {
-            font-size: 0.72rem;
-            opacity: 0.38;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        /* --- FLECHAS DE CARRUSEL --- */
+        .carousel-wrapper {
+            position: relative;
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            background-color: var(--bg-main);
+            border: 1px solid rgba(62, 83, 43, 0.18);
+            color: var(--text-dark);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            flex-shrink: 0;
+        }
+        .carousel-arrow:hover { opacity: 1; box-shadow: 0 3px 10px rgba(0,0,0,0.13); }
+        .carousel-arrow.hidden { opacity: 0; pointer-events: none; }
+        .carousel-arrow svg { width: 16px; height: 16px; fill: currentColor; }
+        .carousel-arrow-left  { left: -16px; }
+        .carousel-arrow-right { right: -16px; }
+
+        /* En móvil las flechas van pegadas al borde interior */
+        @media (max-width: 580px) {
+            .carousel-arrow-left  { left: 0; }
+            .carousel-arrow-right { right: 0; }
         }
 
         /* Tags en cards */
@@ -754,8 +795,12 @@
                     <h2 class="section-title">For You</h2>
                     <span class="section-subtitle">freshly conjured</span>
                 </div>
-                <div class="chars-row" id="forYouRow">
-                    <div class="empty-state">Consulting the codex...</div>
+                <div class="carousel-wrapper">
+                    <button class="carousel-arrow carousel-arrow-left" onclick="scrollCarousel('forYouRow', -1)"><svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg></button>
+                    <div class="chars-row" id="forYouRow">
+                        <div class="empty-state">Consulting the codex...</div>
+                    </div>
+                    <button class="carousel-arrow carousel-arrow-right" onclick="scrollCarousel('forYouRow', 1)"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
                 </div>
             </div>
 
@@ -765,8 +810,12 @@
                     <h2 class="section-title">Most Popular</h2>
                     <span class="section-subtitle">everyone's talking to them</span>
                 </div>
-                <div class="chars-row" id="popularRow">
-                    <div class="empty-state">Consulting the codex...</div>
+                <div class="carousel-wrapper">
+                    <button class="carousel-arrow carousel-arrow-left" onclick="scrollCarousel('popularRow', -1)"><svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg></button>
+                    <div class="chars-row" id="popularRow">
+                        <div class="empty-state">Consulting the codex...</div>
+                    </div>
+                    <button class="carousel-arrow carousel-arrow-right" onclick="scrollCarousel('popularRow', 1)"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
                 </div>
             </div>
 
@@ -776,8 +825,12 @@
                     <h2 class="section-title">Canon</h2>
                     <span class="section-subtitle">from books, series, anime & more</span>
                 </div>
-                <div class="chars-row" id="canonRow">
-                    <div class="empty-state">Consulting the codex...</div>
+                <div class="carousel-wrapper">
+                    <button class="carousel-arrow carousel-arrow-left" onclick="scrollCarousel('canonRow', -1)"><svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg></button>
+                    <div class="chars-row" id="canonRow">
+                        <div class="empty-state">Consulting the codex...</div>
+                    </div>
+                    <button class="carousel-arrow carousel-arrow-right" onclick="scrollCarousel('canonRow', 1)"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
                 </div>
             </div>
 
@@ -787,8 +840,12 @@
                     <h2 class="section-title">Original Characters</h2>
                     <span class="section-subtitle">born from imagination</span>
                 </div>
-                <div class="chars-row" id="ocRow">
-                    <div class="empty-state">Consulting the codex...</div>
+                <div class="carousel-wrapper">
+                    <button class="carousel-arrow carousel-arrow-left" onclick="scrollCarousel('ocRow', -1)"><svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg></button>
+                    <div class="chars-row" id="ocRow">
+                        <div class="empty-state">Consulting the codex...</div>
+                    </div>
+                    <button class="carousel-arrow carousel-arrow-right" onclick="scrollCarousel('ocRow', 1)"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
                 </div>
             </div>
 
@@ -916,10 +973,18 @@
                     <div class="char-avatar" ${avatarStyle}>${avatarContent}</div>
                     <div class="char-card-body">
                         <p class="char-name">${char.name}</p>
-                        <p class="char-subtitle-text">${char.subtitle || ''}</p>
                         ${creator}
+                        <p class="char-subtitle-text">${char.subtitle || ''}</p>
                     </div>
                 </a>`;
+        }
+
+        // ===== FLECHAS DE CARRUSEL =====
+        function scrollCarousel(rowId, direction) {
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            const scrollAmount = 240; // ancho de ~1 card + gap
+            row.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
         }
 
         async function renderRow(containerId, characters) {
