@@ -38,7 +38,6 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- HEADER --- */
         header {
             background-color: var(--bg-main);
             padding: 14px 22px;
@@ -75,7 +74,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* --- CONTENIDO PRINCIPAL --- */
         main {
             max-width: 680px;
             width: 100%;
@@ -86,7 +84,6 @@
             gap: 0;
         }
 
-        /* --- SECCIONES DEL FORMULARIO --- */
         .form-section {
             border-bottom: 1px dashed var(--border);
             padding: 28px 0;
@@ -101,7 +98,7 @@
             margin-bottom: 18px;
         }
 
-        /* --- FOTO --- */
+        /* FOTO */
         .photo-upload-area {
             display: flex;
             align-items: center;
@@ -123,12 +120,7 @@
             transition: border-color 0.2s;
         }
         .photo-preview:hover { border-color: var(--btn-color); }
-        .photo-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
+        .photo-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
         .photo-preview .upload-icon {
             display: flex;
             flex-direction: column;
@@ -159,7 +151,7 @@
 
         #photoInput { display: none; }
 
-        /* --- CAMPOS DE TEXTO --- */
+        /* CAMPOS DE TEXTO */
         .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
         .field-group:last-child { margin-bottom: 0; }
 
@@ -172,11 +164,8 @@
             align-items: baseline;
         }
 
-        .char-counter {
-            font-size: 0.78rem;
-            opacity: 0.45;
-            font-style: normal;
-        }
+        .char-counter { font-size: 0.78rem; opacity: 0.45; font-style: normal; }
+        .char-counter.warning { color: #b85c38; opacity: 1; }
 
         .field-group input,
         .field-group textarea {
@@ -207,14 +196,8 @@
             line-height: 1.4;
         }
 
-        /* Indicador de límite cerca */
-        .char-counter.warning { color: #b85c38; opacity: 1; }
-
-        /* --- VISIBILIDAD --- */
-        .visibility-toggle {
-            display: flex;
-            gap: 10px;
-        }
+        /* VISIBILIDAD */
+        .visibility-toggle { display: flex; gap: 10px; }
 
         .vis-btn {
             flex: 1;
@@ -238,7 +221,84 @@
             font-weight: bold;
         }
 
-        /* --- BARRA INFERIOR FIJA --- */
+        /* ================================================
+           CATEGORÍA Y TAGS
+        ================================================ */
+
+        /* Selector de categoría */
+        .category-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
+
+        .cat-btn {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: none;
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .cat-btn.selected {
+            background-color: var(--bg-accent);
+            border-color: var(--btn-color);
+            font-weight: bold;
+        }
+
+        /* Tags chips */
+        .tags-label {
+            font-size: 0.9rem;
+            font-style: italic;
+            opacity: 0.8;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .tags-counter {
+            font-size: 0.78rem;
+            opacity: 0.45;
+            font-style: normal;
+        }
+        .tags-counter.full { color: #b85c38; opacity: 1; }
+
+        .tags-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-chip {
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: none;
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, opacity 0.2s;
+            opacity: 0.7;
+        }
+        .tag-chip:hover { opacity: 1; border-color: var(--btn-color); }
+        .tag-chip.selected {
+            background-color: var(--bg-accent);
+            border-color: var(--btn-color);
+            opacity: 1;
+            font-weight: bold;
+        }
+        .tag-chip.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .tag-chip.disabled:hover { border-color: var(--border); }
+
+        /* BARRA INFERIOR */
         .bottom-bar {
             position: fixed;
             bottom: 0; left: 0;
@@ -285,12 +345,7 @@
         .btn-save:active { transform: scale(0.97); }
         .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* Mensaje de estado */
-        .save-message {
-            font-size: 0.85rem;
-            align-self: center;
-            display: none;
-        }
+        .save-message { font-size: 0.85rem; align-self: center; display: none; }
         .save-message.error { display: block; color: #8b2e2e; }
         .save-message.success { display: block; color: var(--btn-color); }
 
@@ -301,7 +356,6 @@
             .btn-save { padding: 10px 24px; }
         }
 
-        /* Help hint banner */
         .help-hint-banner {
             display: flex;
             align-items: center;
@@ -317,10 +371,7 @@
             opacity: 0.8;
             transition: opacity 0.2s, background-color 0.2s;
         }
-        .help-hint-banner:hover {
-            opacity: 1;
-            background-color: rgba(235, 242, 155, 0.6);
-        }
+        .help-hint-banner:hover { opacity: 1; background-color: rgba(235, 242, 155, 0.6); }
     </style>
 </head>
 <body>
@@ -370,13 +421,8 @@
                     Name
                     <span class="char-counter" id="nameCounter">0 / 50</span>
                 </label>
-                <input
-                    type="text"
-                    id="charName"
-                    placeholder="The Wandering Bard"
-                    maxlength="50"
-                    oninput="updateCounter('charName', 'nameCounter', 50)"
-                >
+                <input type="text" id="charName" placeholder="The Wandering Bard" maxlength="50"
+                    oninput="updateCounter('charName', 'nameCounter', 50)">
             </div>
 
             <div class="field-group">
@@ -384,34 +430,69 @@
                     Subtitle
                     <span class="char-counter" id="subtitleCounter">0 / 80</span>
                 </label>
-                <input
-                    type="text"
-                    id="charSubtitle"
-                    placeholder="Brooding Victorian poet with a secret"
-                    maxlength="80"
-                    oninput="updateCounter('charSubtitle', 'subtitleCounter', 80)"
-                >
+                <input type="text" id="charSubtitle" placeholder="Brooding Victorian poet with a secret" maxlength="80"
+                    oninput="updateCounter('charSubtitle', 'subtitleCounter', 80)">
                 <p class="field-hint">One line shown under the name on character cards.</p>
             </div>
         </div>
 
-        <!-- DESCRIPCIÓN PÚBLICA -->
+        <!-- DESCRIPCIÓN -->
         <div class="form-section">
-            <p class="section-label">Public Description</p>
+            <p class="section-label">Description</p>
             <div class="field-group">
                 <label class="field-label">
-                    Description
+                    Character Description
                     <span class="char-counter" id="descCounter">0 / 400</span>
                 </label>
-                <textarea
-                    id="charDesc"
-                    rows="4"
-                    placeholder="What users will read before starting a chat. A brief, compelling introduction to your character — like the back cover of a book."
+                <textarea id="charDesc" rows="4"
+                    placeholder="Write a brief summary of your character — their appearance, personality, the vibe they give off. Think of it as the back cover of a book."
                     maxlength="400"
-                    oninput="updateCounter('charDesc', 'descCounter', 400)"
-                ></textarea>
-                <p class="field-hint">Visible to everyone. This is your character's first impression.</p>
+                    oninput="updateCounter('charDesc', 'descCounter', 400)"></textarea>
+                <p class="field-hint">🔒 This is only visible on your character's profile page — not in the public feed. Use it freely to describe who they really are.</p>
             </div>
+        </div>
+
+        <!-- CATEGORÍA Y TAGS -->
+        <div class="form-section">
+            <p class="section-label">Category &amp; Tags</p>
+
+            <p class="field-label" style="margin-bottom: 10px;">Category</p>
+            <div class="category-toggle">
+                <button class="cat-btn selected" id="cat-canon" onclick="selectCategory('canon')">
+                    📚 Canon
+                </button>
+                <button class="cat-btn" id="cat-oc" onclick="selectCategory('oc')">
+                    ✨ Original Character
+                </button>
+            </div>
+            <p class="field-hint" style="margin-bottom: 20px;">Canon: from a book, series, anime, game, film, etc. OC: your original creation.</p>
+
+            <div class="tags-label">
+                Tags
+                <span class="tags-counter" id="tagsCounter">0 / 3 selected</span>
+            </div>
+            <div class="tags-chips" id="tagsChips">
+                <button class="tag-chip" onclick="toggleTag(this, 'Fantasy')">Fantasy</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Romance')">Romance</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Action')">Action</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Drama')">Drama</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Horror')">Horror</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Sci-Fi')">Sci-Fi</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Comedy')">Comedy</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Mystery')">Mystery</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Slice of Life')">Slice of Life</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Adventure')">Adventure</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Historical')">Historical</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Psychological')">Psychological</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Villain')">Villain</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Hero')">Hero</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Anime')">Anime</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Video Game')">Video Game</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Books')">Books</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'TV Series')">TV Series</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Film')">Film</button>
+            </div>
+            <p class="field-hint" style="margin-top: 10px;">Choose up to 3 tags. They help others find your character.</p>
         </div>
 
         <!-- DEFINICIÓN / PROMPT -->
@@ -422,13 +503,10 @@
                     Character Definition
                     <span class="char-counter" id="defCounter">0 / 5000</span>
                 </label>
-                <textarea
-                    id="charDefinition"
-                    rows="10"
+                <textarea id="charDefinition" rows="10"
                     placeholder="Only the AI reads this. Write who your character is in depth: their personality, speech patterns, backstory, fears, obsessions, how they address the user, what they would never do. The richer this is, the better they will write."
                     maxlength="5000"
-                    oninput="updateCounter('charDefinition', 'defCounter', 5000)"
-                ></textarea>
+                    oninput="updateCounter('charDefinition', 'defCounter', 5000)"></textarea>
                 <p class="field-hint">Not visible to users. Write in second or third person — e.g. "You are..." or "{{char}} is..."</p>
             </div>
         </div>
@@ -441,13 +519,10 @@
                     Opening
                     <span class="char-counter" id="firstMsgCounter">0 / 5000</span>
                 </label>
-                <textarea
-                    id="charFirstMsg"
-                    rows="6"
+                <textarea id="charFirstMsg" rows="6"
                     placeholder="The first thing your character says when a chat begins. Set the scene, the mood, the hook. This is what will make someone stay."
                     maxlength="5000"
-                    oninput="updateCounter('charFirstMsg', 'firstMsgCounter', 5000)"
-                ></textarea>
+                    oninput="updateCounter('charFirstMsg', 'firstMsgCounter', 5000)"></textarea>
                 <p class="field-hint">Written in character voice. Use *asterisks* for actions if you prefer that style.</p>
             </div>
         </div>
@@ -471,7 +546,6 @@
 
     </main>
 
-    <!-- BARRA INFERIOR -->
     <div class="bottom-bar">
         <span class="save-message" id="saveMessage"></span>
         <a href="dashboard.html" class="btn-cancel">Cancel</a>
@@ -484,9 +558,11 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let selectedVisibility = 'public';
+        let selectedCategory = 'canon';
+        let selectedTags = [];
+        const MAX_TAGS = 3;
         let uploadedPhotoFile = null;
 
-        // Restaurar tema guardado
         window.onload = function() {
             const saved = localStorage.getItem('user-theme');
             if (saved === 'dark') document.body.classList.add('theme-dark');
@@ -502,7 +578,6 @@
             }
         }
 
-        // Contador de caracteres
         function updateCounter(inputId, counterId, max) {
             const val = document.getElementById(inputId).value.length;
             const el = document.getElementById(counterId);
@@ -510,14 +585,10 @@
             el.classList.toggle('warning', val >= max * 0.9);
         }
 
-        // Vista previa de foto
         function handlePhotoChange(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Image is too large. Maximum size is 2MB.');
-                return;
-            }
+            if (file.size > 2 * 1024 * 1024) { alert('Image is too large. Maximum size is 2MB.'); return; }
             uploadedPhotoFile = file;
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -529,21 +600,52 @@
             reader.readAsDataURL(file);
         }
 
-        // Selección de visibilidad
         function selectVisibility(val) {
             selectedVisibility = val;
             document.getElementById('vis-public').classList.toggle('selected', val === 'public');
             document.getElementById('vis-private').classList.toggle('selected', val === 'private');
         }
 
-        // Mostrar mensaje de estado
+        function selectCategory(val) {
+            selectedCategory = val;
+            document.getElementById('cat-canon').classList.toggle('selected', val === 'canon');
+            document.getElementById('cat-oc').classList.toggle('selected', val === 'oc');
+        }
+
+        function toggleTag(btn, tag) {
+            if (btn.classList.contains('disabled')) return;
+
+            if (btn.classList.contains('selected')) {
+                // Deseleccionar
+                btn.classList.remove('selected');
+                selectedTags = selectedTags.filter(t => t !== tag);
+            } else {
+                if (selectedTags.length >= MAX_TAGS) return; // ya no entra más
+                btn.classList.add('selected');
+                selectedTags.push(tag);
+            }
+            updateTagsUI();
+        }
+
+        function updateTagsUI() {
+            const counter = document.getElementById('tagsCounter');
+            counter.textContent = `${selectedTags.length} / ${MAX_TAGS} selected`;
+            counter.classList.toggle('full', selectedTags.length >= MAX_TAGS);
+
+            // Deshabilitar chips que no están seleccionados si ya llegamos al límite
+            document.querySelectorAll('.tag-chip').forEach(chip => {
+                if (!chip.classList.contains('selected')) {
+                    chip.classList.toggle('disabled', selectedTags.length >= MAX_TAGS);
+                }
+            });
+        }
+
         function showSaveMsg(text, type) {
             const el = document.getElementById('saveMessage');
             el.textContent = text;
             el.className = `save-message ${type}`;
         }
 
-        // Guardar personaje en Supabase
         async function saveCharacter() {
             const name = document.getElementById('charName').value.trim();
             const subtitle = document.getElementById('charSubtitle').value.trim();
@@ -559,13 +661,11 @@
             btn.disabled = true;
             btn.textContent = 'Saving...';
 
-            // Verificar sesión
             const { data: { session } } = await _supabase.auth.getSession();
             if (!session) { window.location.href = 'registro.html'; return; }
 
             let photoUrl = null;
 
-            // Subir foto si hay una
             if (uploadedPhotoFile) {
                 const ext = uploadedPhotoFile.name.split('.').pop();
                 const fileName = `${session.user.id}_${Date.now()}.${ext}`;
@@ -580,13 +680,10 @@
                     return;
                 }
 
-                const { data: urlData } = _supabase.storage
-                    .from('character-images')
-                    .getPublicUrl(fileName);
+                const { data: urlData } = _supabase.storage.from('character-images').getPublicUrl(fileName);
                 photoUrl = urlData.publicUrl;
             }
 
-            // Guardar en base de datos
             const { error } = await _supabase.from('characters').insert({
                 name,
                 subtitle,
@@ -594,6 +691,8 @@
                 definition,
                 first_message: firstMessage,
                 visibility: selectedVisibility,
+                category: selectedCategory,
+                tags: selectedTags,
                 photo_url: photoUrl,
                 creator_id: session.user.id,
                 created_at: new Date().toISOString()

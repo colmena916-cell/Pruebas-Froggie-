@@ -74,7 +74,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Etiqueta de danger zone en header */
         .danger-header-btn {
             margin-left: auto;
             background: none;
@@ -114,62 +113,34 @@
             margin-bottom: 18px;
         }
 
-        .photo-upload-area {
-            display: flex;
-            align-items: center;
-            gap: 22px;
-        }
+        .photo-upload-area { display: flex; align-items: center; gap: 22px; }
 
         .photo-preview {
-            width: 90px;
-            height: 90px;
+            width: 90px; height: 90px;
             border-radius: 50%;
             background-color: var(--bg-accent);
             border: 2px dashed var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0; cursor: pointer;
             transition: border-color 0.2s;
-            background-size: cover;
-            background-position: center;
-            font-size: 1.6rem;
-            font-weight: bold;
+            background-size: cover; background-position: center;
+            font-size: 1.6rem; font-weight: bold;
         }
         .photo-preview:hover { border-color: var(--btn-color); }
-        .photo-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
+        .photo-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
         .photo-preview .upload-icon {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            opacity: 0.45;
-            font-size: 0.78rem;
-            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; opacity: 0.45; font-size: 0.78rem; text-align: center;
         }
 
         .photo-upload-info { font-size: 0.88rem; line-height: 1.6; opacity: 0.7; }
         .photo-upload-info span { display: block; font-size: 0.78rem; opacity: 0.6; margin-top: 4px; }
 
         .btn-upload {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 7px 18px;
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            color: var(--text-dark);
-            font-family: var(--font-serif);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
+            display: inline-block; margin-top: 10px; padding: 7px 18px;
+            background: none; border: 1px solid var(--border); border-radius: 20px;
+            color: var(--text-dark); font-family: var(--font-serif); font-size: 0.85rem;
+            cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
         }
         .btn-upload:hover { background-color: var(--bg-accent); border-color: var(--btn-color); }
 
@@ -179,190 +150,126 @@
         .field-group:last-child { margin-bottom: 0; }
 
         .field-label {
-            font-size: 0.9rem;
-            font-style: italic;
-            opacity: 0.8;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
+            font-size: 0.9rem; font-style: italic; opacity: 0.8;
+            display: flex; justify-content: space-between; align-items: baseline;
         }
 
-        .char-counter {
-            font-size: 0.78rem;
-            opacity: 0.45;
-            font-style: normal;
-        }
+        .char-counter { font-size: 0.78rem; opacity: 0.45; font-style: normal; }
+        .char-counter.warning { color: #b85c38; opacity: 1; }
 
         .field-group input,
         .field-group textarea {
-            width: 100%;
-            padding: 11px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background-color: var(--bg-main);
-            color: var(--text-dark);
-            font-family: var(--font-serif);
-            font-size: 0.97rem;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            resize: none;
-            line-height: 1.55;
+            width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+            border-radius: 8px; background-color: var(--bg-main); color: var(--text-dark);
+            font-family: var(--font-serif); font-size: 0.97rem; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s; resize: none; line-height: 1.55;
         }
-
         .field-group input:focus,
         .field-group textarea:focus {
             border-color: var(--btn-color);
             box-shadow: 0 0 0 3px rgba(93, 112, 56, 0.1);
         }
 
-        .field-hint {
-            font-size: 0.78rem;
-            opacity: 0.45;
-            font-style: italic;
-            line-height: 1.4;
-        }
+        .field-hint { font-size: 0.78rem; opacity: 0.45; font-style: italic; line-height: 1.4; }
 
-        .char-counter.warning { color: #b85c38; opacity: 1; }
-
-        .visibility-toggle {
-            display: flex;
-            gap: 10px;
-        }
+        .visibility-toggle { display: flex; gap: 10px; }
 
         .vis-btn {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: none;
-            color: var(--text-dark);
-            font-family: var(--font-serif);
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px;
+            background: none; color: var(--text-dark); font-family: var(--font-serif);
+            font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .vis-btn.selected {
-            background-color: var(--bg-accent);
-            border-color: var(--btn-color);
-            font-weight: bold;
-        }
+        .vis-btn.selected { background-color: var(--bg-accent); border-color: var(--btn-color); font-weight: bold; }
 
-        /* Danger Zone */
+        /* ================================================
+           CATEGORÍA Y TAGS
+        ================================================ */
+        .category-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
+
+        .cat-btn {
+            flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+            background: none; color: var(--text-dark); font-family: var(--font-serif);
+            font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .cat-btn.selected { background-color: var(--bg-accent); border-color: var(--btn-color); font-weight: bold; }
+
+        .tags-label {
+            font-size: 0.9rem; font-style: italic; opacity: 0.8; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: baseline;
+        }
+        .tags-counter { font-size: 0.78rem; opacity: 0.45; font-style: normal; }
+        .tags-counter.full { color: #b85c38; opacity: 1; }
+
+        .tags-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .tag-chip {
+            padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+            background: none; color: var(--text-dark); font-family: var(--font-serif);
+            font-size: 0.82rem; cursor: pointer; transition: background-color 0.2s, border-color 0.2s, opacity 0.2s;
+            opacity: 0.7;
+        }
+        .tag-chip:hover { opacity: 1; border-color: var(--btn-color); }
+        .tag-chip.selected { background-color: var(--bg-accent); border-color: var(--btn-color); opacity: 1; font-weight: bold; }
+        .tag-chip.disabled { opacity: 0.3; cursor: not-allowed; }
+        .tag-chip.disabled:hover { border-color: var(--border); }
+
+        /* DANGER ZONE */
         .danger-zone {
-            margin-top: 40px;
-            padding: 20px;
-            border: 1px dashed rgba(180, 60, 60, 0.35);
-            border-radius: 10px;
+            margin-top: 40px; padding: 20px;
+            border: 1px dashed rgba(180, 60, 60, 0.35); border-radius: 10px;
         }
         .danger-zone h3 {
-            font-size: 0.85rem;
-            font-weight: normal;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #8b2e2e;
-            opacity: 0.7;
-            margin-bottom: 10px;
+            font-size: 0.85rem; font-weight: normal; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #8b2e2e; opacity: 0.7; margin-bottom: 10px;
         }
-        .danger-zone p {
-            font-size: 0.85rem;
-            opacity: 0.65;
-            margin-bottom: 14px;
-            line-height: 1.4;
-        }
+        .danger-zone p { font-size: 0.85rem; opacity: 0.65; margin-bottom: 14px; line-height: 1.4; }
         .btn-delete {
-            background: none;
-            border: 1px solid rgba(180, 60, 60, 0.5);
-            color: #8b2e2e;
-            font-family: var(--font-serif);
-            font-size: 0.9rem;
-            padding: 9px 22px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            background: none; border: 1px solid rgba(180, 60, 60, 0.5); color: #8b2e2e;
+            font-family: var(--font-serif); font-size: 0.9rem; padding: 9px 22px;
+            border-radius: 20px; cursor: pointer; transition: background-color 0.2s;
         }
         .btn-delete:hover { background-color: rgba(180, 60, 60, 0.07); }
 
         .bottom-bar {
-            position: fixed;
-            bottom: 0; left: 0;
-            width: 100%;
-            background-color: var(--bg-main);
-            border-top: 1px solid var(--border);
-            padding: 14px 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            z-index: 100;
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: var(--bg-main); border-top: 1px solid var(--border);
+            padding: 14px 20px; display: flex; justify-content: flex-end; gap: 12px; z-index: 100;
         }
 
         .btn-cancel {
-            padding: 11px 26px;
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            color: var(--text-dark);
-            font-family: var(--font-serif);
-            font-size: 1rem;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
+            padding: 11px 26px; background: none; border: 1px solid var(--border);
+            border-radius: 30px; color: var(--text-dark); font-family: var(--font-serif);
+            font-size: 1rem; cursor: pointer; opacity: 0.7; transition: opacity 0.2s;
+            text-decoration: none; display: inline-flex; align-items: center;
         }
         .btn-cancel:hover { opacity: 1; }
 
         .btn-save {
-            padding: 11px 32px;
-            background-color: var(--btn-color);
-            border: none;
-            border-radius: 30px;
-            color: #fff;
-            font-family: var(--font-serif);
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 11px 32px; background-color: var(--btn-color); border: none;
+            border-radius: 30px; color: #fff; font-family: var(--font-serif); font-size: 1rem;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transition: background-color 0.2s, transform 0.1s;
         }
         .btn-save:hover { background-color: var(--btn-hover); }
         .btn-save:active { transform: scale(0.97); }
         .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .save-message {
-            font-size: 0.85rem;
-            align-self: center;
-            display: none;
-        }
+        .save-message { font-size: 0.85rem; align-self: center; display: none; }
         .save-message.error { display: block; color: #8b2e2e; }
         .save-message.success { display: block; color: var(--btn-color); }
 
-        /* Modal de confirmación de borrado */
+        /* Modal borrado */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            padding: 20px;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px;
         }
         .modal-overlay.show { display: flex; }
         .modal-box {
-            background: var(--bg-main);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 28px 24px;
-            max-width: 380px;
-            width: 100%;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
+            background: var(--bg-main); border: 1px solid var(--border); border-radius: 14px;
+            padding: 28px 24px; max-width: 380px; width: 100%; text-align: center;
+            display: flex; flex-direction: column; gap: 14px;
         }
         .modal-box h3 { font-weight: normal; font-size: 1.2rem; }
         .modal-box p { font-size: 0.9rem; opacity: 0.7; line-height: 1.5; }
@@ -375,26 +282,15 @@
             .btn-save { padding: 10px 24px; }
         }
 
-        /* Help hint banner */
         .help-hint-banner {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin: 16px 16px 0 16px;
-            padding: 9px 14px;
+            display: flex; align-items: center; gap: 7px;
+            margin: 16px 16px 0 16px; padding: 9px 14px;
             background-color: rgba(235, 242, 155, 0.35);
-            border: 1px dashed rgba(62, 83, 43, 0.3);
-            border-radius: 10px;
-            font-size: 0.85rem;
-            color: var(--text-dark);
-            text-decoration: none;
-            opacity: 0.8;
-            transition: opacity 0.2s, background-color 0.2s;
+            border: 1px dashed rgba(62, 83, 43, 0.3); border-radius: 10px;
+            font-size: 0.85rem; color: var(--text-dark); text-decoration: none;
+            opacity: 0.8; transition: opacity 0.2s, background-color 0.2s;
         }
-        .help-hint-banner:hover {
-            opacity: 1;
-            background-color: rgba(235, 242, 155, 0.6);
-        }
+        .help-hint-banner:hover { opacity: 1; background-color: rgba(235, 242, 155, 0.6); }
     </style>
 </head>
 <body>
@@ -460,20 +356,63 @@
             </div>
         </div>
 
-        <!-- DESCRIPCIÓN PÚBLICA -->
+        <!-- DESCRIPCIÓN -->
         <div class="form-section">
-            <p class="section-label">Public Description</p>
+            <p class="section-label">Description</p>
             <div class="field-group">
                 <label class="field-label">
-                    Description
+                    Character Description
                     <span class="char-counter" id="descCounter">0 / 400</span>
                 </label>
                 <textarea id="charDesc" rows="4"
-                    placeholder="What users will read before starting a chat."
+                    placeholder="Write a brief summary of your character — their appearance, personality, the vibe they give off. Think of it as the back cover of a book."
                     maxlength="400"
                     oninput="updateCounter('charDesc', 'descCounter', 400)"></textarea>
-                <p class="field-hint">Visible to everyone. This is your character's first impression.</p>
+                <p class="field-hint">🔒 This is only visible on your character's profile page — not in the public feed. Use it freely to describe who they really are.</p>
             </div>
+        </div>
+
+        <!-- CATEGORÍA Y TAGS -->
+        <div class="form-section">
+            <p class="section-label">Category &amp; Tags</p>
+
+            <p class="field-label" style="margin-bottom: 10px;">Category</p>
+            <div class="category-toggle">
+                <button class="cat-btn selected" id="cat-canon" onclick="selectCategory('canon')">
+                    📚 Canon
+                </button>
+                <button class="cat-btn" id="cat-oc" onclick="selectCategory('oc')">
+                    ✨ Original Character
+                </button>
+            </div>
+            <p class="field-hint" style="margin-bottom: 20px;">Canon: from a book, series, anime, game, film, etc. OC: your original creation.</p>
+
+            <div class="tags-label">
+                Tags
+                <span class="tags-counter" id="tagsCounter">0 / 3 selected</span>
+            </div>
+            <div class="tags-chips" id="tagsChips">
+                <button class="tag-chip" onclick="toggleTag(this, 'Fantasy')">Fantasy</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Romance')">Romance</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Action')">Action</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Drama')">Drama</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Horror')">Horror</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Sci-Fi')">Sci-Fi</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Comedy')">Comedy</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Mystery')">Mystery</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Slice of Life')">Slice of Life</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Adventure')">Adventure</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Historical')">Historical</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Psychological')">Psychological</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Villain')">Villain</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Hero')">Hero</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Anime')">Anime</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Video Game')">Video Game</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Books')">Books</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'TV Series')">TV Series</button>
+                <button class="tag-chip" onclick="toggleTag(this, 'Film')">Film</button>
+            </div>
+            <p class="field-hint" style="margin-top: 10px;">Choose up to 3 tags. They help others find your character.</p>
         </div>
 
         <!-- DEFINICIÓN / PROMPT -->
@@ -534,7 +473,6 @@
 
     </main>
 
-    <!-- BARRA INFERIOR -->
     <div class="bottom-bar">
         <span class="save-message" id="saveMessage"></span>
         <button class="btn-cancel" onclick="goBack()">Cancel</button>
@@ -559,13 +497,15 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let selectedVisibility = 'public';
+        let selectedCategory = 'canon';
+        let selectedTags = [];
+        const MAX_TAGS = 3;
         let uploadedPhotoFile = null;
         let currentPhotoUrl = null;
         let characterId = null;
         let currentUserId = null;
 
         window.onload = async function() {
-            // Tema
             const saved = localStorage.getItem('user-theme');
             if (saved === 'dark') document.body.classList.add('theme-dark');
             else if (saved === 'custom') {
@@ -579,7 +519,6 @@
                 document.body.style.setProperty('--border', `rgba(0,0,0,0.15)`);
             }
 
-            // Sesión
             const storedAccess = localStorage.getItem('froggie_access_token');
             const storedRefresh = localStorage.getItem('froggie_refresh_token');
             if (storedAccess && storedRefresh) {
@@ -589,7 +528,6 @@
             if (!session) { window.location.href = 'registro.html'; return; }
             currentUserId = session.user.id;
 
-            // ID del personaje por URL
             const params = new URLSearchParams(window.location.search);
             characterId = params.get('id');
             if (!characterId) {
@@ -608,29 +546,38 @@
                 .eq('id', characterId)
                 .single();
 
-            if (error || !char) {
-                showSaveMsg('Character not found.', 'error');
-                return;
-            }
+            if (error || !char) { showSaveMsg('Character not found.', 'error'); return; }
 
-            // Verificar que el usuario es el dueño
             if (char.creator_id !== currentUserId) {
                 showSaveMsg('You are not the creator of this character.', 'error');
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 1800);
                 return;
             }
 
-            // Rellenar todos los campos
             setValue('charName', char.name, 'nameCounter', 50);
             setValue('charSubtitle', char.subtitle || '', 'subtitleCounter', 80);
             setValue('charDesc', char.description || '', 'descCounter', 400);
             setValue('charDefinition', char.definition || '', 'defCounter', 5000);
             setValue('charFirstMsg', char.first_message || '', 'firstMsgCounter', 5000);
 
-            // Visibilidad
             selectVisibility(char.visibility || 'public');
+            selectCategory(char.category || 'canon');
 
-            // Foto actual
+            // Cargar tags guardados
+            if (Array.isArray(char.tags) && char.tags.length > 0) {
+                char.tags.forEach(tag => {
+                    const chips = document.querySelectorAll('.tag-chip');
+                    chips.forEach(chip => {
+                        // Buscar el chip que corresponde a este tag por su texto
+                        if (chip.textContent.trim() === tag) {
+                            chip.classList.add('selected');
+                            selectedTags.push(tag);
+                        }
+                    });
+                });
+                updateTagsUI();
+            }
+
             currentPhotoUrl = char.photo_url || null;
             const preview = document.getElementById('photoPreview');
             if (currentPhotoUrl) {
@@ -662,10 +609,7 @@
         function handlePhotoChange(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Image is too large. Maximum size is 2MB.');
-                return;
-            }
+            if (file.size > 2 * 1024 * 1024) { alert('Image is too large. Maximum size is 2MB.'); return; }
             uploadedPhotoFile = file;
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -684,6 +628,36 @@
             selectedVisibility = val;
             document.getElementById('vis-public').classList.toggle('selected', val === 'public');
             document.getElementById('vis-private').classList.toggle('selected', val === 'private');
+        }
+
+        function selectCategory(val) {
+            selectedCategory = val;
+            document.getElementById('cat-canon').classList.toggle('selected', val === 'canon');
+            document.getElementById('cat-oc').classList.toggle('selected', val === 'oc');
+        }
+
+        function toggleTag(btn, tag) {
+            if (btn.classList.contains('disabled')) return;
+            if (btn.classList.contains('selected')) {
+                btn.classList.remove('selected');
+                selectedTags = selectedTags.filter(t => t !== tag);
+            } else {
+                if (selectedTags.length >= MAX_TAGS) return;
+                btn.classList.add('selected');
+                selectedTags.push(tag);
+            }
+            updateTagsUI();
+        }
+
+        function updateTagsUI() {
+            const counter = document.getElementById('tagsCounter');
+            counter.textContent = `${selectedTags.length} / ${MAX_TAGS} selected`;
+            counter.classList.toggle('full', selectedTags.length >= MAX_TAGS);
+            document.querySelectorAll('.tag-chip').forEach(chip => {
+                if (!chip.classList.contains('selected')) {
+                    chip.classList.toggle('disabled', selectedTags.length >= MAX_TAGS);
+                }
+            });
         }
 
         function showSaveMsg(text, type) {
@@ -709,7 +683,6 @@
 
             let photoUrl = currentPhotoUrl;
 
-            // Subir nueva foto si cambió
             if (uploadedPhotoFile) {
                 const ext = uploadedPhotoFile.name.split('.').pop();
                 const fileName = `${currentUserId}_${Date.now()}.${ext}`;
@@ -720,9 +693,7 @@
                 if (uploadError) {
                     showSaveMsg('Image upload failed. Changes saved without new photo.', 'error');
                 } else {
-                    const { data: urlData } = _supabase.storage
-                        .from('character-images')
-                        .getPublicUrl(fileName);
+                    const { data: urlData } = _supabase.storage.from('character-images').getPublicUrl(fileName);
                     photoUrl = urlData.publicUrl;
                 }
             }
@@ -734,6 +705,8 @@
                 definition,
                 first_message: firstMessage,
                 visibility: selectedVisibility,
+                category: selectedCategory,
+                tags: selectedTags,
                 photo_url: photoUrl,
                 updated_at: new Date().toISOString()
             }).eq('id', characterId).eq('creator_id', currentUserId);
@@ -754,13 +727,9 @@
             const btn = document.getElementById('confirmDeleteBtn');
             btn.textContent = 'Deleting...';
             btn.disabled = true;
-
-            // Borrar chats vinculados primero, luego el personaje
             await _supabase.from('chats').delete().eq('character_id', characterId);
             const { error } = await _supabase.from('characters').delete()
-                .eq('id', characterId)
-                .eq('creator_id', currentUserId);
-
+                .eq('id', characterId).eq('creator_id', currentUserId);
             if (error) {
                 btn.textContent = 'Yes, delete';
                 btn.disabled = false;
@@ -770,16 +739,11 @@
             }
         }
 
-        function openDeleteModal() {
-            document.getElementById('deleteModal').classList.add('show');
-        }
+        function openDeleteModal() { document.getElementById('deleteModal').classList.add('show'); }
         function closeDeleteModal(e) {
             if (e.target.id === 'deleteModal') document.getElementById('deleteModal').classList.remove('show');
         }
-
-        function goBack() {
-            window.location.href = `character-profile.html?id=${characterId}`;
-        }
+        function goBack() { window.location.href = `character-profile.html?id=${characterId}`; }
     </script>
 
 </body>

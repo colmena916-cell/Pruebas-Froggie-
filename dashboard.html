@@ -63,7 +63,6 @@
         }
         .brand img { width: 30px; height: auto; }
 
-        /* --- BARRA DE BÚSQUEDA --- */
         .search-bar {
             flex-grow: 1;
             max-width: 400px;
@@ -107,7 +106,6 @@
         .menu-trigger { background: none; border: none; cursor: pointer; color: var(--text-dark); display: flex; padding: 4px; }
         .icon-svg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* --- Ocultar texto de logout en pantallas pequeñas para dar espacio al buscador --- */
         @media (max-width: 580px) {
             .brand span, .btn-logout span { display: none; }
             .search-bar { margin: 0 5px; }
@@ -217,84 +215,155 @@
 
         /* --- MAIN CONTENT --- */
         main {
-            max-width: 600px;
+            max-width: 680px;
             width: 100%;
             margin: 0 auto;
             padding: 30px 20px;
             flex-grow: 1;
         }
 
-        .page-title {
-            font-size: 1.6rem;
-            font-weight: normal;
-            margin-bottom: 6px;
-            opacity: 0.95;
+        /* --- SECCIONES DEL DASHBOARD --- */
+        .dashboard-section {
+            margin-bottom: 36px;
         }
 
-        .page-subtitle {
-            font-size: 0.9rem;
-            opacity: 0.55;
-            margin-bottom: 25px;
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+
+        .section-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.4;
             font-style: italic;
         }
 
-        .chars-grid {
+        /* --- CARRUSEL HORIZONTAL --- */
+        .chars-row {
             display: flex;
-            flex-direction: column;
             gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
+        .chars-row::-webkit-scrollbar { display: none; }
 
+        /* --- CHAR CARD (horizontal carrusel) --- */
         .char-card {
             background-color: rgba(62, 83, 43, 0.03);
             border: 1px solid rgba(62, 83, 43, 0.08);
             border-radius: 14px;
-            padding: 16px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
             gap: 10px;
             text-decoration: none;
             color: var(--text-dark);
             transition: background-color 0.2s, border-color 0.2s;
+            flex-shrink: 0;
+            width: 170px;
         }
         .char-card:hover {
             background-color: rgba(62, 83, 43, 0.06);
             border-color: var(--btn-color);
         }
 
-        .char-card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
         .char-avatar {
-            width: 42px; height: 42px;
+            width: 54px; height: 54px;
             background-color: var(--bg-accent);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.95rem;
+            font-weight: bold; font-size: 1rem;
             border: 1px solid rgba(62, 83, 43, 0.1);
+            margin: 0 auto;
+            flex-shrink: 0;
         }
 
-        .char-info h4 { font-size: 1.05rem; font-weight: normal; }
-        .char-info span { font-size: 0.78rem; opacity: 0.45; }
+        .char-name {
+            font-size: 0.95rem;
+            font-weight: normal;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-        .char-description {
-            font-size: 0.88rem;
-            opacity: 0.75;
-            line-height: 1.4;
+        .char-subtitle-text {
+            font-size: 0.78rem;
+            opacity: 0.5;
+            text-align: center;
+            line-height: 1.3;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
+        /* Tags en cards */
+        .char-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+        }
+        .char-tag {
+            font-size: 0.68rem;
+            padding: 2px 7px;
+            border-radius: 20px;
+            background-color: var(--bg-accent);
+            opacity: 0.7;
+        }
+
         .empty-state {
             text-align: center;
-            padding: 50px 20px;
-            opacity: 0.5;
+            padding: 30px 20px;
+            opacity: 0.4;
             font-style: italic;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+        }
+
+        /* --- RESULTADOS DE BÚSQUEDA (lista vertical) --- */
+        #searchResults {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .search-result-card {
+            background-color: rgba(62, 83, 43, 0.03);
+            border: 1px solid rgba(62, 83, 43, 0.08);
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .search-result-card:hover {
+            background-color: rgba(62, 83, 43, 0.06);
+            border-color: var(--btn-color);
+        }
+        .search-result-card .char-avatar { margin: 0; width: 44px; height: 44px; font-size: 0.9rem; }
+        .search-result-info { flex-grow: 1; min-width: 0; }
+        .search-result-info h4 { font-size: 1rem; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .search-result-info span { font-size: 0.78rem; opacity: 0.45; }
+
+        .search-result-title {
+            font-size: 1rem;
+            opacity: 0.55;
+            font-style: italic;
+            margin-bottom: 14px;
         }
 
         /* --- BOTTOM NAV --- */
@@ -359,11 +428,184 @@
         .create-popover button:hover {
             background-color: rgba(93, 112, 56, 0.12);
         }
+
+        /* ================================================
+           MODAL DE NOVEDADES
+        ================================================ */
+        .news-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .news-modal-overlay.visible { opacity: 1; }
+
+        .news-modal {
+            background: var(--bg-main);
+            border: 1px solid rgba(62, 83, 43, 0.2);
+            border-radius: 18px;
+            padding: 28px 24px 24px;
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            max-height: 88vh;
+            overflow-y: auto;
+            transform: translateY(10px);
+            transition: transform 0.25s ease;
+        }
+        .news-modal-overlay.visible .news-modal { transform: translateY(0); }
+
+        .news-modal-close {
+            position: absolute;
+            top: 14px; right: 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-dark);
+            opacity: 0.5;
+            font-size: 1.3rem;
+            line-height: 1;
+            transition: opacity 0.2s;
+            padding: 4px;
+        }
+        .news-modal-close:hover { opacity: 1; }
+
+        .news-modal-frog {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .news-modal h2 {
+            font-size: 1.25rem;
+            font-weight: normal;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .news-modal .news-tagline {
+            font-size: 0.82rem;
+            opacity: 0.45;
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .news-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: flex-start;
+        }
+
+        .news-item-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .news-item-text {
+            font-size: 0.88rem;
+            line-height: 1.55;
+            opacity: 0.85;
+        }
+
+        .news-item-text strong {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+            opacity: 1;
+        }
+
+        .news-modal-divider {
+            border: none;
+            border-top: 1px dashed rgba(62, 83, 43, 0.18);
+            margin: 18px 0;
+        }
+
+        .news-modal-footer {
+            font-size: 0.85rem;
+            text-align: center;
+            opacity: 0.6;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .news-modal-btn {
+            display: block;
+            width: 100%;
+            margin-top: 18px;
+            padding: 11px;
+            background-color: var(--btn-color);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .news-modal-btn:hover { background-color: var(--btn-hover); }
     </style>
 </head>
 <body>
 
     <div class="overlay" id="menuOverlay" onclick="closeAllPanels()"></div>
+
+    <!-- ===== MODAL DE NOVEDADES ===== -->
+    <div class="news-modal-overlay" id="newsModal" style="display:none;">
+        <div class="news-modal">
+            <button class="news-modal-close" onclick="closeNewsModal()" aria-label="Close">✕</button>
+
+            <div class="news-modal-frog">🐸</div>
+            <h2>¡Bienvenidos de vuelta!</h2>
+            <p class="news-tagline">...croac. Hay algunas cositas nuevas por aquí.</p>
+
+            <div class="news-item">
+                <span class="news-item-icon">🙈</span>
+                <div class="news-item-text">
+                    <strong>La descripción ya no es pública</strong>
+                    La descripción de los personajes ahora es solo visible en su perfil de personaje — ya no aparece en el feed ni en las fichas del inicio. Así que úsala para lo que fue hecha: describir a tu personaje de verdad, con apariencia, personalidad, todo. ¡Croac!
+                </div>
+            </div>
+
+            <div class="news-item">
+                <span class="news-item-icon">🏷️</span>
+                <div class="news-item-text">
+                    <strong>Categorías y etiquetas</strong>
+                    Ahora puedes clasificar tus personajes con una categoría (Canon u OC) y hasta 3 etiquetas. Ayuda a que la gente encuentre lo que busca — y a que tu personaje llegue a quien le guste. 🐸
+                </div>
+            </div>
+
+            <div class="news-item">
+                <span class="news-item-icon">✏️</span>
+                <div class="news-item-text">
+                    <strong>Recomendamos actualizar tus personajes</strong>
+                    Si ya tienes personajes creados, te recomendamos pasar por "Edit Character" para agregar su categoría y sus tags. Mientras más completos estén, mejor aparecen en el feed.
+                </div>
+            </div>
+
+            <div class="news-item">
+                <span class="news-item-icon">🎨</span>
+                <div class="news-item-text">
+                    <strong>Puedes cambiar la apariencia</strong>
+                    ¿Sabías que puedes cambiar los colores de la página? Entra al menú (esquina superior derecha) → <em>Appearance</em>. Hay modo oscuro y colores personalizados. Croac~
+                </div>
+            </div>
+
+            <hr class="news-modal-divider">
+            <p class="news-modal-footer">Gracias por seguir aquí con nosotros. 🐸<br>— El equipo de Froggie AI</p>
+
+            <button class="news-modal-btn" onclick="closeNewsModal()">¡Entendido, croac! 🐸</button>
+        </div>
+    </div>
 
     <header>
         <a href="dashboard.html" class="brand">
@@ -373,7 +615,7 @@
 
         <div class="search-bar">
             <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <input type="text" placeholder="Search chronicles...">
+            <input type="text" placeholder="Search chronicles..." id="searchInput">
         </div>
 
         <div class="header-right">
@@ -477,11 +719,60 @@
     </div>
 
     <main>
-        <h2 class="page-title">Explore</h2>
-        <p class="page-subtitle">Breathe life into existing chronicles...</p>
 
-        <div class="chars-grid" id="charactersContainer">
-            <div class="empty-state">Consulting the codex...</div>
+        <!-- RESULTADOS DE BÚSQUEDA (ocultos por defecto) -->
+        <div id="searchResultsWrapper" style="display:none;">
+            <p class="search-result-title" id="searchResultTitle">Results for ""</p>
+            <div id="searchResults"></div>
+        </div>
+
+        <!-- SECCIONES NORMALES DEL DASHBOARD -->
+        <div id="dashboardSections">
+
+            <!-- 🐸 FOR YOU -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">🐸 For You</h2>
+                    <span class="section-subtitle">freshly conjured</span>
+                </div>
+                <div class="chars-row" id="forYouRow">
+                    <div class="empty-state">Consulting the codex...</div>
+                </div>
+            </div>
+
+            <!-- ⭐ MOST POPULAR -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">⭐ Most Popular</h2>
+                    <span class="section-subtitle">everyone's talking to them</span>
+                </div>
+                <div class="chars-row" id="popularRow">
+                    <div class="empty-state">Consulting the codex...</div>
+                </div>
+            </div>
+
+            <!-- 📚 CANON -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">📚 Canon</h2>
+                    <span class="section-subtitle">from books, series, anime & more</span>
+                </div>
+                <div class="chars-row" id="canonRow">
+                    <div class="empty-state">Consulting the codex...</div>
+                </div>
+            </div>
+
+            <!-- ✨ OC -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">✨ Original Characters</h2>
+                    <span class="section-subtitle">born from imagination</span>
+                </div>
+                <div class="chars-row" id="ocRow">
+                    <div class="empty-state">Consulting the codex...</div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -505,13 +796,28 @@
         const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // ===== MODAL DE NOVEDADES =====
+        function showNewsModal() {
+            const seen = localStorage.getItem('froggie_news_v2');
+            if (seen) return;
+            const modal = document.getElementById('newsModal');
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => modal.classList.add('visible'));
+        }
+
+        function closeNewsModal() {
+            const modal = document.getElementById('newsModal');
+            modal.classList.remove('visible');
+            setTimeout(() => { modal.style.display = 'none'; }, 250);
+            localStorage.setItem('froggie_news_v2', '1');
+        }
+
+        // ===== MENÚ =====
         function toggleMenu(event) {
             if(event) event.stopPropagation();
             const menu = document.getElementById('sideMenu');
             const overlay = document.getElementById('menuOverlay');
-            
             document.getElementById('createPopover').classList.remove('show');
-
             menu.classList.toggle('open');
             if (menu.classList.contains('open')) {
                 overlay.classList.add('show');
@@ -556,12 +862,10 @@
             document.body.classList.remove('theme-dark');
             const bg = document.getElementById('customBgInput').value;
             const txt = document.getElementById('customTextInput').value;
-            
             document.body.style.setProperty('--bg-main', bg);
             document.body.style.setProperty('--text-dark', txt);
             document.body.style.setProperty('--btn-color', txt);
             document.body.style.setProperty('--bg-accent', adjustBrightness(bg, -12));
-            
             localStorage.setItem('user-theme', 'custom');
             localStorage.setItem('custom-bg', bg);
             localStorage.setItem('custom-text', txt);
@@ -576,89 +880,89 @@
         document.getElementById('logoutBtn').addEventListener('click', async (e) => {
             e.preventDefault();
             await _supabase.auth.signOut();
-                localStorage.removeItem('froggie_access_token');
-                localStorage.removeItem('froggie_refresh_token');
-                localStorage.removeItem('froggie_uid');
-                window.location.href = 'index.html';
+            localStorage.removeItem('froggie_access_token');
+            localStorage.removeItem('froggie_refresh_token');
+            localStorage.removeItem('froggie_uid');
+            window.location.href = 'index.html';
         });
 
-        window.onload = async function() {
-            const saved = localStorage.getItem('user-theme');
-            if (saved === 'dark') setTheme('dark');
-            else if (saved === 'custom') {
-                const bg = localStorage.getItem('custom-bg') || '#FFFDF9';
-                const txt = localStorage.getItem('custom-text') || '#3E532B';
-                document.getElementById('customBgInput').value = bg;
-                document.getElementById('customTextInput').value = txt;
-                applyCustomTheme();
-            }
-
-            // Restaurar sesion desde tokens guardados si existen
-            const storedAccess = localStorage.getItem('froggie_access_token');
-            const storedRefresh = localStorage.getItem('froggie_refresh_token');
-            if (storedAccess && storedRefresh) {
-                await _supabase.auth.setSession({
-                    access_token: storedAccess,
-                    refresh_token: storedRefresh
-                });
-            }
-
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) { window.location.href = 'registro.html'; return; }
-            localStorage.setItem('froggie_uid', session.user.id);
-            localStorage.setItem('froggie_access_token', session.access_token);
-            localStorage.setItem('froggie_refresh_token', session.refresh_token);
-            fetchAllGlobalCharacters();
+        // ===== RENDER HELPER: card de carrusel (sin descripción) =====
+        function buildCard(char) {
+            const avatarStyle = char.photo_url
+                ? `style="background-image:url('${char.photo_url}');background-size:cover;background-position:center;"` : '';
+            const avatarContent = char.photo_url ? '' : char.name.substring(0,2).toUpperCase();
+            const tags = Array.isArray(char.tags) && char.tags.length
+                ? char.tags.slice(0,3).map(t => `<span class="char-tag">${t}</span>`).join('') : '';
+            const tagsHtml = tags ? `<div class="char-tags">${tags}</div>` : '';
+            return `
+                <a href="room.html?id=${char.id}" class="char-card">
+                    <div class="char-avatar" ${avatarStyle}>${avatarContent}</div>
+                    <p class="char-name">${char.name}</p>
+                    <p class="char-subtitle-text">${char.subtitle || ''}</p>
+                    ${tagsHtml}
+                </a>`;
         }
 
-        async function fetchAllGlobalCharacters() {
-            const container = document.getElementById('charactersContainer');
-            try {
-                const { data: characters, error } = await _supabase
-                    .from('characters')
-                    .select('id, name, subtitle, description, photo_url')
-                    .eq('visibility', 'public')
-                    .order('created_at', { ascending: false });
-
-                if (error || !characters || characters.length === 0) {
-                    container.innerHTML = `<p class="empty-state">No characters published yet. Be the first to create one!</p>`;
-                    return;
-                }
-
-                container.innerHTML = '';
-                characters.forEach(char => {
-                    const avatarStyle = char.photo_url
-                        ? `style="background-image:url('${char.photo_url}');background-size:cover;background-position:center;"`
-                        : '';
-                    const avatarContent = char.photo_url ? '' : char.name.substring(0,2).toUpperCase();
-                    container.innerHTML += `
-                        <a href="room.html?id=${char.id}" class="char-card">
-                            <div class="char-card-header">
-                                <div class="char-avatar" ${avatarStyle}>${avatarContent}</div>
-                                <div class="char-info">
-                                    <h4>${char.name}</h4>
-                                    <span>${char.subtitle || 'Character'}</span>
-                                </div>
-                            </div>
-                            <p class="char-description">${char.description || 'No description provided.'}</p>
-                        </a>`;
-                });
-            } catch (err) {
-                console.error(err);
-                container.innerHTML = `<p class="empty-state">Could not load characters. Database setup pending.</p>`;
+        function renderRow(containerId, characters) {
+            const container = document.getElementById(containerId);
+            if (!characters || characters.length === 0) {
+                container.innerHTML = `<p class="empty-state" style="padding:20px 0;">Nothing here yet — be the first! 🐸</p>`;
+                return;
             }
+            container.innerHTML = characters.map(buildCard).join('');
         }
 
-        // --- BÚSQUEDA EN TIEMPO REAL INTEGRADA ---
+        // ===== CARGAR SECCIONES =====
+        async function loadDashboard() {
+            // For You: los más recientes
+            const { data: recent } = await _supabase
+                .from('characters')
+                .select('id, name, subtitle, photo_url, tags, category, chat_count')
+                .eq('visibility', 'public')
+                .order('created_at', { ascending: false })
+                .limit(12);
+            renderRow('forYouRow', recent);
+
+            // Most Popular: por chat_count desc (si la columna existe, si no por recientes)
+            const { data: popular } = await _supabase
+                .from('characters')
+                .select('id, name, subtitle, photo_url, tags, category, chat_count')
+                .eq('visibility', 'public')
+                .order('chat_count', { ascending: false })
+                .limit(12);
+            renderRow('popularRow', popular);
+
+            // Canon
+            const { data: canon } = await _supabase
+                .from('characters')
+                .select('id, name, subtitle, photo_url, tags, category, chat_count')
+                .eq('visibility', 'public')
+                .eq('category', 'canon')
+                .order('chat_count', { ascending: false })
+                .limit(12);
+            renderRow('canonRow', canon);
+
+            // OC
+            const { data: oc } = await _supabase
+                .from('characters')
+                .select('id, name, subtitle, photo_url, tags, category, chat_count')
+                .eq('visibility', 'public')
+                .eq('category', 'oc')
+                .order('chat_count', { ascending: false })
+                .limit(12);
+            renderRow('ocRow', oc);
+        }
+
+        // ===== BÚSQUEDA =====
         let searchTimeout = null;
 
-        document.querySelector('.search-bar input').addEventListener('input', function() {
+        document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
             const query = this.value.trim();
-            
             searchTimeout = setTimeout(() => {
                 if (query.length === 0) {
-                    fetchAllGlobalCharacters(); // Cambiado para emparejar con tu función por defecto
+                    document.getElementById('searchResultsWrapper').style.display = 'none';
+                    document.getElementById('dashboardSections').style.display = 'block';
                 } else {
                     searchCharacters(query);
                 }
@@ -666,13 +970,17 @@
         });
 
         async function searchCharacters(query) {
-            const container = document.getElementById('charactersContainer');
+            document.getElementById('dashboardSections').style.display = 'none';
+            const wrapper = document.getElementById('searchResultsWrapper');
+            const container = document.getElementById('searchResults');
+            wrapper.style.display = 'block';
+            document.getElementById('searchResultTitle').textContent = `Results for "${query}"`;
             container.innerHTML = '<p class="empty-state">Searching...</p>';
 
             try {
                 const { data: characters, error } = await _supabase
                     .from('characters')
-                    .select('*')
+                    .select('id, name, subtitle, photo_url, tags, category, creator_id')
                     .eq('visibility', 'public')
                     .ilike('name', `%${query}%`)
                     .order('created_at', { ascending: false });
@@ -680,7 +988,7 @@
                 if (error) throw error;
 
                 if (!characters || characters.length === 0) {
-                    container.innerHTML = `<p class="empty-state">No characters found for "<em>${query}</em>".</p>`;
+                    container.innerHTML = `<p class="empty-state">No characters found for "<em>${query}</em>". Croac...</p>`;
                     return;
                 }
 
@@ -694,30 +1002,54 @@
                     if (profiles) profiles.forEach(p => { creatorMap[p.id] = p.username; });
                 }
 
-                container.innerHTML = '';
-                characters.forEach(char => {
+                container.innerHTML = characters.map(char => {
                     const avatar = char.photo_url
                         ? `<div class="char-avatar" style="background-image:url('${char.photo_url}');background-size:cover;"></div>`
                         : `<div class="char-avatar">${char.name.substring(0,2).toUpperCase()}</div>`;
-                    const creatorName = char.creator_id ? (creatorMap[char.creator_id] || 'creator') : 'creator';
-
-                    container.innerHTML += `
-                        <a href="room.html?id=${char.id}" class="char-card">
-                            <div class="char-card-header">
-                                ${avatar}
-                                <div class="char-info">
-                                    <h4>${char.name}</h4>
-                                    <span>By @${creatorName}</span>
-                                </div>
+                    const creator = char.creator_id ? (creatorMap[char.creator_id] || 'creator') : 'creator';
+                    return `
+                        <a href="room.html?id=${char.id}" class="search-result-card">
+                            ${avatar}
+                            <div class="search-result-info">
+                                <h4>${char.name}</h4>
+                                <span>${char.subtitle || ''} · @${creator}</span>
                             </div>
-                            <p class="char-description">${char.description || 'No description provided.'}</p>
                         </a>`;
-                });
+                }).join('');
 
             } catch (err) {
                 console.error(err);
                 container.innerHTML = `<p class="empty-state">Search failed. Try again.</p>`;
             }
+        }
+
+        // ===== INIT =====
+        window.onload = async function() {
+            // Tema
+            const saved = localStorage.getItem('user-theme');
+            if (saved === 'dark') setTheme('dark');
+            else if (saved === 'custom') {
+                const bg = localStorage.getItem('custom-bg') || '#FFFDF9';
+                const txt = localStorage.getItem('custom-text') || '#3E532B';
+                document.getElementById('customBgInput').value = bg;
+                document.getElementById('customTextInput').value = txt;
+                applyCustomTheme();
+            }
+
+            // Sesión
+            const storedAccess = localStorage.getItem('froggie_access_token');
+            const storedRefresh = localStorage.getItem('froggie_refresh_token');
+            if (storedAccess && storedRefresh) {
+                await _supabase.auth.setSession({ access_token: storedAccess, refresh_token: storedRefresh });
+            }
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) { window.location.href = 'registro.html'; return; }
+            localStorage.setItem('froggie_uid', session.user.id);
+            localStorage.setItem('froggie_access_token', session.access_token);
+            localStorage.setItem('froggie_refresh_token', session.refresh_token);
+
+            await loadDashboard();
+            showNewsModal();
         }
     </script>
 </body>
