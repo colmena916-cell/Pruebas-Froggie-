@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Froggie AI - Home</title>
     <link rel="icon" href="ranita.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ── Redirección silenciosa si hay sesión activa ─────────────────────────
+        // Se ejecuta ANTES de renderizar nada visible para evitar flash de contenido
+        (async function checkSession() {
+            const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
+            const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
+            const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // getSession() devuelve la sesión desde localStorage sin llamada de red
+            const { data: { session } } = await _supabase.auth.getSession();
+
+            if (session && session.user) {
+                // Sesión válida: ir directo al dashboard sin mostrar la home
+                window.location.replace('dashboard.html');
+            }
+            // Si no hay sesión, continúa cargando la página normalmente
+        })();
+    </script>
     <style>
         :root {
             --bg-color: #EBF29B;      

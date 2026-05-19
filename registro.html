@@ -129,6 +129,113 @@
             box-shadow: 0 0 0 3px rgba(93, 112, 56, 0.12);
         }
 
+        /* --- OJITO (password toggle) --- */
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding: 11px 42px 11px 14px; /* espacio a la derecha para el ícono */
+            border: 1px solid rgba(62, 83, 43, 0.35);
+            border-radius: 7px;
+            background-color: var(--card-bg);
+            color: var(--text-dark);
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .password-wrapper input:focus {
+            border-color: var(--btn-color);
+            box-shadow: 0 0 0 3px rgba(93, 112, 56, 0.12);
+        }
+
+        .toggle-pw {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            color: var(--text-dark);
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .toggle-pw:hover { opacity: 0.8; }
+
+        .toggle-pw svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+
+        /* --- FORGOT PASSWORD LINK --- */
+        .forgot-link {
+            display: block;
+            margin-top: 7px;
+            font-size: 0.82rem;
+            font-style: italic;
+            color: var(--text-dark);
+            opacity: 0.55;
+            text-decoration: none;
+            text-align: right;
+            transition: opacity 0.2s;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: var(--font-serif);
+            width: 100%;
+        }
+
+        .forgot-link:hover { opacity: 1; }
+
+        /* --- FORGOT PASSWORD PANEL --- */
+        .forgot-panel {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            padding-top: 4px;
+        }
+
+        .forgot-panel.visible { display: flex; }
+
+        .forgot-panel .panel-title {
+            font-size: 0.95rem;
+            font-style: italic;
+            opacity: 0.8;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .forgot-panel .back-to-login {
+            font-size: 0.82rem;
+            font-style: italic;
+            color: var(--text-dark);
+            opacity: 0.55;
+            text-decoration: none;
+            background: none;
+            border: none;
+            font-family: var(--font-serif);
+            cursor: pointer;
+            text-align: left;
+            transition: opacity 0.2s;
+        }
+
+        .forgot-panel .back-to-login:hover { opacity: 1; }
+
+        /* --- BOTÓN SUBMIT --- */
         .btn-submit {
             background-color: var(--btn-color);
             color: #fff;
@@ -146,7 +253,9 @@
 
         .btn-submit:hover { background-color: var(--btn-hover); }
         .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+        /* --- MENSAJES --- */
         .form-message {
             font-size: 0.88rem;
             padding: 10px 14px;
@@ -203,33 +312,68 @@
             <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Sign Up</button>
         </div>
 
+        <!-- ===== FORMULARIO: LOGIN ===== -->
         <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-message" id="loginMsg"></div>
+
             <div class="form-group">
                 <label for="login-email">Email Address</label>
                 <input type="email" id="login-email" placeholder="your.email@example.com" required>
             </div>
+
             <div class="form-group">
                 <label for="login-password">Password</label>
-                <input type="password" id="login-password" placeholder="••••••••" required>
+                <div class="password-wrapper">
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                    <button type="button" class="toggle-pw" onclick="togglePw('login-password', this)" aria-label="Show password">
+                        <svg id="eye-login-open" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg id="eye-login-closed" viewBox="0 0 24 24" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                </div>
+                <!-- Enlace "Forgot password?" debajo del campo -->
+                <button type="button" class="forgot-link" onclick="showForgotPanel()">Forgot your password?</button>
             </div>
+
             <button type="submit" class="btn-submit">Log In</button>
         </form>
 
+        <!-- ===== PANEL: RECUPERAR CONTRASEÑA (inline, reemplaza el form de login) ===== -->
+        <div class="forgot-panel" id="forgotPanel">
+            <div class="form-message" id="forgotMsg"></div>
+            <p class="panel-title">Enter your email and we'll send you a link to reset your password.</p>
+            <div class="form-group">
+                <label for="forgot-email">Email Address</label>
+                <input type="email" id="forgot-email" placeholder="your.email@example.com">
+            </div>
+            <button type="button" class="btn-submit" id="forgotBtn" onclick="handleForgotPassword()">Send Reset Link</button>
+            <button type="button" class="back-to-login" onclick="hideForgotPanel()">← Back to log in</button>
+        </div>
+
+        <!-- ===== FORMULARIO: REGISTRO ===== -->
         <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
             <div class="form-message" id="registerMsg"></div>
+
             <div class="form-group">
                 <label for="reg-email">Email Address</label>
                 <input type="email" id="reg-email" placeholder="your.email@example.com" required>
             </div>
+
             <div class="form-group">
                 <label for="reg-password">Password</label>
-                <input type="password" id="reg-password" placeholder="••••••••" required>
+                <div class="password-wrapper">
+                    <input type="password" id="reg-password" placeholder="••••••••" required>
+                    <button type="button" class="toggle-pw" onclick="togglePw('reg-password', this)" aria-label="Show password">
+                        <svg id="eye-reg-open" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg id="eye-reg-closed" viewBox="0 0 24 24" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                </div>
             </div>
+
             <div class="form-group">
                 <label for="beta-key">Beta Invitation Key</label>
                 <input type="text" id="beta-key" placeholder="FRG-XXXXXX" required>
             </div>
+
             <button type="submit" class="btn-submit">Create Account</button>
         </form>
 
@@ -243,17 +387,19 @@
 
         const VALID_BETA_KEY = "FRG-BETA01";
 
+        // ── Pestañas ────────────────────────────────────────────────────────────
         function switchTab(tab) {
             document.getElementById('tab-login').classList.toggle('active', tab === 'login');
             document.getElementById('tab-register').classList.toggle('active', tab === 'register');
             document.getElementById('loginForm').classList.toggle('active', tab === 'login');
             document.getElementById('registerForm').classList.toggle('active', tab === 'register');
-            
-            // Limpiar mensajes al cambiar de pestaña
+            // Ocultar panel de forgot si el usuario cambia de pestaña
+            hideForgotPanel();
             document.getElementById('loginMsg').style.display = 'none';
             document.getElementById('registerMsg').style.display = 'none';
         }
 
+        // ── Mensajes ────────────────────────────────────────────────────────────
         function showMsg(id, text, type) {
             const el = document.getElementById(id);
             el.textContent = text;
@@ -261,11 +407,72 @@
             el.style.display = 'block';
         }
 
+        // ── Toggle de contraseña (ojito) ────────────────────────────────────────
+        function togglePw(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+
+            // Determinar prefijo del ícono según el inputId
+            const prefix = inputId === 'login-password' ? 'eye-login'
+                         : inputId === 'reg-password'   ? 'eye-reg'
+                         : null;
+            if (prefix) {
+                document.getElementById(`${prefix}-open`).style.display   = showing ? 'block' : 'none';
+                document.getElementById(`${prefix}-closed`).style.display = showing ? 'none'  : 'block';
+            }
+            btn.style.opacity = showing ? '0.4' : '0.8';
+        }
+
+        // ── Forgot password: mostrar/ocultar panel ──────────────────────────────
+        function showForgotPanel() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('forgotPanel').classList.add('visible');
+            // Pre-rellenar con el email que ya tenga escrito, si aplica
+            const emailVal = document.getElementById('login-email').value;
+            if (emailVal) document.getElementById('forgot-email').value = emailVal;
+        }
+
+        function hideForgotPanel() {
+            document.getElementById('forgotPanel').classList.remove('visible');
+            document.getElementById('loginForm').style.display = '';   // restaura display por CSS (.active = flex)
+            document.getElementById('forgotMsg').style.display = 'none';
+        }
+
+        // ── Enviar correo de recuperación ────────────────────────────────────────
+        async function handleForgotPassword() {
+            const email = document.getElementById('forgot-email').value.trim();
+            const btn   = document.getElementById('forgotBtn');
+
+            if (!email) {
+                showMsg('forgotMsg', 'Please enter your email address.', 'error');
+                return;
+            }
+
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+
+            // redirectTo debe apuntar a tu página reset-password.html
+            const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/reset-password.html'
+            });
+
+            if (error) {
+                showMsg('forgotMsg', 'Something went wrong. Please try again.', 'error');
+            } else {
+                showMsg('forgotMsg', 'Check your inbox — we sent you a reset link. (It may take a minute to arrive.)', 'success');
+            }
+
+            btn.textContent = 'Send Reset Link';
+            btn.disabled = false;
+        }
+
+        // ── Login ────────────────────────────────────────────────────────────────
         async function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
+            const email    = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            const btn = e.target.querySelector('.btn-submit');
+            const btn      = e.target.querySelector('.btn-submit');
 
             btn.textContent = 'Entering...';
             btn.disabled = true;
@@ -273,15 +480,13 @@
             const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
 
             if (error) {
-                // Alerta explícita de error para saber si es por confirmación de mail
-                showMsg('loginMsg', error.message.includes("confirm") ? 
-                    "Please check your email to confirm your account first." : 
+                showMsg('loginMsg', error.message.includes("confirm") ?
+                    "Please check your email to confirm your account first." :
                     "Invalid email or password. Please try again.", 'error');
                 btn.textContent = 'Log In';
                 btn.disabled = false;
             } else {
                 showMsg('loginMsg', 'Welcome back! Redirecting...', 'success');
-                // Guardar sesion completa para que dashboard la lea directamente
                 localStorage.setItem('froggie_uid', data.user.id);
                 localStorage.setItem('froggie_access_token', data.session.access_token);
                 localStorage.setItem('froggie_refresh_token', data.session.refresh_token);
@@ -289,12 +494,13 @@
             }
         }
 
+        // ── Registro ─────────────────────────────────────────────────────────────
         async function handleRegister(e) {
             e.preventDefault();
-            const email = document.getElementById('reg-email').value;
+            const email    = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
-            const key = document.getElementById('beta-key').value.trim().toUpperCase();
-            const btn = e.target.querySelector('.btn-submit');
+            const key      = document.getElementById('beta-key').value.trim().toUpperCase();
+            const btn      = e.target.querySelector('.btn-submit');
 
             if (key !== VALID_BETA_KEY) {
                 showMsg('registerMsg', 'Invalid beta key. Check your invitation.', 'error');
@@ -312,11 +518,7 @@
                 btn.disabled = false;
             } else {
                 showMsg('registerMsg', 'Account created successfully! Switching to login...', 'success');
-                
-                // Pasar el correo automáticamente al login para ahorrar trabajo
                 document.getElementById('login-email').value = email;
-                
-                // Mover al usuario a la pestaña de login después de 2 segundos
                 setTimeout(() => {
                     switchTab('login');
                     showMsg('loginMsg', 'Now enter your password to log in. (If it fails, remember to check your email inbox to confirm your account).', 'success');
