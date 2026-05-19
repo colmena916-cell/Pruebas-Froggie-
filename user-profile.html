@@ -251,8 +251,9 @@
             background-position: center;
         }
         .char-info h4 { font-weight: normal; font-size: 1.05rem; }
-        .char-info span { font-size: 0.8rem; opacity: 0.6; }
-        .char-description { font-size: 0.9rem; line-height: 1.45; opacity: 0.75; }
+        .char-info span { font-size: 0.88rem; opacity: 0.6; }
+        .char-info .char-creator { font-size: 0.75rem; opacity: 0.38; margin-top: 1px; display: block; }
+        .char-description { display: none; }
 
         /* Comments */
         .comments-list {
@@ -628,7 +629,7 @@
             try {
                 const { data: characters, error } = await _supabase
                     .from('characters')
-                    .select('id, name, description, subtitle, photo_url, visibility')
+                    .select('id, name, subtitle, photo_url, visibility')
                     .eq('creator_id', targetUserId)
                     .eq('visibility', 'public')
                     .order('created_at', { ascending: false });
@@ -642,15 +643,22 @@
                     return;
                 }
 
+                // Fetch creator username
+                let creatorUsername = '';
+                const { data: creatorProfile } = await _supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', targetUserId)
+                    .single();
+                if (creatorProfile) creatorUsername = creatorProfile.username;
+
                 document.getElementById('botCountLabel').textContent = characters.length;
                 container.innerHTML = '';
 
                 characters.forEach(char => {
                     const avatarStyle   = char.photo_url ? `style="background-image:url('${char.photo_url}'); background-size:cover; background-position:center;"` : '';
                     const avatarContent = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
-                    const description   = char.description
-                        ? (char.description.length > 120 ? char.description.substring(0, 117) + '...' : char.description)
-                        : 'No description provided.';
+                    const creatorHtml   = creatorUsername ? `<span class="char-creator">@${escapeHTML(creatorUsername)}</span>` : '';
 
                     container.innerHTML += `
                         <div class="char-card" onclick="window.location.href='character-profile.html?id=${char.id}&from=user-profile'">
@@ -659,9 +667,9 @@
                                 <div class="char-info">
                                     <h4>${escapeHTML(char.name)}</h4>
                                     <span>${escapeHTML(char.subtitle || 'Character')}</span>
+                                    ${creatorHtml}
                                 </div>
                             </div>
-                            <p class="char-description">${escapeHTML(description)}</p>
                         </div>`;
                 });
 

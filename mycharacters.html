@@ -230,16 +230,11 @@
         }
 
         .char-info h4 { font-size: 1.05rem; font-weight: normal; }
-        .char-info span { font-size: 0.78rem; opacity: 0.45; }
+        .char-info span { font-size: 0.88rem; opacity: 0.6; }
+        .char-creator { font-size: 0.75rem; opacity: 0.38; margin-top: 1px; }
 
         .char-description {
-            font-size: 0.88rem;
-            opacity: 0.75;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            display: none;
         }
 
         .empty-state {
@@ -559,8 +554,8 @@
             try {
                 const { data: characters, error } = await _supabase
                     .from('characters')
-                    .select('id, name, subtitle, description, photo_url, visibility')
-                    .eq('creator_id', userId)  // ← corregido: era 'user_id'
+                    .select('id, name, subtitle, photo_url, visibility')
+                    .eq('creator_id', userId)
                     .order('created_at', { ascending: false });
 
                 if (error || !characters || characters.length === 0) {
@@ -572,6 +567,15 @@
                     return;
                 }
 
+                // Fetch username
+                let username = '';
+                const { data: profile } = await _supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', userId)
+                    .single();
+                if (profile) username = profile.username;
+
                 container.innerHTML = '';
                 characters.forEach(char => {
                     const avatarStyle = char.photo_url
@@ -581,6 +585,7 @@
                     const visibilityBadge = char.visibility === 'private'
                         ? `<span style="font-size:0.7rem;opacity:0.45;margin-left:6px;">🔒 Private</span>`
                         : '';
+                    const creatorHtml = username ? `<p class="char-creator">@${username}</p>` : '';
                     container.innerHTML += `
                         <a href="room.html?id=${char.id}" class="char-card">
                             <div class="char-card-header">
@@ -588,9 +593,9 @@
                                 <div class="char-info">
                                     <h4>${char.name}${visibilityBadge}</h4>
                                     <span>${char.subtitle || 'Character'}</span>
+                                    ${creatorHtml}
                                 </div>
                             </div>
-                            <p class="char-description">${char.description || 'No personality context provided.'}</p>
                         </a>`;
                 });
 

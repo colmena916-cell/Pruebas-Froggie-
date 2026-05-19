@@ -190,8 +190,9 @@
         .char-card-header { display: flex; align-items: center; gap: 12px; }
         .char-avatar { width: 44px; height: 44px; border-radius: 50%; background-color: var(--bg-accent); display: flex; align-items: center; justify-content: center; font-weight: bold; background-size: cover; background-position: center; }
         .char-info h4 { font-weight: normal; font-size: 1.1rem; }
-        .char-info span { font-size: 0.8rem; opacity: 0.6; }
-        .char-description { font-size: 0.95rem; line-height: 1.4; opacity: 0.8; }
+        .char-info span { font-size: 0.88rem; opacity: 0.6; }
+        .char-info .char-creator { font-size: 0.75rem; opacity: 0.38; margin-top: 1px; display: block; }
+        .char-description { display: none; }
 
         .empty-state { text-align: center; font-style: italic; opacity: 0.5; padding: 32px; font-size: 0.95rem; }
 
@@ -624,7 +625,7 @@
             try {
                 const { data: characters, error } = await _supabase
                     .from('characters')
-                    .select('id, name, description, subtitle, photo_url')
+                    .select('id, name, subtitle, photo_url')
                     .eq('creator_id', targetUserId)
                     .order('created_at', { ascending: false });
 
@@ -634,6 +635,15 @@
                     return;
                 }
 
+                // Fetch creator username
+                let creatorUsername = '';
+                const { data: creatorProfile } = await _supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', targetUserId)
+                    .single();
+                if (creatorProfile) creatorUsername = creatorProfile.username;
+
                 document.getElementById('botCountLabel').textContent = characters.length;
                 container.innerHTML = '';
                 characters.forEach(char => {
@@ -641,6 +651,7 @@
                         ? `style="background-image:url('${char.photo_url}');"`
                         : '';
                     const avatarContent = char.photo_url ? '' : char.name.substring(0,2).toUpperCase();
+                    const creatorHtml = creatorUsername ? `<span class="char-creator">@${creatorUsername}</span>` : '';
                     container.innerHTML += `
                         <a href="room.html?id=${char.id}" class="char-card">
                             <div class="char-card-header">
@@ -648,9 +659,9 @@
                                 <div class="char-info">
                                     <h4>${char.name}</h4>
                                     <span>${char.subtitle || 'Character'}</span>
+                                    ${creatorHtml}
                                 </div>
                             </div>
-                            <p class="char-description">${char.description || 'No description provided.'}</p>
                         </a>`;
                 });
             } catch(e) {
@@ -684,7 +695,7 @@
                                     <span>Roleplay Persona</span>
                                 </div>
                             </div>
-                            <p class="char-description">${p.description}</p>
+                            <p class="char-description persona-description" style="display:block;font-size:0.88rem;opacity:0.75;line-height:1.4;">${p.description}</p>
                             <div style="display:flex; gap:8px; margin-top:4px;">
                                 ${!p.is_default ? `<button class="btn-action" style="font-size:0.75rem; padding:4px 10px;" onclick="setDefaultPersona('${p.id}')">Set as Default</button>` : '<span style="font-size:0.75rem; opacity:0.5; padding:4px 0;">Default persona</span>'}
                                 <button class="btn-action" style="font-size:0.75rem; padding:4px 10px; border-color:#c97171; color:#c97171;" onclick="deletePersona('${p.id}')">Delete</button>
