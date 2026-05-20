@@ -613,6 +613,8 @@
                 inp.removeAttribute('disabled');
                 inp.placeholder = "Write something... (sign in to chat)";
                 btn.removeAttribute('disabled');
+                // Show the greeting message so guests see the character format
+                showGuestGreeting();
             }
 
             if (activePersona) {
@@ -750,6 +752,20 @@
         }
 
         // ─── CARGAR HISTORIAL ─────────────────────────────────────
+        // ─── GREETING PARA INVITADOS (sin guardar en Supabase) ───
+        function showGuestGreeting() {
+            const container = document.getElementById('chatScrollArea');
+            document.getElementById('loadingState').style.display = 'none';
+            container.innerHTML = '';
+            const greetingBlockId = 'guest_' + Date.now();
+            blockStateMap.set(greetingBlockId, {
+                alternatives: [{ text: characterGreeting, rating: 0 }],
+                index: 0, userPrompt: '', historySnapshot: [], generating: false
+            });
+            appendBotMessage(characterGreeting, greetingBlockId, true);
+            // No chatHistory push, no Supabase insert
+        }
+
         async function loadHistory() {
             const container = document.getElementById('chatScrollArea');
             document.getElementById('loadingState').style.display = 'none';
