@@ -560,8 +560,10 @@
         let currentBotBlockId = null;
         let currentBotMessageId = null;
         let memorySummary = '';      // Resumen acumulado de la historia
-        const SUMMARY_EVERY = 20;   // Resumir cada 20 mensajes (10 pares)
-        const RECENT_KEEP   = 8;    // Mensajes recientes que siempre se mandan completos
+        let summaryCount  = 0;       // Cuántos resúmenes parciales se han hecho
+        const SUMMARY_EVERY   = 10;  // Resumir y borrar cada 10 mensajes viejos
+        const RECENT_KEEP     = 50;  // Mensajes recientes visibles siempre completos
+        const SUMMARIES_MERGE = 5;   // Cada 5 resúmenes parciales se fusionan en uno nuevo
         // Map: blockId -> { alternatives: [{text, rating}], index: number }
         const blockStateMap = new Map();
         // Compat helpers para el código que usa las variables globales del último bloque
@@ -775,7 +777,7 @@
             try {
                 let { data: conv, error: convErr } = await _supabase
                     .from('conversations')
-                    .select('id, memory_summary')
+                    .select('id, memory_summary, summary_count')
                     .eq('user_id', currentUserId)
                     .eq('character_id', characterId)
                     .single();
@@ -784,13 +786,14 @@
                     const { data: newConv, error: createErr } = await _supabase
                         .from('conversations')
                         .insert({ user_id: currentUserId, character_id: characterId })
-                        .select('id, memory_summary')
+                        .select('id, memory_summary, summary_count')
                         .single();
                     if (createErr) throw createErr;
                     conv = newConv;
                 }
                 conversationId = conv.id;
                 memorySummary = conv.memory_summary || '';
+                summaryCount  = conv.summary_count  || 0;
 
                 const { data: messages, error: msgErr } = await _supabase
                     .from('messages')
@@ -1033,9 +1036,8 @@
                     .update({ updated_at: new Date().toISOString() })
                     .eq('id', conversationId);
 
-                // ── Comprobar si toca generar resumen ──────────────
-                // chatHistory incluye el mensaje del usuario y la respuesta recién añadida
-                if (chatHistory.length > 0 && chatHistory.length % SUMMARY_EVERY === 0) {
+                // ── Ventana deslizante: si hay más de 60 mensajes, resumir y borrar los 10 más viejos
+                if (chatHistory.length > 60) {
                     await generateAndSaveSummary();
                 }
             }
@@ -1508,11 +1510,10 @@ NARRATIVE RULES:
         async function generateAndSaveSummary() {
             if (!apiSettings) return;
 
-            // Tomar los mensajes a resumir: todos excepto los últimos RECENT_KEEP
-            const toSummarize = chatHistory.slice(0, -RECENT_KEEP);
-            if (toSummarize.length === 0) return;
+            // Los 10 mensajes más viejos son los que se van a resumir y borrar
+            const toSummarize = chatHistory.slice(0, SUMMARY_EVERY);
+            if (toSummarize.length < SUMMARY_EVERY) return;
 
-            // Formatear el bloque de conversación para el prompt de resumen
             const convoBlock = toSummarize.map(m =>
                 `${m.role === 'user' ? 'User' : characterName}: ${m.content}`
             ).join('\n');
@@ -1524,21 +1525,58 @@ NARRATIVE RULES:
             const summaryPrompt = `${prevSummaryNote}New exchanges to incorporate:\n${convoBlock}\n\nWrite a concise narrative summary (max 200 words) of what has happened in this roleplay story so far, written in third person, present tense. Focus on: key events, relationship dynamics, emotional tone, and any important details about the characters or setting. Do not include dialogue verbatim. Output only the summary text, nothing else.`;
 
             try {
-                // Llamada directa al proveedor activo, reutilizando la lógica de callAI
-                // pero con un prompt especial y sin historial de chat
                 const summaryResult = await callAIRaw(summaryPrompt);
-                if (summaryResult) {
-                    memorySummary = summaryResult.trim();
-                    await _supabase.from('conversations')
-                        .update({ memory_summary: memorySummary })
-                        .eq('id', conversationId);
+                if (!summaryResult) return;
+
+                const newSummary = summaryResult.trim();
+                const newSummaryCount = summaryCount + 1;
+
+                // ── Fusión jerárquica: cada 5 resúmenes parciales, hacer un meta-resumen ──
+                let finalSummary = newSummary;
+                let finalCount = newSummaryCount;
+
+                if (newSummaryCount >= SUMMARIES_MERGE) {
+                    const mergePrompt = `You have been summarizing an ongoing roleplay story. Here is the current accumulated summary:\n"${newSummary}"\n\nCondense this into a single cohesive narrative summary (max 200 words) that preserves the most important events, character dynamics, and emotional arcs. Write in third person, present tense. Output only the summary text, nothing else.`;
+                    const merged = await callAIRaw(mergePrompt);
+                    if (merged) {
+                        finalSummary = merged.trim();
+                        finalCount = 0; // reiniciar contador de resúmenes parciales
+                    }
                 }
+
+                // Primero guardar — si falla, no borramos nada
+                const { error: updateErr } = await _supabase.from('conversations')
+                    .update({ memory_summary: finalSummary, summary_count: finalCount })
+                    .eq('id', conversationId);
+
+                if (updateErr) {
+                    console.warn('Summary save failed, keeping messages:', updateErr);
+                    return;
+                }
+
+                // Resumen guardado con éxito — ahora borrar los mensajes viejos de Supabase
+                const { data: oldMessages } = await _supabase
+                    .from('messages')
+                    .select('id')
+                    .eq('conversation_id', conversationId)
+                    .order('created_at', { ascending: true })
+                    .limit(SUMMARY_EVERY);
+
+                if (oldMessages && oldMessages.length > 0) {
+                    await _supabase.from('messages').delete().in('id', oldMessages.map(m => m.id));
+                }
+
+                // Actualizar estado local
+                memorySummary = finalSummary;
+                summaryCount  = finalCount;
+                chatHistory   = chatHistory.slice(SUMMARY_EVERY);
+
             } catch (e) {
                 console.warn('Summary generation failed (non-critical):', e);
             }
         }
 
-        // Versión simple de callAI para el resumen: un solo mensaje de usuario, sin historial
+                // Versión simple de callAI para el resumen: un solo mensaje de usuario, sin historial
         async function callAIRaw(prompt) {
             if (!apiSettings) return null;
             const messages = [{ role: 'user', content: prompt }];
