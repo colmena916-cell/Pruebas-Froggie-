@@ -690,6 +690,15 @@
             let photoUrl = currentPhotoUrl;
 
             if (uploadedPhotoFile) {
+                // Borrar foto anterior del bucket si existe
+                if (currentPhotoUrl) {
+                    try {
+                        const bucketBase = _supabase.storage.from('character-images').getPublicUrl('').data.publicUrl;
+                        const oldPath = currentPhotoUrl.replace(bucketBase, '');
+                        if (oldPath) await _supabase.storage.from('character-images').remove([oldPath]);
+                    } catch (e) { console.warn('Could not delete old photo:', e); }
+                }
+
                 const ext = uploadedPhotoFile.name.split('.').pop();
                 const fileName = `${currentUserId}_${Date.now()}.${ext}`;
                 const { error: uploadError } = await _supabase.storage
@@ -733,6 +742,16 @@
             const btn = document.getElementById('confirmDeleteBtn');
             btn.textContent = 'Deleting...';
             btn.disabled = true;
+
+            // Borrar foto del storage si existe
+            if (currentPhotoUrl) {
+                try {
+                    const bucketBase = _supabase.storage.from('character-images').getPublicUrl('').data.publicUrl;
+                    const oldPath = currentPhotoUrl.replace(bucketBase, '');
+                    if (oldPath) await _supabase.storage.from('character-images').remove([oldPath]);
+                } catch (e) { console.warn('Could not delete character photo:', e); }
+            }
+
             await _supabase.from('chats').delete().eq('character_id', characterId);
             const { error } = await _supabase.from('characters').delete()
                 .eq('id', characterId).eq('creator_id', currentUserId);

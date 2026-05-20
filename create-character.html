@@ -671,13 +671,14 @@
             if (!session) { window.location.href = 'registro.html'; return; }
 
             let photoUrl = null;
+            let uploadedFileName = null;
 
             if (uploadedPhotoFile) {
                 const ext = uploadedPhotoFile.name.split('.').pop();
-                const fileName = `${session.user.id}_${Date.now()}.${ext}`;
+                uploadedFileName = `${session.user.id}_${Date.now()}.${ext}`;
                 const { error: uploadError } = await _supabase.storage
                     .from('character-images')
-                    .upload(fileName, uploadedPhotoFile);
+                    .upload(uploadedFileName, uploadedPhotoFile);
 
                 if (uploadError) {
                     showSaveMsg('Image upload failed. Try without a photo first.', 'error');
@@ -686,7 +687,7 @@
                     return;
                 }
 
-                const { data: urlData } = _supabase.storage.from('character-images').getPublicUrl(fileName);
+                const { data: urlData } = _supabase.storage.from('character-images').getPublicUrl(uploadedFileName);
                 photoUrl = urlData.publicUrl;
             }
 
@@ -706,6 +707,10 @@
 
             if (error) {
                 console.error(error);
+                // Si el insert falló pero ya subimos una foto, la borramos para no dejar basura
+                if (uploadedFileName) {
+                    await _supabase.storage.from('character-images').remove([uploadedFileName]);
+                }
                 showSaveMsg('Could not save. Check your Supabase table setup.', 'error');
                 btn.disabled = false;
                 btn.textContent = 'Create Character';
