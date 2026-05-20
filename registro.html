@@ -369,11 +369,6 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="beta-key">Beta Invitation Key</label>
-                <input type="text" id="beta-key" placeholder="FRG-XXXXXX" required>
-            </div>
-
             <button type="submit" class="btn-submit">Create Account</button>
         </form>
 
@@ -385,7 +380,7 @@
         const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const VALID_BETA_KEY = "FRG-BETA01";
+        const USER_LIMIT = 170;
 
         // ── Pestañas ────────────────────────────────────────────────────────────
         function switchTab(tab) {
@@ -499,16 +494,33 @@
             e.preventDefault();
             const email    = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
-            const key      = document.getElementById('beta-key').value.trim().toUpperCase();
             const btn      = e.target.querySelector('.btn-submit');
 
-            if (key !== VALID_BETA_KEY) {
-                showMsg('registerMsg', 'Invalid beta key. Check your invitation.', 'error');
+            btn.textContent = 'Checking availability...';
+            btn.disabled = true;
+
+            const { count, error: countError } = await _supabase
+                .from('profiles')
+                .select('id', { count: 'exact', head: true });
+
+            if (countError) {
+                showMsg('registerMsg', 'Could not verify availability. Try again.', 'error');
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+                return;
+            }
+
+            if (count >= USER_LIMIT) {
+                const el = document.getElementById('registerMsg');
+                el.innerHTML = '🐸 Froggie AI is currently at full capacity. Follow us to know when spots open up! <a href="https://discord.gg/9GN3AEVb7V" target="_blank" style="color:inherit;font-weight:bold;">Discord</a> · <a href="https://www.tiktok.com/@beemena_" target="_blank" style="color:inherit;font-weight:bold;">TikTok</a>';
+                el.className = 'form-message error';
+                el.style.display = 'block';
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
                 return;
             }
 
             btn.textContent = 'Creating account...';
-            btn.disabled = true;
 
             const { data, error } = await _supabase.auth.signUp({ email, password });
 
