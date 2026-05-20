@@ -674,6 +674,12 @@
             const firstMessage = document.getElementById('charFirstMsg').value.trim();
 
             if (!name) { showSaveMsg('Name is required.', 'error'); return; }
+
+            const validName = /^[A-Za-zÑñ0-9 ]+$/;
+            if (!validName.test(name)) {
+                showSaveMsg('The name can only contain letters (A-Z, ñ), numbers, and spaces. No accents, emojis, or special characters.', 'error');
+                return;
+            }
             if (!definition) { showSaveMsg('Character definition cannot be empty.', 'error'); return; }
             if (!firstMessage) { showSaveMsg('First message cannot be empty.', 'error'); return; }
 
