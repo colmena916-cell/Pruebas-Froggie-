@@ -678,15 +678,12 @@
             currentUserId = session.user.id;
             await loadSettings(currentUserId);
 
-            // Mostrar modal de ayuda si es la primera vez
-            if (!localStorage.getItem('froggie_api_modal_seen')) {
-                document.getElementById('apiHelpModal').style.display = 'flex';
-            }
+            // Mostrar modal de ayuda siempre al entrar
+            document.getElementById('apiHelpModal').style.display = 'flex';
         }
 
         function closeApiModal() {
             document.getElementById('apiHelpModal').style.display = 'none';
-            localStorage.setItem('froggie_api_modal_seen', '1');
         }
     </script>
 
@@ -696,8 +693,8 @@
             <button onclick="closeApiModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; cursor:pointer; color:var(--text-dark); opacity:0.5; font-size:1.3rem; line-height:1; padding:4px;">✕</button>
             <div style="font-size:2rem; text-align:center; margin-bottom:10px;">🔑</div>
             <h3 style="font-weight:normal; font-size:1.2rem; text-align:center; margin-bottom:8px;">Setting up your API key?</h3>
-            <p style="font-size:0.9rem; line-height:1.6; opacity:0.8; margin-bottom:14px; text-align:center;">If you're not sure what to put here, the <strong>Help Center</strong> has todo lo que necesitas — incluyendo una guía paso a paso con links para conectarte gratis en minutos.</p>
-            <p style="font-size:0.85rem; line-height:1.55; opacity:0.7; margin-bottom:20px; text-align:center;">👉 Si eres nuevo, ve al Help Center y busca la sección <em>Custom API</em> — <strong>justo al final</strong> encontrarás el tutorial completo con todo detallado.</p>
+            <p style="font-size:0.9rem; line-height:1.6; opacity:0.8; margin-bottom:14px; text-align:center;">If you're not sure what to put here, the <strong>Help Center</strong> has everything you need — including a step-by-step guide with links to connect for free in minutes.</p>
+            <p style="font-size:0.85rem; line-height:1.55; opacity:0.7; margin-bottom:20px; text-align:center;">👉 If you're new, head to the Help Center and look for the <em>Custom API</em> section — <strong>at the bottom</strong> you'll find the full tutorial with everything detailed.</p>
             <a href="possible-doubts.html#api-keys" style="display:block; width:100%; text-align:center; background-color:var(--btn-color); color:#fff; border:none; padding:11px; font-family:var(--font-serif); font-size:0.95rem; border-radius:30px; text-decoration:none; cursor:pointer; transition:background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--btn-hover)'" onmouseout="this.style.backgroundColor='var(--btn-color)'" onclick="closeApiModal()">Go to Help Center →</a>
             <button onclick="closeApiModal()" style="display:block; width:100%; margin-top:10px; background:none; border:none; font-family:var(--font-serif); font-size:0.88rem; opacity:0.5; cursor:pointer; color:var(--text-dark);">I already know what I'm doing</button>
         </div>
