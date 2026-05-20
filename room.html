@@ -937,6 +937,11 @@
                 lastUserBlock.dataset.msgid = savedUserMsg.id;
             }
 
+            // Sumar 1 al chat_count del personaje solo en el primer mensaje de la conversación
+            if (chatHistory.filter(m => m.role === 'user').length === 0) {
+                await _supabase.rpc('increment_chat_count', { char_id: characterId });
+            }
+
             chatHistory.push({ role: 'user', content: text });
 
             document.getElementById('typingIndicator').classList.add('show');
