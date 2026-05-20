@@ -156,6 +156,32 @@
             transform: scale(0.98);
         }
 
+        .btn-action-outline {
+            background-color: transparent;
+            color: var(--btn-color);
+            border: 2px solid var(--btn-color);
+            padding: 12px 50px;
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-action-outline:hover { background-color: rgba(93,112,56,0.08); }
+        .btn-action-outline:active { transform: scale(0.98); }
+
+        .hero-btns {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
         /* --- SECCIONES INFORMATIVAS --- */
         .info-section {
             width: 100%;
@@ -240,16 +266,17 @@
             <img src="ranita.png" alt="Froggie Logo" class="frog-logo">
             <h1>FROGGIE.AI</h1>
         </div>
-        
-        <a href="registro.html" class="btn-action">Try it</a>
-        <p class="beta-badge">[ This is an invitation-only closed beta ]</p>
-    </section>
 
-    <section class="info-section" style="padding-top: 60px; padding-bottom: 40px; text-align: center;">
-        <div style="background-color: rgba(93,112,56,0.08); border: 1px dashed rgba(93,112,56,0.35); border-radius: 14px; padding: 20px 28px; max-width: 600px; margin: 0 auto;">
-            <p style="margin-bottom: 8px; font-size: 1.05rem;">🔑 <strong>Not sure how to set up your API key?</strong></p>
-            <p style="margin-bottom: 14px; font-size: 0.97rem; opacity: 0.85;">Our Help Center has a complete step-by-step guide — including the free provider I personally use and recommend. No technical experience needed.</p>
-            <a href="possible-doubts.html#api-keys" style="color: var(--btn-color); font-weight: bold; font-size: 0.97rem; text-decoration: underline;">Visit the Help Center →</a>
+        <div class="hero-btns">
+            <a href="dashboard.html" class="btn-action">Visit</a>
+            <a href="registro.html" class="btn-action-outline">Join</a>
+        </div>
+        <p class="beta-badge">[ Open beta — limited spots available ]</p>
+
+        <div style="margin-top: 32px; background-color: rgba(93,112,56,0.08); border: 1px dashed rgba(93,112,56,0.35); border-radius: 14px; padding: 16px 24px; max-width: 520px; text-align: center;">
+            <p style="margin-bottom: 6px; font-size: 1rem;">🔑 <strong>Not sure how to set up your API key?</strong></p>
+            <p style="margin-bottom: 10px; font-size: 0.92rem; opacity: 0.8;">Step-by-step guide available — free, no technical experience needed.</p>
+            <a href="possible-doubts.html#api-keys" style="color: var(--btn-color); font-weight: bold; font-size: 0.93rem; text-decoration: underline;">Visit the Help Center →</a>
         </div>
     </section>
 
@@ -281,12 +308,16 @@
     <section class="info-section" id="contact">
         <h2>Get in Touch</h2>
         <p>Whether you want to share feedback, report a bug, suggest features, or simply connect with other beta creators and share your stories, this is where you can find me. Welcome to the pond.</p>
-        <div class="center-btn-container">
+        <div class="center-btn-container" style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center;">
             <a href="https://discord.gg/9GN3AEVb7V" target="_blank" class="btn-action">
                 <svg class="icon-svg" viewBox="0 0 127.14 96.36">
                     <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.18,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.71-11,68.6,68.6,0,0,1-10.64-5.12c.91-.66,1.8-1.34,2.65-2a75.58,75.58,0,0,0,72.86,0c.85.69,1.74,1.37,2.65,2a68.45,68.45,0,0,1-10.64,5.12,74.65,74.65,0,0,0,6.71,11,105.73,105.73,0,0,0,31-18.83C129,50.7,122.64,27.78,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.88,46,53.88,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.12,46,96.12,53,91,65.69,84.69,65.69Z"/>
                 </svg>
-                Join our Discord
+                Discord
+            </a>
+            <a href="https://www.tiktok.com/@beemena_" target="_blank" class="btn-action">
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+                TikTok
             </a>
         </div>
     </section>
