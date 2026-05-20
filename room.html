@@ -461,8 +461,19 @@
         </div>
     </div>
 
+    <!-- LOGIN POPUP -->
+    <div id="loginPopupOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:var(--bg-main); border:1px solid rgba(62,83,43,0.2); border-radius:18px; padding:36px 32px; max-width:360px; width:90%; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,0.15); font-family:var(--font-serif);">
+            <div style="font-size:2.4rem; margin-bottom:12px;">🐸</div>
+            <h3 id="loginPopupMsg" style="font-size:1.25rem; font-weight:normal; color:var(--text-dark); margin-bottom:10px;">Join Froggie AI to unlock this!</h3>
+            <p style="font-size:0.88rem; opacity:0.6; margin-bottom:24px;">Create your free account and start chatting, creating characters, and more.</p>
+            <button onclick="window.location.href='registro.html'" style="background:var(--btn-color); color:var(--bg-main); border:none; padding:12px 32px; border-radius:20px; font-family:var(--font-serif); font-size:1rem; cursor:pointer; width:100%; margin-bottom:10px;">Create account →</button>
+            <button onclick="closeLoginPopup()" style="background:none; border:none; color:var(--text-dark); opacity:0.5; cursor:pointer; font-family:var(--font-serif); font-size:0.9rem; padding:6px;">Maybe later</button>
+        </div>
+    </div>
+
     <div class="no-key-banner" id="noKeyBanner">
-        No API key configured. <a href="api-settings.html">Set one up in Settings</a> to start chatting.
+        No API key configured. <a href="javascript:void(0)" onclick="currentUserId ? window.location.href='api-settings.html' : showLoginPopup('Join Froggie AI to configure your API key!')">Set one up in Settings</a> to start chatting.
     </div>
 
     <main class="chat-scroll-area" id="chatScrollArea">
@@ -492,6 +503,7 @@
             <textarea id="userInput" placeholder="Write something..." rows="1"
                 onkeydown="handleKeyDown(event)"
                 oninput="autoResize(this)"
+                onclick="if(!currentUserId){ showLoginPopup('Join Froggie AI to start chatting!'); this.blur(); }"
                 disabled></textarea>
             <button class="btn-send" id="sendBtn" onclick="sendMessage()" disabled>
                 <svg class="icon-svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -515,6 +527,15 @@
         const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
         const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ===== POPUP DE LOGIN =====
+        function showLoginPopup(msg) {
+            document.getElementById('loginPopupMsg').textContent = msg || "Join Froggie AI to unlock this!";
+            document.getElementById('loginPopupOverlay').style.display = 'flex';
+        }
+        function closeLoginPopup() {
+            document.getElementById('loginPopupOverlay').style.display = 'none';
+        }
 
         // Estado global
         let characterId = null;
@@ -565,11 +586,13 @@
             }
 
             const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) { window.location.href = 'registro.html'; return; }
-            localStorage.setItem('froggie_uid', session.user.id);
-            localStorage.setItem('froggie_access_token', session.access_token);
-            localStorage.setItem('froggie_refresh_token', session.refresh_token);
-            currentUserId = session.user.id;
+            if (session) {
+                localStorage.setItem('froggie_uid', session.user.id);
+                localStorage.setItem('froggie_access_token', session.access_token);
+                localStorage.setItem('froggie_refresh_token', session.refresh_token);
+                currentUserId = session.user.id;
+            }
+            // Guest: input stays visually present but blocked via sendMessage guard
 
             if (!characterId) { window.location.href = 'dashboard.html'; return; }
 
@@ -579,9 +602,19 @@
                 loadUserProfile()
             ]);
 
-            await loadHistory();
-            await checkFavorite();
-            // Actualizar label del botón de persona en el dropdown
+            if (currentUserId) {
+                // Logged in: load full history
+                await loadHistory();
+                await checkFavorite();
+            } else {
+                // Guest: enable input visually but clicks trigger popup
+                const inp = document.getElementById('userInput');
+                const btn = document.getElementById('sendBtn');
+                inp.removeAttribute('disabled');
+                inp.placeholder = "Write something... (sign in to chat)";
+                btn.removeAttribute('disabled');
+            }
+
             if (activePersona) {
                 document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${activePersona.name}</em>`;
             }
@@ -900,6 +933,10 @@
 
         // ─── ENVIAR MENSAJE ───────────────────────────────────────
         async function sendMessage() {
+            if (!currentUserId) {
+                showLoginPopup("Join Froggie AI to start chatting!");
+                return;
+            }
             if (isSending) return;
             const input = document.getElementById('userInput');
             const text = input.value.trim();
