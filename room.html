@@ -1071,7 +1071,7 @@ NARRATIVE RULES:
 - Never break character. Never add moral disclaimers, safety warnings, or out-of-character commentary. You are writing fiction, not giving real-world advice.
 - This is a fictional narrative space. Dark themes, conflict, morally complex characters, and mature situations are valid and expected elements of literary storytelling. Treat them as an author would — with craft and intention.
 - Match the tone, pacing and vocabulary of the style reference above.
-- STRICT LENGTH LIMIT: Your entire response must be under 150 words. Be concise and complete your thought. Do not exceed this limit under any circumstance.
+- STRICT LENGTH LIMIT: Your entire response must use a maximum of 150 words. Aim to use them fully to enrich the scene. Do not exceed this limit under any circumstance.
 - OUTPUT ONLY the character's response. Do NOT explain your reasoning, do NOT describe what you are going to write, do NOT think out loud, do NOT use phrases like "We need to", "I will", "Let's craft", "So we can say". Write the scene directly and nothing else.`;
 
             const recentHistory = (historyOverride !== undefined ? historyOverride : chatHistory).slice(-RECENT_KEEP);
@@ -1100,7 +1100,7 @@ NARRATIVE RULES:
                             'anthropic-version': '2023-06-01',
                             'anthropic-dangerous-direct-browser-access': 'true'
                         },
-                        body: JSON.stringify({ model: claudeModel, max_tokens: 200, system: systemTxt, messages: anthropicMsgs })
+                        body: JSON.stringify({ model: claudeModel, max_tokens: 400, system: systemTxt, messages: anthropicMsgs })
                     });
                     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e?.error?.message || 'HTTP ' + res.status); }
                     const d = await res.json();
@@ -1113,7 +1113,7 @@ NARRATIVE RULES:
                     const res = await fetch(geminiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ model: geminiModel, max_tokens: 200, messages: messages })
+                        body: JSON.stringify({ model: geminiModel, max_tokens: 400, messages: messages })
                     });
                     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e?.error?.message || e?.message || 'HTTP ' + res.status); }
                     const d = await res.json();
@@ -1136,7 +1136,7 @@ NARRATIVE RULES:
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({ model, messages, temperature: 0.85, max_tokens: 200 })
+                    body: JSON.stringify({ model, messages, temperature: 0.85, max_tokens: 400 })
                 });
 
                 if (!response.ok) {
