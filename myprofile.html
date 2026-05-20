@@ -555,7 +555,7 @@
                 const { data: urlData } = _supabase.storage
                     .from('user-avatars')
                     .getPublicUrl(path);
-                avatarUrl = urlData.publicUrl;
+                avatarUrl = urlData.publicUrl + '?t=' + Date.now();
             }
 
             const updates = { display_name: name, bio: bio };
