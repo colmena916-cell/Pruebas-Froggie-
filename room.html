@@ -1334,6 +1334,15 @@ CONSTRAINTS:
                     .update({ rating: rating })
                     .eq('id', currentBotMessageId);
             }
+
+            if (rating === 3 && state.userPrompt) {
+                await _supabase.from('training_pairs').insert({
+                    character_id: characterId,
+                    user_message: state.userPrompt,
+                    bot_message: state.alternatives[state.index].text,
+                    rating: 3
+                });
+            }
         }
 
         function updateStars(blockId, rating) {
@@ -1639,6 +1648,7 @@ CONSTRAINTS:
                     .from('messages')
                     .select('id')
                     .eq('conversation_id', conversationId)
+                    .or('rating.is.null,rating.lt.3')
                     .order('created_at', { ascending: true })
                     .limit(SUMMARY_EVERY);
 
