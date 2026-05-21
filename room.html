@@ -375,10 +375,66 @@
         }
         .msg-select-check svg { width: 11px; height: 11px; fill: white; display: none; }
         body.delete-mode .msg-block.user.deletable .msg-select-check { display: flex; }
+        body.delete-mode .msg-block.bot.deletable-bot { cursor: pointer; }
+        body.delete-mode .msg-block.bot.deletable-bot:not(.selected-pair):hover::after {
+            content: '';
+            position: absolute;
+            inset: -6px -4px;
+            border-radius: 10px;
+            border: 2px dashed rgba(201, 113, 113, 0.3);
+            pointer-events: none;
+        }
         body.delete-mode .msg-block.user.selected-pair .msg-select-check {
             background-color: #c97171; border-color: #c97171;
         }
         body.delete-mode .msg-block.user.selected-pair .msg-select-check svg { display: block; }
+
+        /* --- MODO EDICIÓN DE MENSAJES --- */
+        .msg-edit-btn {
+            display: none;
+            position: absolute;
+            top: 0; right: 0;
+            background: none; border: none;
+            cursor: pointer;
+            color: var(--text-dark);
+            opacity: 0.35;
+            padding: 2px;
+            z-index: 5;
+            transition: opacity 0.2s;
+        }
+        .msg-edit-btn:hover { opacity: 1; }
+        .msg-edit-btn svg { width: 14px; height: 14px; fill: currentColor; }
+        .msg-block.editable-last .msg-edit-btn { display: block; }
+        body.delete-mode .msg-edit-btn { display: none !important; }
+
+        .msg-edit-area {
+            width: 100%;
+            font-family: var(--font-serif);
+            font-size: 1.02rem;
+            line-height: 1.65;
+            background: rgba(62, 83, 43, 0.04);
+            border: 1px solid var(--btn-color);
+            border-radius: 8px;
+            color: var(--text-dark);
+            padding: 8px 10px;
+            resize: none;
+            outline: none;
+            min-height: 60px;
+        }
+        .msg-edit-actions {
+            display: flex; gap: 8px; margin-top: 6px;
+        }
+        .btn-edit-confirm, .btn-edit-cancel {
+            font-family: var(--font-serif);
+            font-size: 0.85rem;
+            padding: 5px 14px;
+            border-radius: 7px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-edit-confirm { background-color: var(--btn-color); color: white; }
+        .btn-edit-confirm:hover { background-color: var(--btn-hover); }
+        .btn-edit-cancel { background: none; border: 1px solid var(--border); color: var(--text-dark); opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -562,6 +618,7 @@
         let memorySummary = '';      // Resumen acumulado de la historia
         let summaryCount  = 0;       // Cuántos resúmenes parciales se han hecho
         const SUMMARY_EVERY   = 10;  // Resumir y borrar cada 10 mensajes viejos
+        const MAX_ALTERNATIVES = 15; // Límite de alternativas por mensaje del bot
         const RECENT_KEEP     = 50;  // Mensajes recientes visibles siempre completos
         const SUMMARIES_MERGE = 5;   // Cada 5 resúmenes parciales se fusionan en uno nuevo
         // Map: blockId -> { alternatives: [{text, rating}], index: number }
@@ -879,6 +936,9 @@
                     <div class="msg-select-check">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                     </div>
+                    <button class="msg-edit-btn" onclick="event.stopPropagation(); startEdit(this.closest('.msg-block'), 'user')" title="Edit message">
+                        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
                     <div class="msg-avatar user-avatar" ${avatarStyle}>${avatarText}</div>
                     <div class="msg-body">
                         <span class="msg-sender-name">${displayName}</span>
@@ -886,6 +946,7 @@
                     </div>
                 </div>`;
             scrollToBottom();
+            updateEditableMarkers();
         }
 
         function appendBotMessage(text, blockId, isLoaded = false) {
@@ -895,7 +956,10 @@
             const avatarText = botPhotoUrl ? '' : characterName.substring(0, 2).toUpperCase();
 
             container.innerHTML += `
-                <div class="msg-block bot" id="${blockId}">
+                <div class="msg-block bot" id="${blockId}" onclick="toggleSelectBotMessage(this)">
+                    <button class="msg-edit-btn" onclick="startEdit(this.closest('.msg-block'), 'bot')" title="Edit message">
+                        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
                     <div class="msg-avatar" ${avatarStyle}>${avatarText}</div>
                     <div class="msg-body">
                         <span class="msg-sender-name">${characterName}</span>
@@ -922,6 +986,7 @@
                 typeWriter(blockId, text);
             }
             scrollToBottom();
+            updateEditableMarkers();
         }
 
         function typeWriter(blockId, text) {
@@ -959,7 +1024,14 @@
             if (isSending) return;
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text) return;
+
+            // Empty input: regenerate last bot message if exists
+            if (!text) {
+                if (currentBotBlockId && blockStateMap.has(currentBotBlockId)) {
+                    await navigateAlt(currentBotBlockId, 1);
+                }
+                return;
+            }
 
             if (!apiSettings) {
                 document.getElementById('noKeyBanner').classList.add('show');
@@ -1172,6 +1244,11 @@ CONSTRAINTS:
 
             // Flecha derecha y ya no hay alternativa guardada → generar nueva
             if (direction === 1 && target >= state.alternatives.length) {
+                // Límite de alternativas alcanzado
+                if (state.alternatives.length >= MAX_ALTERNATIVES) {
+                    updateNavArrows(blockId);
+                    return;
+                }
                 state.generating = true;
 
                 const textEl = document.getElementById(`txt_${blockId}`);
@@ -1241,7 +1318,8 @@ CONSTRAINTS:
             if (!leftBtn || !rightBtn || !label || !state) return;
             leftBtn.disabled = state.index === 0;
             rightBtn.disabled = false; // siempre se puede generar otra
-            label.textContent = `${state.index + 1}/${state.alternatives.length}`;
+            label.textContent = `${state.index + 1}/${MAX_ALTERNATIVES}`;
+            rightBtn.disabled = state.alternatives.length >= MAX_ALTERNATIVES && state.index === state.alternatives.length - 1;
         }
 
         // ─── CALIFICACIÓN ─────────────────────────────────────────
@@ -1630,19 +1708,26 @@ CONSTRAINTS:
         // ─── MODO BORRADO DE MENSAJES ─────────────────────────────
         let deleteSelectedUserBlock = null;
         let deleteSelectedBotBlock  = null;
-        let deletableUserBlock      = null; // único bloque elegible
+        let deletableUserBlock      = null;
+        let deletableBotBlock       = null; // último bot block, seleccionable solo
 
         function enterDeleteMode() {
             toggleMenu();
 
-            // Identificar el último mensaje de usuario (el único elegible)
+            // Identificar el último mensaje de usuario
             const allUserBlocks = document.querySelectorAll('.msg-block.user');
             deletableUserBlock = allUserBlocks.length > 0
                 ? allUserBlocks[allUserBlocks.length - 1]
                 : null;
 
-            // Si no hay ningún mensaje de usuario, no entrar al modo
-            if (!deletableUserBlock) return;
+            // Identificar el último mensaje del bot (seleccionable independientemente)
+            const allBotBlocks = document.querySelectorAll('.msg-block.bot');
+            deletableBotBlock = allBotBlocks.length > 0
+                ? allBotBlocks[allBotBlocks.length - 1]
+                : null;
+
+            // Si no hay ningún mensaje elegible, no entrar al modo
+            if (!deletableUserBlock && !deletableBotBlock) return;
 
             document.body.classList.add('delete-mode');
             document.querySelector('.chat-input-area').style.display = 'none';
@@ -1650,8 +1735,9 @@ CONSTRAINTS:
             deleteSelectedUserBlock = null;
             deleteSelectedBotBlock  = null;
 
-            // Marcar visualmente solo el elegible
-            deletableUserBlock.classList.add('deletable');
+            // Marcar visualmente los elegibles
+            if (deletableUserBlock) deletableUserBlock.classList.add('deletable');
+            if (deletableBotBlock) deletableBotBlock.classList.add('deletable-bot');
             updateDeleteConfirmBtn();
         }
 
@@ -1661,18 +1747,17 @@ CONSTRAINTS:
             document.getElementById('deleteBar').classList.remove('show');
             document.querySelectorAll('.msg-block.selected-pair').forEach(el => el.classList.remove('selected-pair'));
             document.querySelectorAll('.msg-block.deletable').forEach(el => el.classList.remove('deletable'));
+            document.querySelectorAll('.msg-block.deletable-bot').forEach(el => el.classList.remove('deletable-bot'));
             deleteSelectedUserBlock = null;
             deleteSelectedBotBlock  = null;
             deletableUserBlock      = null;
+            deletableBotBlock       = null;
         }
 
         function toggleSelectMessage(userBlock) {
             if (!document.body.classList.contains('delete-mode')) return;
-
-            // Solo permitir interacción con el último mensaje de usuario
             if (userBlock !== deletableUserBlock) return;
 
-            // Toggle selección
             if (userBlock.classList.contains('selected-pair')) {
                 userBlock.classList.remove('selected-pair');
                 if (deleteSelectedBotBlock) deleteSelectedBotBlock.classList.remove('selected-pair');
@@ -1685,16 +1770,36 @@ CONSTRAINTS:
             userBlock.classList.add('selected-pair');
             deleteSelectedUserBlock = userBlock;
 
-            // Buscar la respuesta del bot que le sigue
+            // Seleccionar también el bot que le sigue
             let next = userBlock.nextElementSibling;
             while (next && !next.classList.contains('msg-block')) next = next.nextElementSibling;
             if (next && next.classList.contains('bot')) {
                 next.classList.add('selected-pair');
                 deleteSelectedBotBlock = next;
+                // Si este bot era el deletable-bot independiente, quitarle esa clase para evitar doble selección
+                if (next === deletableBotBlock) next.classList.remove('deletable-bot');
             } else {
                 deleteSelectedBotBlock = null;
             }
 
+            updateDeleteConfirmBtn();
+        }
+
+        function toggleSelectBotMessage(botBlock) {
+            if (!document.body.classList.contains('delete-mode')) return;
+            if (botBlock !== deletableBotBlock) return;
+            // Si el usuario ya está seleccionado (arrastre), no hacer nada
+            if (deleteSelectedUserBlock) return;
+
+            if (botBlock.classList.contains('selected-pair')) {
+                botBlock.classList.remove('selected-pair');
+                deleteSelectedBotBlock = null;
+                updateDeleteConfirmBtn();
+                return;
+            }
+
+            botBlock.classList.add('selected-pair');
+            deleteSelectedBotBlock = botBlock;
             updateDeleteConfirmBtn();
         }
 
@@ -1703,7 +1808,10 @@ CONSTRAINTS:
             const hint = document.getElementById('deleteHint');
             if (deleteSelectedUserBlock) {
                 btn.classList.add('ready');
-                hint.textContent = 'Selected exchange will be removed';
+                hint.textContent = 'Exchange will be removed';
+            } else if (deleteSelectedBotBlock) {
+                btn.classList.add('ready');
+                hint.textContent = 'Bot message will be removed';
             } else {
                 btn.classList.remove('ready');
                 hint.textContent = 'Select a message to delete';
@@ -1711,32 +1819,40 @@ CONSTRAINTS:
         }
 
         async function confirmDeleteSelected() {
-            if (!deleteSelectedUserBlock) return;
-
-            const userMsgId = deleteSelectedUserBlock.dataset.msgid;
-            const botBlockId = deleteSelectedBotBlock ? deleteSelectedBotBlock.id : null;
+            if (!deleteSelectedUserBlock && !deleteSelectedBotBlock) return;
 
             try {
-                // Borrar mensaje del usuario en Supabase
-                if (userMsgId) {
-                    await _supabase.from('messages').delete().eq('id', userMsgId);
-                }
-                // Borrar respuesta del bot en Supabase (el id del bloque es el id del mensaje)
-                if (botBlockId && !botBlockId.startsWith('init_') && !botBlockId.startsWith('msg_')) {
-                    await _supabase.from('messages').delete().eq('id', botBlockId);
-                } else if (botBlockId && botBlockId.startsWith('msg_')) {
-                    // ID temporal: buscar por conversationId y posición no es confiable,
-                    // pero al ser recién guardado sí tenemos currentBotMessageId
-                    if (deleteSelectedBotBlock === document.getElementById(currentBotBlockId) && currentBotMessageId) {
+                if (deleteSelectedUserBlock) {
+                    // Borrar par usuario + bot
+                    const userMsgId = deleteSelectedUserBlock.dataset.msgid;
+                    const botBlockId = deleteSelectedBotBlock ? deleteSelectedBotBlock.id : null;
+
+                    if (userMsgId) {
+                        await _supabase.from('messages').delete().eq('id', userMsgId);
+                    }
+                    if (botBlockId && !botBlockId.startsWith('init_') && !botBlockId.startsWith('msg_')) {
+                        await _supabase.from('messages').delete().eq('id', botBlockId);
+                    } else if (botBlockId && botBlockId.startsWith('msg_')) {
+                        if (deleteSelectedBotBlock === document.getElementById(currentBotBlockId) && currentBotMessageId) {
+                            await _supabase.from('messages').delete().eq('id', currentBotMessageId);
+                        }
+                    }
+                    deleteSelectedUserBlock.remove();
+                    if (deleteSelectedBotBlock) deleteSelectedBotBlock.remove();
+
+                } else if (deleteSelectedBotBlock) {
+                    // Borrar solo el mensaje del bot
+                    const botBlockId = deleteSelectedBotBlock.id;
+                    if (botBlockId && !botBlockId.startsWith('init_') && !botBlockId.startsWith('msg_')) {
+                        await _supabase.from('messages').delete().eq('id', botBlockId);
+                    } else if (botBlockId === currentBotBlockId && currentBotMessageId) {
                         await _supabase.from('messages').delete().eq('id', currentBotMessageId);
                     }
+                    deleteSelectedBotBlock.remove();
+                    currentBotBlockId = null;
+                    currentBotMessageId = null;
                 }
 
-                // Quitar del DOM
-                deleteSelectedUserBlock.remove();
-                if (deleteSelectedBotBlock) deleteSelectedBotBlock.remove();
-
-                // Reconstruir chatHistory desde el DOM
                 rebuildChatHistory();
 
             } catch (err) {
@@ -1744,6 +1860,7 @@ CONSTRAINTS:
             }
 
             exitDeleteMode();
+            updateEditableMarkers();
         }
 
         function rebuildChatHistory() {
@@ -1757,6 +1874,79 @@ CONSTRAINTS:
                     if (txt) chatHistory.push({ role: 'assistant', content: txt.innerText });
                 }
             });
+        }
+
+        // ─── EDICIÓN DE MENSAJES ──────────────────────────────────
+        function updateEditableMarkers() {
+            document.querySelectorAll('.msg-block.editable-last').forEach(el => el.classList.remove('editable-last'));
+            const userBlocks = document.querySelectorAll('.msg-block.user');
+            if (userBlocks.length > 0) userBlocks[userBlocks.length - 1].classList.add('editable-last');
+            const botBlocks = document.querySelectorAll('.msg-block.bot');
+            if (botBlocks.length > 0) botBlocks[botBlocks.length - 1].classList.add('editable-last');
+        }
+
+        function startEdit(block, role) {
+            if (block.classList.contains('editing')) return;
+            block.classList.add('editing');
+            const msgText = block.querySelector('.msg-text');
+            const rawText = msgText.innerText;
+            const editArea = document.createElement('textarea');
+            editArea.className = 'msg-edit-area';
+            editArea.value = rawText;
+            editArea.rows = Math.max(3, rawText.split('\n').length);
+            const actions = document.createElement('div');
+            actions.className = 'msg-edit-actions';
+            actions.innerHTML = `
+                <button class="btn-edit-confirm" onclick="confirmEdit(this.closest('.msg-block'), '${role}')">Save</button>
+                <button class="btn-edit-cancel" onclick="cancelEdit(this.closest('.msg-block'))">Cancel</button>`;
+            const body = block.querySelector('.msg-body');
+            msgText.style.display = 'none';
+            body.appendChild(editArea);
+            body.appendChild(actions);
+            editArea.focus();
+        }
+
+        function cancelEdit(block) {
+            block.classList.remove('editing');
+            const body = block.querySelector('.msg-body');
+            block.querySelector('.msg-text').style.display = '';
+            body.querySelector('.msg-edit-area')?.remove();
+            body.querySelector('.msg-edit-actions')?.remove();
+        }
+
+        async function confirmEdit(block, role) {
+            const body = block.querySelector('.msg-body');
+            const editArea = body.querySelector('.msg-edit-area');
+            const newText = editArea.value.trim();
+            if (!newText) return;
+            const msgText = block.querySelector('.msg-text');
+            if (role === 'user') {
+                msgText.innerHTML = formatNarrative(escapeHTML(newText));
+            } else {
+                msgText.innerHTML = formatNarrative(newText);
+                const blockId = block.id;
+                const state = blockStateMap.get(blockId);
+                if (state && state.alternatives.length > 0) {
+                    state.alternatives[state.index].text = newText;
+                }
+            }
+            try {
+                if (role === 'user') {
+                    const msgId = block.dataset.msgid;
+                    if (msgId) await _supabase.from('messages').update({ content: newText }).eq('id', msgId);
+                } else {
+                    const blockId = block.id;
+                    if (blockId && !blockId.startsWith('init_') && !blockId.startsWith('msg_')) {
+                        await _supabase.from('messages').update({ content: newText }).eq('id', blockId);
+                    } else if (blockId === currentBotBlockId && currentBotMessageId) {
+                        await _supabase.from('messages').update({ content: newText }).eq('id', currentBotMessageId);
+                    }
+                }
+            } catch (err) {
+                console.error('Error al guardar edicion:', err);
+            }
+            cancelEdit(block);
+            rebuildChatHistory();
         }
     </script>
 </body>
