@@ -144,7 +144,7 @@ export async function init(params) {
     };
 
     document.getElementById('chatBtn').onclick = () => {
-        if (!Auth.userId) { UI.showLoginPopup('Join Froggie AI to start chatting!'); return; }
+        if (!Auth.userId) { window.UI.showLoginPopup('Join Froggie AI to start chatting!'); return; }
         Router.go('room', { id: characterId });
     };
 
@@ -162,7 +162,7 @@ export async function init(params) {
     }
 
     document.getElementById('likeBtn').onclick = async () => {
-        if (!Auth.userId) { UI.showLoginPopup('Join Froggie AI to save your favorites!'); return; }
+        if (!Auth.userId) { window.UI.showLoginPopup('Join Froggie AI to save your favorites!'); return; }
         isLiked = !isLiked;
         const btn = document.getElementById('likeBtn');
         const txt = document.getElementById('likeTxt');
@@ -203,7 +203,7 @@ export async function init(params) {
     };
 
     document.getElementById('postCommentBtn').onclick = async () => {
-        if (!Auth.userId) { UI.showLoginPopup('Join Froggie AI to post reviews!'); return; }
+        if (!Auth.userId) { window.UI.showLoginPopup('Join Froggie AI to post reviews!'); return; }
         const input = document.getElementById('newCommentInput');
         const text  = input.value.trim();
         if (!text) return;
