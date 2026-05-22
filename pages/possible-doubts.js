@@ -89,6 +89,13 @@ export function render() {
             border: 1px solid rgba(62,83,43,0.15);
             border-radius: 16px; padding: 20px;
         }
+        .image-container {
+            margin: 14px 0; text-align: center;
+            background: rgba(255,255,255,0.6); border: 1px solid rgba(62,83,43,0.15);
+            border-radius: 8px; padding: 8px;
+        }
+        .image-container img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 0 auto; }
+        .image-caption { font-size: 0.8rem; opacity: 0.6; margin-top: 6px; font-family: sans-serif; }
         .prompt-box {
             background-color: rgba(93,112,56,0.06);
             border-left: 3px solid var(--btn-color);
@@ -204,22 +211,40 @@ export function render() {
             <div class="guide-step">
                 <h3>Step 1: Basic Identity & Visuals</h3>
                 <p>The very first thing other users will see. Define your character's avatar or photo (we recommend a direct, stable image URL), their name, and a brief subtitle summarizing who they are in a single sentence.</p>
+                <div class="image-container">
+                    <img src="primera parte del bot.png" alt="Basic Identity Form Area">
+                    <div class="image-caption">Reference Image: primera parte del bot.png</div>
+                </div>
             </div>
 
             <div class="guide-step">
                 <h3>Step 2: Public Description</h3>
                 <p>A <strong>compact summary of who your character is</strong> — key physical appearance and most defining personality traits. Be <strong>clear, direct, and concise</strong>. This is also visible to the public, so it doubles as the first impression readers get of your creation!</p>
+                <div class="image-container">
+                    <img src="segunda parte.png" alt="Public Description Area">
+                    <div class="image-caption">Reference Image: segunda parte.png</div>
+                </div>
             </div>
 
             <div class="guide-step">
                 <h3>Step 3: Deep System Definition (The Soul of the Bot)</h3>
                 <p>The most critical and hidden part. Your writing needs to be <strong>extremely clear, direct, and detailed</strong>. Use explicit attributes and lore traits to guide the AI on how to act, its backstory, relationship to the user, speech mannerisms, and psychological traits.</p>
+                <div class="image-container">
+                    <img src="tercera parte.png" alt="System Definition Part 1" style="margin-bottom:8px;">
+                    <img src="cuarta parte.png" alt="System Definition Part 2" style="margin-bottom:8px;">
+                    <img src="quinta parte.png" alt="System Definition Part 3">
+                    <div class="image-caption">Sequential Reference Images: tercera parte.png, cuarta parte.png, and quinta parte.png</div>
+                </div>
             </div>
 
             <div class="guide-step">
                 <h3>Step 4: First Message & Visibility</h3>
                 <p>Write the bot's <strong>First Message / Greeting</strong>. This triggers the roleplay session and subtly dictates the writing style to the AI (whether to use asterisks <code>*actions*</code> or quotation marks for dialogue).</p>
                 <p>Then select: <strong>Public</strong> (appears on the global feed) or <strong>Private</strong> (only accessible from your profile).</p>
+                <div class="image-container">
+                    <img src="ultima parte.png" alt="First Message and Privacy Options">
+                    <div class="image-caption">Reference Image: ultima parte.png</div>
+                </div>
             </div>
 
             <p style="margin-top:20px;font-style:italic;text-align:center;">💡 <strong>Quick Pro-Tip:</strong> While this structure is highly recommended, Froggie AI is all about creative freedom — experiment with different styles and discover unique interactions!</p>
