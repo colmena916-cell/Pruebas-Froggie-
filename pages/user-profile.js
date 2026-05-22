@@ -217,13 +217,17 @@ export async function init(params) {
     };
 
     if (currentUserId && targetUserId !== currentUserId) {
-        const { data } = await _supabase.from('follows').select('id').eq('follower_id', currentUserId).eq('following_id', targetUserId).maybeSingle().catch(() => ({ data: null }));
-        isFollowing = !!data;
+        let followData = null;
+        try {
+            const { data } = await _supabase.from('follows').select('id').eq('follower_id', currentUserId).eq('following_id', targetUserId).maybeSingle();
+            followData = data;
+        } catch {}
+        isFollowing = !!followData;
         updateFollowBtn();
     }
 
     document.getElementById('followBtn').onclick = async () => {
-        if (!currentUserId) { UI.showLoginPopup('Join Froggie AI to follow authors!'); return; }
+        if (!currentUserId) { window.UI.showLoginPopup('Join Froggie AI to follow authors!'); return; }
         const btn = document.getElementById('followBtn');
         btn.disabled = true;
         try {

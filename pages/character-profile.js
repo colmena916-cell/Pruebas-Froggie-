@@ -157,7 +157,12 @@ export async function init(params) {
 
     // ── Like ──────────────────────────────────────────────────
     if (Auth.userId) {
-        const { data: likeData } = await _supabase.from('favorites').select('*').eq('character_id', characterId).eq('user_id', Auth.userId).single().catch(() => ({ data: null }));
+        let likeData = null;
+        try {
+            const { data } = await _supabase.from('favorites').select('*').eq('character_id', characterId).eq('user_id', Auth.userId).maybeSingle();
+            likeData = data;
+        } catch {}
+        // fix: use try/catch instead
         if (likeData) { isLiked = true; document.getElementById('likeBtn').classList.add('active'); document.getElementById('likeTxt').textContent = 'Liked'; }
     }
 
