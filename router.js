@@ -72,9 +72,11 @@ export const Router = {
         // Cerrar popover de create al navegar
         document.getElementById('createPopover')?.classList.remove('show');
 
-        // Limpiar clases que la landing pone al sidebar/overlay
+        // Limpiar cualquier display:none inline del sidebar (puesto por la landing)
         document.getElementById('sideMenu')?.classList.remove('landing-hidden');
         document.getElementById('menuOverlay')?.classList.remove('landing-hidden');
+        const sideMenu = document.getElementById('sideMenu');
+        if (sideMenu) sideMenu.style.display = '';
 
         // Ocultar bottom nav en páginas de auth y room, restaurar en el resto
         const hideNav = ['registro', 'reset-password', 'room'].includes(routeName);
