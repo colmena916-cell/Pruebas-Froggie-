@@ -172,6 +172,7 @@
         import { _supabase } from './supabase.js';
         import { Auth, Theme } from './auth.js';
         import { Router } from './router.js';
+        import { UI } from './ui.js';
 
         // ── 1. Aplicar tema guardado ANTES de renderizar (evita flash) ──
         Theme.restore();
@@ -270,6 +271,7 @@
         window.Auth   = Auth;
         window.Router = Router;
         window.Theme  = Theme;
+        window.UI     = UI;
 
         // ── 5. Arrancar el router ────────────────────────────────────
         Router.init();
