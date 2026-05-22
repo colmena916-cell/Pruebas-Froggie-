@@ -69,20 +69,24 @@ export const Router = {
         const loader = ROUTES[routeName] || ROUTES['dashboard'];
         const app    = document.getElementById('app');
 
-        // Indicador de carga suave (para páginas lentas)
+        // Cerrar popover de create al navegar
+        document.getElementById('createPopover')?.classList.remove('show');
+
+        // Ocultar bottom nav en páginas de auth y room
+        const hideNav = ['registro', 'reset-password', 'room'].includes(routeName);
+        const bottomNav = document.getElementById('bottomNav');
+        if (bottomNav) bottomNav.style.display = hideNav ? 'none' : '';
+
+        // Indicador de carga suave
         app.style.opacity = '0.6';
         app.style.transition = 'opacity 0.15s';
 
         try {
             const module = await loader();
-            // Cada módulo exporta: render(params) → devuelve HTML string
-            //                      init(params)   → monta listeners después de render
             if (module.render) {
                 app.innerHTML = module.render(params);
             }
-            // Restaurar tema (por si la página tiene pickers que necesitan sync)
             Theme.restore();
-
             if (module.init) {
                 await module.init(params);
             }
@@ -93,7 +97,6 @@ export const Router = {
         }
 
         app.style.opacity = '1';
-        // Scroll al inicio al navegar
         window.scrollTo({ top: 0, behavior: 'instant' });
     },
 
