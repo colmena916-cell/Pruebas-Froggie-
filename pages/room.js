@@ -78,22 +78,23 @@ export function render() {
         .no-key-banner a { color: #8b2e2e; font-weight: bold; }
 
         /* ── Mensajes ────────────────────────────────────────── */
-        .msg-block { display: flex; gap: 10px; align-items: flex-start; position: relative; }
+        .msg-block { display: flex; gap: 12px; align-items: flex-start; position: relative; }
 
-        .msg-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-accent); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; background-size: cover; background-position: center; border: 1px solid rgba(62,83,43,0.1); }
-        .user-avatar { background-color: rgba(62,83,43,0.12); border: 1px dashed var(--btn-color); }
+        .msg-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-accent); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; flex-shrink: 0; background-size: cover; background-position: center; border: 1px solid rgba(62,83,43,0.1); }
+        .user-avatar { background-color: rgba(62,83,43,0.08); border: 1px solid rgba(62,83,43,0.15); }
 
         .msg-body { display: flex; flex-direction: column; gap: 4px; max-width: 82%; }
-        .msg-sender-name { font-size: 0.72rem; opacity: 0.45; }
-        .msg-block.bot .msg-sender-name { color: var(--btn-color); opacity: 1; font-size: 0.85rem; font-weight: bold; }
+        .msg-sender-name { font-size: 0.88rem; font-family: var(--font-serif); opacity: 0.55; display: flex; align-items: center; gap: 6px; }
+        .msg-block.bot .msg-sender-name { color: var(--text-dark); opacity: 0.75; font-weight: bold; }
+        .bot-badge { display: inline-block; font-size: 0.6rem; font-family: var(--font-serif); color: var(--text-dark); border: 1px solid var(--text-dark); border-radius: 3px; padding: 0px 3px; opacity: 0.55; line-height: 1.5; letter-spacing: 0.02em; vertical-align: middle; }
         .msg-text { font-size: 1.02rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
         .msg-text em { font-style: italic; opacity: 0.85; }
         .msg-text em.action { font-style: italic; opacity: 0.7; }
 
         .bot-tools { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
-        .stars-container { display: flex; gap: 2px; }
-        .star-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: rgba(62,83,43,0.25); transition: color 0.15s; padding: 0 1px; }
-        .star-btn.active { color: var(--btn-color); }
+        .stars-container { display: flex; gap: 3px; }
+        .star-btn { background: none; border: none; cursor: pointer; font-size: 1.05rem; color: transparent; -webkit-text-stroke: 1px var(--text-dark); transition: color 0.15s, -webkit-text-stroke 0.15s; padding: 0 1px; opacity: 0.4; }
+        .star-btn.active { color: var(--btn-color); -webkit-text-stroke: 1px var(--btn-color); opacity: 1; }
 
         .nav-arrows { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; opacity: 0.6; }
         .nav-arrow { background: none; border: none; cursor: pointer; color: var(--text-dark); font-size: 0.9rem; padding: 0 4px; }
@@ -116,19 +117,25 @@ export function render() {
         .chat-input-area {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--bg-main); border-top: 1px solid rgba(62,83,43,0.15);
-            padding: 10px 12px; z-index: 100;
+            padding: 12px 16px 16px; z-index: 100;
+            display: flex; justify-content: center;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
         }
-        .input-wrapper { display: flex; gap: 8px; align-items: flex-end; }
+        .input-wrapper { max-width: 820px; width: 100%; position: relative; display: flex; align-items: center; }
         .input-wrapper textarea {
-            flex: 1; resize: none; border: 1px solid rgba(62,83,43,0.25);
-            border-radius: 20px; padding: 10px 14px; font-family: var(--font-serif);
-            font-size: 1rem; outline: none; background: var(--bg-main); color: var(--text-dark);
-            max-height: 140px; overflow-y: auto; line-height: 1.4; transition: border-color 0.2s;
+            width: 100%; padding: 12px 48px 12px 18px;
+            border: 1px solid rgba(62,83,43,0.25); border-radius: 24px;
+            font-family: var(--font-serif); font-size: 1rem;
+            background-color: rgba(62,83,43,0.02); color: var(--text-dark);
+            outline: none; resize: none; line-height: 1.5;
+            max-height: 140px; overflow-y: auto;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .input-wrapper textarea:focus { border-color: var(--btn-color); }
-        .btn-send { background-color: var(--btn-color); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background-color 0.2s; }
-        .btn-send:hover { background-color: var(--btn-hover); }
-        .btn-send:disabled { opacity: 0.45; cursor: not-allowed; }
+        .input-wrapper textarea:focus { border-color: var(--btn-color); box-shadow: 0 0 8px rgba(93,112,56,0.12); }
+        .btn-send { position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--btn-color); padding: 7px; display: flex; border-radius: 50%; transition: transform 0.1s, color 0.2s; }
+        .btn-send:hover { color: var(--btn-hover); }
+        .btn-send:active { transform: scale(0.85); }
+        .btn-send:disabled { opacity: 0.3; cursor: not-allowed; }
         .btn-send .icon-svg { width: 20px; height: 20px; }
 
         /* ── System message ──────────────────────────────────── */
@@ -160,12 +167,17 @@ export function render() {
         .btn-delete-confirm.ready { opacity: 1; pointer-events: auto; }
 
         /* ── Selección y edición ─────────────────────────────── */
-        .msg-select-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(62,83,43,0.3); background: var(--bg-main); display: none; align-items: center; justify-content: center; z-index: 5; pointer-events: none; flex-shrink: 0; }
+        .msg-select-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(201,113,113,0.5); background: var(--bg-main); display: none; align-items: center; justify-content: center; z-index: 5; pointer-events: none; position: absolute; top: 0; right: 0; }
         .msg-select-check svg { width: 11px; height: 11px; fill: white; display: none; }
+        body.delete-mode .msg-block.user { cursor: not-allowed; }
+        body.delete-mode .msg-block.user.deletable { cursor: pointer; }
         body.delete-mode .msg-block.user.deletable .msg-select-check { display: flex; }
         body.delete-mode .msg-block.bot.deletable-bot { cursor: pointer; }
         body.delete-mode .msg-block.user.selected-pair .msg-select-check { background-color: #c97171; border-color: #c97171; }
         body.delete-mode .msg-block.user.selected-pair .msg-select-check svg { display: block; }
+        body.delete-mode .msg-block.selected-pair::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; background-color: rgba(0,0,0,0.05); border: 2px solid rgba(201,113,113,0.35); pointer-events: none; }
+        body.delete-mode .msg-block.user.deletable:not(.selected-pair):hover::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; border: 2px dashed rgba(201,113,113,0.3); pointer-events: none; }
+        body.delete-mode .msg-block.bot.deletable-bot:not(.selected-pair):hover::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; border: 2px dashed rgba(201,113,113,0.3); pointer-events: none; }
 
         .msg-edit-btn { display: none; position: absolute; top: 0; right: 0; background: none; border: none; cursor: pointer; color: var(--text-dark); opacity: 0.35; padding: 2px; z-index: 5; transition: opacity 0.2s; }
         .msg-edit-btn:hover { opacity: 1; }
@@ -481,7 +493,7 @@ export async function init(params) {
             <button class="msg-edit-btn" title="Edit message"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
             <div class="msg-avatar" ${avatarStyle}>${avatarText}</div>
             <div class="msg-body">
-                <span class="msg-sender-name">${characterName}</span>
+                <span class="msg-sender-name">${characterName} <span class="bot-badge">f.ai</span></span>
                 <p class="msg-text" id="txt_${blockId}"></p>
                 <div class="bot-tools" id="tools_${blockId}">
                     <div class="stars-container">
@@ -495,7 +507,6 @@ export async function init(params) {
                 </div>
             </div>`;
 
-        div.onclick = () => toggleSelectBotMessage(div);
         div.querySelector('.msg-edit-btn').onclick = (e) => { e.stopPropagation(); startEdit(div, 'bot'); };
         div.querySelectorAll('.star-btn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); rateBotMessage(blockId, parseInt(btn.dataset.n)); }; });
         div.getElementById = (id) => div.querySelector(`#${id}`); // no existe en div, usamos document
@@ -845,13 +856,13 @@ PROSE:
     };
 
     // ── Selección y borrado ───────────────────────────────────
-    let deletableUserBlock = null, deletableBotBlock = null;
+    let deletableUserBlock = null;
     let deleteSelectedUserBlock = null, deleteSelectedBotBlock = null;
 
     const updateDeleteConfirmBtn = () => {
         const btn  = document.getElementById('deleteConfirmBtn');
         const hint = document.getElementById('deleteHint');
-        if (deleteSelectedUserBlock || deleteSelectedBotBlock) { btn.classList.add('ready'); hint.textContent = deleteSelectedUserBlock ? 'Exchange will be removed' : 'Bot message will be removed'; }
+        if (deleteSelectedUserBlock) { btn.classList.add('ready'); hint.textContent = 'Exchange will be removed'; }
         else { btn.classList.remove('ready'); hint.textContent = 'Select a message to delete'; }
     };
 
@@ -866,16 +877,13 @@ PROSE:
     const enterDeleteMode = () => {
         toggleDropdown();
         const allUser = document.querySelectorAll('.msg-block.user');
-        const allBot  = document.querySelectorAll('.msg-block.bot');
         deletableUserBlock = allUser.length > 0 ? allUser[allUser.length - 1] : null;
-        deletableBotBlock  = allBot.length  > 0 ? allBot[allBot.length - 1]   : null;
-        if (!deletableUserBlock && !deletableBotBlock) return;
+        if (!deletableUserBlock) return;
         document.body.classList.add('delete-mode');
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('deleteBar').classList.add('show');
         deleteSelectedUserBlock = null; deleteSelectedBotBlock = null;
-        if (deletableUserBlock) deletableUserBlock.classList.add('deletable');
-        if (deletableBotBlock)  deletableBotBlock.classList.add('deletable-bot');
+        deletableUserBlock.classList.add('deletable');
         updateDeleteConfirmBtn();
     };
 
@@ -883,8 +891,8 @@ PROSE:
         document.body.classList.remove('delete-mode');
         document.getElementById('inputArea').style.display = '';
         document.getElementById('deleteBar').classList.remove('show');
-        document.querySelectorAll('.msg-block.selected-pair, .msg-block.deletable, .msg-block.deletable-bot').forEach(el => el.classList.remove('selected-pair', 'deletable', 'deletable-bot'));
-        deleteSelectedUserBlock = deleteSelectedBotBlock = deletableUserBlock = deletableBotBlock = null;
+        document.querySelectorAll('.msg-block.selected-pair, .msg-block.deletable').forEach(el => el.classList.remove('selected-pair', 'deletable'));
+        deleteSelectedUserBlock = deleteSelectedBotBlock = deletableUserBlock = null;
     };
 
     const toggleSelectMessage = (userBlock) => {
@@ -896,17 +904,11 @@ PROSE:
             updateDeleteConfirmBtn(); return;
         }
         userBlock.classList.add('selected-pair'); deleteSelectedUserBlock = userBlock;
+        // También marcar el bot que sigue al usuario seleccionado
         let next = userBlock.nextElementSibling;
         while (next && !next.classList.contains('msg-block')) next = next.nextElementSibling;
-        if (next && next.classList.contains('bot')) { next.classList.add('selected-pair'); deleteSelectedBotBlock = next; if (next === deletableBotBlock) next.classList.remove('deletable-bot'); }
+        if (next && next.classList.contains('bot')) { next.classList.add('selected-pair'); deleteSelectedBotBlock = next; }
         else deleteSelectedBotBlock = null;
-        updateDeleteConfirmBtn();
-    };
-
-    const toggleSelectBotMessage = (botBlock) => {
-        if (!document.body.classList.contains('delete-mode') || botBlock !== deletableBotBlock || deleteSelectedUserBlock) return;
-        if (botBlock.classList.contains('selected-pair')) { botBlock.classList.remove('selected-pair'); deleteSelectedBotBlock = null; }
-        else { botBlock.classList.add('selected-pair'); deleteSelectedBotBlock = botBlock; }
         updateDeleteConfirmBtn();
     };
 
@@ -921,24 +923,16 @@ PROSE:
     };
 
     const confirmDeleteSelected = async () => {
-        if (!deleteSelectedUserBlock && !deleteSelectedBotBlock) return;
+        if (!deleteSelectedUserBlock) return;
         try {
-            if (deleteSelectedUserBlock) {
-                const userMsgId  = deleteSelectedUserBlock.dataset.msgid;
-                const botBlockId = deleteSelectedBotBlock ? deleteSelectedBotBlock.id : null;
-                const botMsgId   = deleteSelectedBotBlock ? deleteSelectedBotBlock.dataset.msgid : null;
-                if (userMsgId) await _supabase.from('messages').delete().eq('id', userMsgId);
-                if (botMsgId) await _supabase.from('messages').delete().eq('id', botMsgId);
-                else if (botBlockId && botBlockId === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
-                deleteSelectedUserBlock.remove();
-                if (deleteSelectedBotBlock) deleteSelectedBotBlock.remove();
-            } else if (deleteSelectedBotBlock) {
-                const botMsgId = deleteSelectedBotBlock.dataset.msgid;
-                if (botMsgId) await _supabase.from('messages').delete().eq('id', botMsgId);
-                else if (deleteSelectedBotBlock.id === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
-                deleteSelectedBotBlock.remove();
-                currentBotBlockId = currentBotMessageId = null;
-            }
+            const userMsgId = deleteSelectedUserBlock.dataset.msgid;
+            const botMsgId  = deleteSelectedBotBlock ? deleteSelectedBotBlock.dataset.msgid : null;
+            const botBlockId = deleteSelectedBotBlock ? deleteSelectedBotBlock.id : null;
+            if (userMsgId) await _supabase.from('messages').delete().eq('id', userMsgId);
+            if (botMsgId) await _supabase.from('messages').delete().eq('id', botMsgId);
+            else if (botBlockId && botBlockId === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
+            deleteSelectedUserBlock.remove();
+            if (deleteSelectedBotBlock) deleteSelectedBotBlock.remove();
             rebuildChatHistory();
         } catch (err) { console.error('Error deleting:', err); }
         exitDeleteMode(); updateEditableMarkers();
