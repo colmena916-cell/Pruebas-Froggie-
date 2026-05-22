@@ -226,9 +226,9 @@ export async function init() {
     }
 
     // Ocultar sidebar y bottom nav — la landing tiene su propio nav
-    document.getElementById('bottomNav').style.display  = 'none';
-    document.getElementById('sideMenu').style.display   = 'none';
-    document.getElementById('menuOverlay').style.display = 'none';
+    document.getElementById('bottomNav').style.display   = 'none';
+    document.getElementById('sideMenu').classList.add('landing-hidden');
+    document.getElementById('menuOverlay').classList.add('landing-hidden');
 
     // Botones de navegación
     document.getElementById('landingVisit').onclick    = () => Router.go('dashboard');
