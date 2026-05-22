@@ -779,7 +779,11 @@ PROSE:
                 state.alternatives.push({ text: alt, rating: 0 });
                 state.index = state.alternatives.length - 1;
                 const blockEl = document.getElementById(blockId);
-                const realMsgId = blockEl?.dataset.msgid || (blockId === currentBotBlockId ? currentBotMessageId : null);
+                // Si el blockId es un UUID real de Supabase (no empieza con msg_ ni init_), úsalo directo
+                // Si es un ID temporal (msg_xxx), buscar el msgid real en el dataset
+                const realMsgId = (!blockId.startsWith('msg_') && !blockId.startsWith('init_') && !blockId.startsWith('guest_'))
+                    ? blockId
+                    : (blockEl?.dataset.msgid || currentBotMessageId);
                 try { if (realMsgId) await _supabase.from('messages').update({ content: alt, rating: 0, alternatives: JSON.stringify(state.alternatives), alt_index: state.index }).eq('id', realMsgId); } catch {}
                 const textElNew = document.getElementById(`txt_${blockId}`);
                 if (textElNew) { textElNew.style.visibility = 'visible'; textElNew.innerHTML = ''; }
@@ -817,7 +821,9 @@ PROSE:
         state.alternatives[state.index].rating = rating;
         updateStars(blockId, rating);
         const blockEl = document.getElementById(blockId);
-        const realMsgId = blockEl?.dataset.msgid || (blockId === currentBotBlockId ? currentBotMessageId : null);
+        const realMsgId = (!blockId.startsWith('msg_') && !blockId.startsWith('init_') && !blockId.startsWith('guest_'))
+            ? blockId
+            : (blockEl?.dataset.msgid || currentBotMessageId);
         if (realMsgId) await _supabase.from('messages').update({ rating }).eq('id', realMsgId);
         if (rating === 3 && state.userPrompt) {
             await _supabase.from('training_pairs').insert({ character_id: characterId, user_message: state.userPrompt, bot_message: state.alternatives[state.index].text, rating: 3 });
