@@ -72,10 +72,10 @@ export const Router = {
         // Cerrar popover de create al navegar
         document.getElementById('createPopover')?.classList.remove('show');
 
-        // Ocultar bottom nav en páginas de auth y room
+        // Ocultar bottom nav en páginas de auth y room, restaurar en el resto
         const hideNav = ['registro', 'reset-password', 'room'].includes(routeName);
         const bottomNav = document.getElementById('bottomNav');
-        if (bottomNav) bottomNav.style.display = hideNav ? 'none' : '';
+        if (bottomNav) bottomNav.style.display = hideNav ? 'none' : 'flex';
 
         // Indicador de carga suave
         app.style.opacity = '0.6';
