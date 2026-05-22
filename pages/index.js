@@ -229,8 +229,8 @@ export async function init() {
     document.getElementById('bottomNav').style.display = 'none';
 
     // Botones de navegación
-    document.getElementById('landingVisit').onclick    = () => Router.go('dashboard');
-    document.getElementById('landingJoin').onclick     = () => Router.go('registro');
+    document.getElementById('landingVisit').onclick = () => Router.go('dashboard');
+    document.getElementById('landingJoin').onclick  = () => Router.go('registro');
     document.getElementById('landingHelp').onclick     = (e) => { e.preventDefault(); Router.go('possible-doubts'); };
     document.getElementById('landingHelpLink').onclick = (e) => { e.preventDefault(); Router.go('possible-doubts'); };
     document.getElementById('termsFullLink').onclick   = (e) => { e.preventDefault(); Router.go('possible-doubts'); };
