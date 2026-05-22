@@ -67,7 +67,7 @@ export function render() {
         /* ── Área de chat ────────────────────────────────────── */
         .chat-scroll-area {
             position: fixed; top: 58px; left: 0; right: 0;
-            bottom: 68px; overflow-y: auto;
+            bottom: 120px; overflow-y: auto;
             padding: 16px 14px 8px;
             display: flex; flex-direction: column; gap: 16px;
         }
@@ -84,8 +84,8 @@ export function render() {
         .user-avatar { background-color: rgba(62,83,43,0.08); border: 1px solid rgba(62,83,43,0.15); }
 
         .msg-body { display: flex; flex-direction: column; gap: 4px; max-width: 82%; }
-        .msg-sender-name { font-size: 0.88rem; font-family: var(--font-serif); opacity: 0.55; display: flex; align-items: center; gap: 6px; }
-        .msg-block.bot .msg-sender-name { color: var(--text-dark); opacity: 0.75; font-weight: bold; }
+        .msg-sender-name { font-size: 0.88rem; font-family: var(--font-serif); font-weight: bold; opacity: 0.55; display: flex; align-items: center; gap: 6px; }
+        .msg-block.bot .msg-sender-name { color: var(--text-dark); opacity: 0.75; }
         .bot-badge { display: inline-block; font-size: 0.6rem; font-family: var(--font-serif); color: var(--text-dark); border: 1px solid var(--text-dark); border-radius: 3px; padding: 0px 3px; opacity: 0.55; line-height: 1.5; letter-spacing: 0.02em; vertical-align: middle; }
         .msg-text { font-size: 1.02rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
         .msg-text em { font-style: italic; opacity: 0.85; }
@@ -101,22 +101,27 @@ export function render() {
         .nav-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
 
         /* ── Indicador de escritura ──────────────────────────── */
-        .typing-indicator { display: none; align-items: center; gap: 10px; padding: 0 0 8px; }
+        .typing-indicator {
+            display: none; align-items: center; gap: 12px;
+            position: fixed; bottom: 68px; left: 0; right: 0;
+            padding: 8px 16px;
+            background: var(--bg-main);
+            border-top: 1px solid rgba(62,83,43,0.15);
+        }
         .typing-indicator.show { display: flex; }
         .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--btn-color); animation: bounce 1.2s infinite; }
         .typing-dot:nth-child(1) { animation-delay: 0s; }
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-        .typing-name { font-size: 0.8rem; opacity: 0.5; font-style: italic; }
         .typing-dots-row { display: flex; align-items: center; gap: 4px; }
-        .typing-body { display: flex; flex-direction: column; gap: 3px; }
-        .typing-label { font-size: 0.72rem; color: var(--btn-color); font-weight: bold; opacity: 1; }
+        .typing-body { display: flex; flex-direction: column; gap: 2px; }
+        .typing-label { font-size: 0.78rem; color: var(--text-dark); font-weight: bold; opacity: 0.7; font-family: var(--font-serif); }
 
         /* ── Input ───────────────────────────────────────────── */
         .chat-input-area {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--bg-main); border-top: 1px solid rgba(62,83,43,0.15);
+            background: var(--bg-main); border-top: 1px solid rgba(62,83,43,0.25);
             padding: 12px 16px 16px; z-index: 100;
             display: flex; justify-content: center;
             padding-bottom: calc(16px + env(safe-area-inset-bottom));
@@ -131,6 +136,7 @@ export function render() {
             max-height: 140px; overflow-y: auto;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
+        .input-wrapper textarea::placeholder { color: var(--text-dark); opacity: 0.35; }
         .input-wrapper textarea:focus { border-color: var(--btn-color); box-shadow: 0 0 8px rgba(93,112,56,0.12); }
         .btn-send { position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--btn-color); padding: 7px; display: flex; border-radius: 50%; transition: transform 0.1s, color 0.2s; }
         .btn-send:hover { color: var(--btn-hover); }
