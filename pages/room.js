@@ -106,10 +106,9 @@ export function render() {
         /* ── Indicador de escritura ──────────────────────────── */
         .typing-indicator {
             display: none; align-items: center; gap: 8px;
-            position: fixed; bottom: 68px; left: 0; right: 0;
-            padding: 8px 20px;
+            position: fixed; bottom: 78px; left: 0; right: 0;
+            padding: 0 20px 8px;
             background: var(--bg-main);
-            border-top: 1px solid var(--border-color);
         }
         .typing-indicator.show { display: flex; }
         .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dark); opacity: 0.35; animation: typingBounce 1.4s infinite both; }
