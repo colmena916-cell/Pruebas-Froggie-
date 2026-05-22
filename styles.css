@@ -401,6 +401,9 @@ main {
 }
 .news-modal-btn:hover { background-color: var(--btn-hover); }
 
+/* ── Landing: ocultar sidebar y overlay temporalmente ───────── */
+.landing-hidden { display: none !important; }
+
 /* ── Estado vacío / carga ───────────────────────────────────── */
 .empty-state {
     text-align: center;
