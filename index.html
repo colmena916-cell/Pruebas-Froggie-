@@ -183,7 +183,10 @@
         // ── 3. Conectar todos los botones del DOM fijo ───────────────
 
         // Login popup
-        document.getElementById('loginPopupBtn').onclick   = () => Router.go('registro');
+        document.getElementById('loginPopupBtn').onclick = () => {
+            document.getElementById('loginPopupOverlay').style.display = 'none';
+            Router.go('registro');
+        };
         document.getElementById('loginPopupClose').onclick = () => {
             document.getElementById('loginPopupOverlay').style.display = 'none';
         };
