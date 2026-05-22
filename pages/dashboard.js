@@ -75,7 +75,7 @@ export function render() {
 
     <main>
         <div id="reloadHint" style="display:none; background:rgba(62,83,43,0.06); border:1px solid rgba(62,83,43,0.15); border-radius:10px; padding:10px 16px; margin-bottom:16px; font-size:0.85rem; opacity:0.75; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <span>🐸 Si algún botón no responde, <a href="" style="color:var(--btn-color);">recarga la página</a>.</span>
+            <span>🐸 If any button is unresponsive, <a href="" style="color:var(--btn-color);">reload the page</a>.</span>
             <button onclick="document.getElementById('reloadHint').style.display='none'" style="background:none;border:none;cursor:pointer;opacity:0.5;font-size:1rem;color:var(--text-dark);">✕</button>
         </div>
         <!-- Resultados de búsqueda -->
