@@ -39,38 +39,38 @@
         <div class="news-modal">
             <button class="news-modal-close" id="newsModalClose" aria-label="Close">✕</button>
             <div class="news-modal-frog">🐸</div>
-            <h2>¡Bienvenidos de vuelta!</h2>
-            <p class="news-tagline">...croac. Hay algunas cositas nuevas por aquí.</p>
+            <h2>¡Froggie AI se mudó!</h2>
+            <p class="news-tagline">...croac. Hay noticias importantes por aquí.</p>
             <div class="news-item">
-                <span class="news-item-icon">🙈</span>
+                <span class="news-item-icon">🏠</span>
                 <div class="news-item-text">
-                    <strong>La descripción ya no es pública</strong>
-                    La descripción de los personajes ahora es solo visible en su perfil de personaje — ya no aparece en el feed ni en las fichas del inicio.
+                    <strong>La página migró a un nuevo formato</strong>
+                    Froggie AI se renovó por dentro — pasamos de 15 páginas separadas a una sola aplicación más rápida y estable. Todo sigue igual por fuera, pero por dentro es un sapo completamente nuevo.
                 </div>
             </div>
             <div class="news-item">
-                <span class="news-item-icon">🏷️</span>
+                <span class="news-item-icon">🔑</span>
                 <div class="news-item-text">
-                    <strong>Categorías y etiquetas</strong>
-                    Ahora puedes clasificar tus personajes con una categoría (Canon u OC) y hasta 3 etiquetas.
+                    <strong>Si te sacó de tu cuenta, es normal</strong>
+                    Las actualizaciones constantes que vinieron con la migración probablemente cerraron la sesión de muchos. No es un error — es el resultado natural de alguien que no siempre sabe bien qué está moviendo. ✌️ Solo vuelve a iniciar sesión y todo debería estar igual.
                 </div>
             </div>
             <div class="news-item">
-                <span class="news-item-icon">✏️</span>
+                <span class="news-item-icon">💾</span>
                 <div class="news-item-text">
-                    <strong>Recomendamos actualizar tus personajes</strong>
-                    Si ya tienes personajes creados, ve a "Edit Character" para agregar categoría y tags.
+                    <strong>Tus chats y personajes están intactos</strong>
+                    Nada se borró. Toda la información sigue guardada — personajes, conversaciones, favoritos, configuración de API.
                 </div>
             </div>
             <div class="news-item">
-                <span class="news-item-icon">🎨</span>
+                <span class="news-item-icon">🐸</span>
                 <div class="news-item-text">
-                    <strong>Puedes cambiar la apariencia</strong>
-                    Menú (esquina superior derecha) → <em>Appearance</em>. Hay modo oscuro y colores personalizados.
+                    <strong>Gracias por la paciencia</strong>
+                    Froggie AI es un proyecto hecho con mucho cariño y muy pocas certezas técnicas. Gracias por seguir aquí mientras todo se va acomodando.
                 </div>
             </div>
             <hr class="news-modal-divider">
-            <p class="news-modal-footer">Gracias por seguir aquí con nosotros. 🐸<br>— El equipo de Froggie AI</p>
+            <p class="news-modal-footer">Con cariño y algo de caos. 🐸<br>— El equipo de Froggie AI</p>
             <button class="news-modal-btn" id="newsModalBtn">¡Entendido, croac! 🐸</button>
         </div>
     </div>
@@ -196,7 +196,7 @@
             const m = document.getElementById('newsModal');
             m.classList.remove('visible');
             setTimeout(() => { m.style.display = 'none'; }, 250);
-            localStorage.setItem('froggie_news_v2', '1');
+            localStorage.setItem('froggie_news_v3', '1');
         };
         document.getElementById('newsModalClose').onclick = closeNews;
         document.getElementById('newsModalBtn').onclick   = closeNews;
