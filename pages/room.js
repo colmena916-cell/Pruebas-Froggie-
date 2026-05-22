@@ -778,12 +778,11 @@ PROSE:
             if (alt) {
                 state.alternatives.push({ text: alt, rating: 0 });
                 state.index = state.alternatives.length - 1;
-                const blockEl = document.getElementById(blockId);
-                // Si el blockId es un UUID real de Supabase (no empieza con msg_ ni init_), úsalo directo
-                // Si es un ID temporal (msg_xxx), buscar el msgid real en el dataset
-                const realMsgId = (!blockId.startsWith('msg_') && !blockId.startsWith('init_') && !blockId.startsWith('guest_'))
-                    ? blockId
-                    : (blockEl?.dataset.msgid || currentBotMessageId);
+                // Si el blockId es UUID real de Supabase úsalo directo.
+                // Si es temporal (msg_/init_/guest_), buscar el UUID real en dataset.msgid del bloque DOM.
+                const realMsgId = (blockId.startsWith('msg_') || blockId.startsWith('init_') || blockId.startsWith('guest_'))
+                    ? (document.getElementById(blockId)?.dataset.msgid || null)
+                    : blockId;
                 try { if (realMsgId) await _supabase.from('messages').update({ content: alt, rating: 0, alternatives: JSON.stringify(state.alternatives), alt_index: state.index }).eq('id', realMsgId); } catch {}
                 const textElNew = document.getElementById(`txt_${blockId}`);
                 if (textElNew) { textElNew.style.visibility = 'visible'; textElNew.innerHTML = ''; }
@@ -820,10 +819,9 @@ PROSE:
         if (!state || state.alternatives.length === 0) return;
         state.alternatives[state.index].rating = rating;
         updateStars(blockId, rating);
-        const blockEl = document.getElementById(blockId);
-        const realMsgId = (!blockId.startsWith('msg_') && !blockId.startsWith('init_') && !blockId.startsWith('guest_'))
-            ? blockId
-            : (blockEl?.dataset.msgid || currentBotMessageId);
+        const realMsgId = (blockId.startsWith('msg_') || blockId.startsWith('init_') || blockId.startsWith('guest_'))
+            ? (document.getElementById(blockId)?.dataset.msgid || null)
+            : blockId;
         if (realMsgId) await _supabase.from('messages').update({ rating }).eq('id', realMsgId);
         if (rating === 3 && state.userPrompt) {
             await _supabase.from('training_pairs').insert({ character_id: characterId, user_message: state.userPrompt, bot_message: state.alternatives[state.index].text, rating: 3 });
