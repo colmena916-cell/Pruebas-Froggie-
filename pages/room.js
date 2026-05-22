@@ -13,10 +13,13 @@ export function render() {
     <style>
         /* ── Layout ─────────────────────────────────────────── */
         body { padding-bottom: 0 !important; }
+        /* Borde derivado del color de texto del tema activo */
+        :root, body { --border-color: rgba(62,83,43,0.2); }
+        body.theme-dark { --border-color: rgba(158,169,63,0.2); }
 
         .chat-header {
             background-color: var(--bg-accent);
-            border-bottom: 1px solid rgba(62,83,43,0.18);
+            border-bottom: 1px solid var(--border-color);
             padding: 10px 14px;
             display: flex; align-items: center;
             justify-content: space-between;
@@ -102,26 +105,23 @@ export function render() {
 
         /* ── Indicador de escritura ──────────────────────────── */
         .typing-indicator {
-            display: none; align-items: center; gap: 12px;
+            display: none; align-items: center; gap: 8px;
             position: fixed; bottom: 68px; left: 0; right: 0;
-            padding: 8px 16px;
+            padding: 8px 20px;
             background: var(--bg-main);
-            border-top: 1px solid rgba(62,83,43,0.15);
+            border-top: 1px solid var(--border-color);
         }
         .typing-indicator.show { display: flex; }
-        .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--btn-color); animation: bounce 1.2s infinite; }
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dark); opacity: 0.35; animation: typingBounce 1.4s infinite both; }
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-        .typing-dots-row { display: flex; align-items: center; gap: 4px; }
-        .typing-body { display: flex; flex-direction: column; gap: 2px; }
-        .typing-label { font-size: 0.78rem; color: var(--text-dark); font-weight: bold; opacity: 0.7; font-family: var(--font-serif); }
+        @keyframes typingBounce { 0%,80%,100%{ transform: scale(0.6); opacity: 0.35; } 40%{ transform: scale(1.1); opacity: 0.8; } }
+        .typing-label { font-size: 0.82rem; opacity: 0.5; font-style: italic; font-family: var(--font-serif); color: var(--text-dark); margin-left: 2px; }
 
         /* ── Input ───────────────────────────────────────────── */
         .chat-input-area {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--bg-main); border-top: 1px solid rgba(62,83,43,0.25);
+            background: var(--bg-main); border-top: 1px solid var(--border-color);
             padding: 12px 16px 16px; z-index: 100;
             display: flex; justify-content: center;
             padding-bottom: calc(16px + env(safe-area-inset-bottom));
@@ -129,7 +129,7 @@ export function render() {
         .input-wrapper { max-width: 820px; width: 100%; position: relative; display: flex; align-items: center; }
         .input-wrapper textarea {
             width: 100%; padding: 12px 48px 12px 18px;
-            border: 1px solid rgba(62,83,43,0.25); border-radius: 24px;
+            border: 1px solid var(--border-color); border-radius: 24px;
             font-family: var(--font-serif); font-size: 1rem;
             background-color: rgba(62,83,43,0.02); color: var(--text-dark);
             outline: none; resize: none; line-height: 1.5;
@@ -309,15 +309,10 @@ export function render() {
     </main>
 
     <div class="typing-indicator" id="typingIndicator">
-        <div class="msg-avatar" id="typingAvatar" style="flex-shrink:0;width:36px;height:36px;"></div>
-        <div class="typing-body">
-            <span class="typing-label" id="typingName"></span>
-            <div class="typing-dots-row">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        </div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <span class="typing-label" id="typingName"></span>
     </div>
 
     <!-- Barra de borrado -->
