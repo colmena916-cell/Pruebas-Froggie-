@@ -79,14 +79,13 @@ export function render() {
 
         /* ── Mensajes ────────────────────────────────────────── */
         .msg-block { display: flex; gap: 10px; align-items: flex-start; position: relative; }
-        .msg-block.user { flex-direction: row-reverse; }
 
         .msg-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-accent); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; background-size: cover; background-position: center; border: 1px solid rgba(62,83,43,0.1); }
-        .user-avatar { background-color: rgba(62,83,43,0.12); }
+        .user-avatar { background-color: rgba(62,83,43,0.12); border: 1px dashed var(--btn-color); }
 
         .msg-body { display: flex; flex-direction: column; gap: 4px; max-width: 82%; }
         .msg-sender-name { font-size: 0.72rem; opacity: 0.45; }
-        .msg-block.user .msg-sender-name { text-align: right; }
+        .msg-block.bot .msg-sender-name { color: var(--btn-color); opacity: 1; font-size: 0.85rem; font-weight: bold; }
         .msg-text { font-size: 1.02rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
         .msg-text em { font-style: italic; opacity: 0.85; }
         .msg-text em.action { font-style: italic; opacity: 0.7; }
@@ -101,13 +100,17 @@ export function render() {
         .nav-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
 
         /* ── Indicador de escritura ──────────────────────────── */
-        .typing-indicator { display: none; align-items: center; gap: 8px; padding: 8px 14px; }
+        .typing-indicator { display: none; align-items: center; gap: 10px; padding: 0 0 8px; }
         .typing-indicator.show { display: flex; }
         .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--btn-color); animation: bounce 1.2s infinite; }
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
         .typing-name { font-size: 0.8rem; opacity: 0.5; font-style: italic; }
+        .typing-dots-row { display: flex; align-items: center; gap: 4px; }
+        .typing-body { display: flex; flex-direction: column; gap: 3px; }
+        .typing-label { font-size: 0.72rem; color: var(--btn-color); font-weight: bold; opacity: 1; }
 
         /* ── Input ───────────────────────────────────────────── */
         .chat-input-area {
@@ -288,10 +291,15 @@ export function render() {
     </main>
 
     <div class="typing-indicator" id="typingIndicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <span class="typing-name" id="typingName"></span>
+        <div class="msg-avatar" id="typingAvatar" style="flex-shrink:0;width:36px;height:36px;"></div>
+        <div class="typing-body">
+            <span class="typing-label" id="typingName"></span>
+            <div class="typing-dots-row">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Barra de borrado -->
@@ -401,6 +409,7 @@ export async function init(params) {
             document.getElementById('typingName').textContent = char.name + ' is writing...';
             setAvatar('botHeaderAvatar', botPhotoUrl, char.name);
             setAvatar('dropdownAvatar',  botPhotoUrl, char.name);
+            setAvatar('typingAvatar',    botPhotoUrl, char.name);
 
             if (char.creator_id) {
                 const { data: profile } = await _supabase.from('profiles').select('username').eq('id', char.creator_id).single();
@@ -692,7 +701,7 @@ PROSE:
         if (isSending) return;
         const input = document.getElementById('userInput');
         const text  = input.value.trim();
-        if (!text) { if (currentBotBlockId && blockStateMap.has(currentBotBlockId)) await navigateAlt(currentBotBlockId, 1); return; }
+        if (!text) { return; }
         if (!apiSettings) { document.getElementById('noKeyBanner').classList.add('show'); return; }
 
         isSending = true; enableInput(false);
@@ -722,6 +731,11 @@ PROSE:
 
             const { data: savedBotMsg } = await _supabase.from('messages').insert({ conversation_id: conversationId, sender_type: 'bot', sender_name: characterName, content: botReply }).select('id').single();
             currentBotMessageId = savedBotMsg?.id || null;
+            // Guardar el ID real de Supabase en el dataset del bloque DOM para poder borrarlo después
+            if (currentBotMessageId) {
+                const botBlock = document.getElementById(blockId);
+                if (botBlock) botBlock.dataset.msgid = currentBotMessageId;
+            }
             await _supabase.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
 
             if (chatHistory.length > 60) await generateAndSaveSummary();
@@ -753,7 +767,9 @@ PROSE:
             if (alt) {
                 state.alternatives.push({ text: alt, rating: 0 });
                 state.index = state.alternatives.length - 1;
-                try { await _supabase.from('messages').update({ content: alt, rating: 0, alternatives: JSON.stringify(state.alternatives), alt_index: state.index }).eq('id', blockId); } catch {}
+                const blockEl = document.getElementById(blockId);
+                const realMsgId = blockEl?.dataset.msgid || (blockId === currentBotBlockId ? currentBotMessageId : null);
+                try { if (realMsgId) await _supabase.from('messages').update({ content: alt, rating: 0, alternatives: JSON.stringify(state.alternatives), alt_index: state.index }).eq('id', realMsgId); } catch {}
                 const textElNew = document.getElementById(`txt_${blockId}`);
                 if (textElNew) { textElNew.style.visibility = 'visible'; textElNew.innerHTML = ''; }
                 updateStars(blockId, 0);
@@ -789,7 +805,9 @@ PROSE:
         if (!state || state.alternatives.length === 0) return;
         state.alternatives[state.index].rating = rating;
         updateStars(blockId, rating);
-        if (currentBotMessageId) await _supabase.from('messages').update({ rating }).eq('id', currentBotMessageId);
+        const blockEl = document.getElementById(blockId);
+        const realMsgId = blockEl?.dataset.msgid || (blockId === currentBotBlockId ? currentBotMessageId : null);
+        if (realMsgId) await _supabase.from('messages').update({ rating }).eq('id', realMsgId);
         if (rating === 3 && state.userPrompt) {
             await _supabase.from('training_pairs').insert({ character_id: characterId, user_message: state.userPrompt, bot_message: state.alternatives[state.index].text, rating: 3 });
         }
@@ -908,15 +926,16 @@ PROSE:
             if (deleteSelectedUserBlock) {
                 const userMsgId  = deleteSelectedUserBlock.dataset.msgid;
                 const botBlockId = deleteSelectedBotBlock ? deleteSelectedBotBlock.id : null;
+                const botMsgId   = deleteSelectedBotBlock ? deleteSelectedBotBlock.dataset.msgid : null;
                 if (userMsgId) await _supabase.from('messages').delete().eq('id', userMsgId);
-                if (botBlockId && !botBlockId.startsWith('init_') && !botBlockId.startsWith('msg_')) await _supabase.from('messages').delete().eq('id', botBlockId);
-                else if (botBlockId?.startsWith('msg_') && deleteSelectedBotBlock === document.getElementById(currentBotBlockId) && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
+                if (botMsgId) await _supabase.from('messages').delete().eq('id', botMsgId);
+                else if (botBlockId && botBlockId === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
                 deleteSelectedUserBlock.remove();
                 if (deleteSelectedBotBlock) deleteSelectedBotBlock.remove();
             } else if (deleteSelectedBotBlock) {
-                const botBlockId = deleteSelectedBotBlock.id;
-                if (botBlockId && !botBlockId.startsWith('init_') && !botBlockId.startsWith('msg_')) await _supabase.from('messages').delete().eq('id', botBlockId);
-                else if (botBlockId === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
+                const botMsgId = deleteSelectedBotBlock.dataset.msgid;
+                if (botMsgId) await _supabase.from('messages').delete().eq('id', botMsgId);
+                else if (deleteSelectedBotBlock.id === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
                 deleteSelectedBotBlock.remove();
                 currentBotBlockId = currentBotMessageId = null;
             }
@@ -965,7 +984,9 @@ PROSE:
             if (role === 'user') { const msgId = block.dataset.msgid; if (msgId) await _supabase.from('messages').update({ content: newText }).eq('id', msgId); }
             else {
                 const blockId = block.id;
-                if (blockId && !blockId.startsWith('init_') && !blockId.startsWith('msg_')) await _supabase.from('messages').update({ content: newText }).eq('id', blockId);
+                const botMsgId = block.dataset.msgid;
+                if (botMsgId) await _supabase.from('messages').update({ content: newText }).eq('id', botMsgId);
+                else if (blockId && !blockId.startsWith('init_') && !blockId.startsWith('msg_')) await _supabase.from('messages').update({ content: newText }).eq('id', blockId);
                 else if (blockId === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').update({ content: newText }).eq('id', currentBotMessageId);
             }
         } catch (err) { console.error('Edit save error:', err); }
