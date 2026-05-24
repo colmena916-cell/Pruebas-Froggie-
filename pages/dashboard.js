@@ -234,15 +234,19 @@ async function renderRow(containerId, characters) {
 async function loadDashboard() {
     const base = { select: 'id, name, subtitle, photo_url, tags, category, chat_count, creator_id', visibility: 'public' };
 
-    const [recent, popular, canon, oc] = await Promise.all([
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('created_at', { ascending: false }).limit(12),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count',  { ascending: false }).limit(12),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(12),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count',   { ascending: false }).limit(12),
+    const [allPublic, popular, canon, oc] = await Promise.all([
+        // For You: traemos todos los públicos y los mezclamos aleatoriamente
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).limit(100),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count',  { ascending: false }).limit(31),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(31),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count',   { ascending: false }).limit(31),
     ]);
 
+    // Mezcla aleatoria para "For You" — diferente cada vez que recargas
+    const shuffled = (allPublic.data || []).sort(() => Math.random() - 0.5);
+
     await Promise.all([
-        renderRow('forYouRow',  recent.data),
+        renderRow('forYouRow',  shuffled),
         renderRow('popularRow', popular.data),
         renderRow('canonRow',   canon.data),
         renderRow('ocRow',      oc.data),
