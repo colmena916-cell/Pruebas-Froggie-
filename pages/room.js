@@ -353,7 +353,7 @@ export async function init(params) {
     let conversationId = null, currentBotBlockId = null, currentBotMessageId = null;
     let memorySummary = '', summaryCount = 0;
     const blockStateMap = new Map();
-    const SUMMARY_EVERY = 10, MAX_ALTERNATIVES = 15, RECENT_KEEP = 50, SUMMARIES_MERGE = 5;
+    const SUMMARY_EVERY = 10, MAX_ALTERNATIVES = 15, RECENT_KEEP = 50, SUMMARIES_MERGE = 5, PAGE_SIZE = 30;
 
     // ── Helpers ───────────────────────────────────────────────
     const escapeHTML = (str) => str.replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
@@ -561,7 +561,79 @@ export async function init(params) {
         btn.removeAttribute('disabled');
     };
 
-    // ── Cargar historial ──────────────────────────────────────
+    // ── Cargar historial con paginación ──────────────────────
+    let allMessages = [];      // todos los mensajes de Supabase
+    let renderedUpTo = 0;      // cuántos se han renderizado ya
+
+    const renderMessages = (msgs) => {
+        const container = document.getElementById('chatScrollArea');
+        // Quitar botón de cargar más si existe
+        const oldBtn = document.getElementById('loadMoreBtn');
+        if (oldBtn) oldBtn.remove();
+
+        let lastUserText = '', historyAtPoint = [...chatHistory];
+        msgs.forEach(msg => {
+            const isBot = msg.sender_type === 'bot';
+            if (isBot) {
+                let alts = [{ text: msg.content, rating: msg.rating || 0 }], idx = 0;
+                try { if (msg.alternatives) { alts = typeof msg.alternatives === 'string' ? JSON.parse(msg.alternatives) : msg.alternatives; idx = Math.min(msg.alt_index || 0, alts.length - 1); } } catch {}
+                if (!blockStateMap.has(msg.id)) {
+                    blockStateMap.set(msg.id, { alternatives: alts, index: idx, userPrompt: lastUserText, historySnapshot: historyAtPoint.slice(), generating: false });
+                }
+                appendBotMessage(alts[idx].text, msg.id, true);
+            } else {
+                lastUserText = msg.content;
+                appendUserMessage(msg.content, msg.id);
+            }
+            chatHistory.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
+            historyAtPoint.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
+        });
+
+        // Ocultar tools de todos menos el último bloque bot
+        const allIds = [...blockStateMap.keys()];
+        allIds.slice(0, -1).forEach(bid => { const t = document.getElementById(`tools_${bid}`); if (t) t.style.display = 'none'; });
+        const lastId = allIds[allIds.length - 1];
+        if (lastId) { const t = document.getElementById(`tools_${lastId}`); if (t) t.style.display = 'flex'; }
+    };
+
+    const loadMoreMessages = () => {
+        const container = document.getElementById('chatScrollArea');
+        const oldBtn = document.getElementById('loadMoreBtn');
+        if (oldBtn) oldBtn.remove();
+
+        const start  = Math.max(0, renderedUpTo - PAGE_SIZE);
+        const batch  = allMessages.slice(start, renderedUpTo);
+        renderedUpTo = start;
+
+        // Guardar scroll position para no saltar al top
+        const prevHeight = container.scrollHeight;
+
+        // Insertar antes de los mensajes existentes
+        const tempDiv = document.createElement('div');
+        const savedHTML = container.innerHTML;
+        container.innerHTML = '';
+        chatHistory = [];
+        blockStateMap.clear();
+        renderMessages(allMessages.slice(renderedUpTo === 0 ? 0 : start, allMessages.length));
+        container.scrollTop = container.scrollHeight - prevHeight;
+
+        // Si hay más mensajes arriba, mostrar botón
+        if (renderedUpTo > 0) insertLoadMoreBtn();
+        updateEditableMarkers();
+    };
+
+    const insertLoadMoreBtn = () => {
+        const container = document.getElementById('chatScrollArea');
+        const btn = document.createElement('button');
+        btn.id = 'loadMoreBtn';
+        btn.textContent = '↑ Load earlier messages';
+        btn.style.cssText = 'display:block;width:100%;padding:10px;background:none;border:1px dashed rgba(62,83,43,0.25);border-radius:10px;font-family:var(--font-serif);font-size:0.85rem;color:var(--text-dark);opacity:0.6;cursor:pointer;margin-bottom:12px;transition:opacity 0.2s;';
+        btn.onmouseenter = () => btn.style.opacity = '1';
+        btn.onmouseleave = () => btn.style.opacity = '0.6';
+        btn.onclick = loadMoreMessages;
+        container.insertBefore(btn, container.firstChild);
+    };
+
     const loadHistory = async () => {
         const container = document.getElementById('chatScrollArea');
         document.getElementById('loadingState').style.display = 'none';
@@ -586,24 +658,13 @@ export async function init(params) {
                 chatHistory.push({ role: 'assistant', content: characterGreeting });
                 await _supabase.from('messages').insert({ conversation_id: conversationId, sender_type: 'bot', sender_name: characterName, content: characterGreeting });
             } else {
-                let lastUserText = '', historyAtPoint = [];
-                messages.forEach(msg => {
-                    const isBot = msg.sender_type === 'bot';
-                    if (isBot) {
-                        let alts = [{ text: msg.content, rating: msg.rating || 0 }], idx = 0;
-                        try { if (msg.alternatives) { alts = typeof msg.alternatives === 'string' ? JSON.parse(msg.alternatives) : msg.alternatives; idx = Math.min(msg.alt_index || 0, alts.length - 1); } } catch {}
-                        blockStateMap.set(msg.id, { alternatives: alts, index: idx, userPrompt: lastUserText, historySnapshot: historyAtPoint.slice(), generating: false });
-                        appendBotMessage(alts[idx].text, msg.id, true);
-                    } else {
-                        lastUserText = msg.content;
-                        appendUserMessage(msg.content, msg.id);
-                    }
-                    chatHistory.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
-                    historyAtPoint.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
-                });
-                // Ocultar tools de todos menos el último
-                const allIds = [...blockStateMap.keys()];
-                allIds.slice(0, -1).forEach(bid => { const t = document.getElementById(`tools_${bid}`); if (t) t.style.display = 'none'; });
+                allMessages  = messages;
+                // Mostrar solo los últimos PAGE_SIZE mensajes
+                const start  = Math.max(0, messages.length - PAGE_SIZE);
+                renderedUpTo = start;
+                renderMessages(messages.slice(start));
+                // Si hay mensajes anteriores, mostrar botón arriba
+                if (start > 0) insertLoadMoreBtn();
             }
         } catch (e) {
             console.error('loadHistory error:', e);
@@ -623,22 +684,12 @@ export async function init(params) {
     // ── callAI ────────────────────────────────────────────────
     const callAI = async (userText, historyOverride) => {
         const memBlock = memorySummary ? `\nSTORY SO FAR:\n"${memorySummary}"\n` : '';
-        const systemPrompt = `[LITERARY ROLEPLAY — DARK PSYCHOLOGICAL FICTION FOR ADULTS]
-You are ${characterName} exclusively. Honor every detail below without deviation.
-Public description: "${characterDescription}"
-Character definition: "${characterDefinition}"
+        const systemPrompt = `You are ${characterName}. Stay in character at all times.
+${characterDefinition}
 ${memBlock}
-STYLE REFERENCE — Opening message to match in tone, vocabulary, rhythm:
-"${characterGreeting}"
-
-USER PERSONA — The user goes by: ${activePersona ? activePersona.name : userDisplayName}.${activePersona?.description ? ` Description: "${activePersona.description}"` : ''} Use {{user}} → their name.
-
-PROSE:
-- SHOW, NEVER EXPLAIN. Render mental states through micro-actions.
-- AUTHENTIC VOICE. Match the character's exact register.
-- FORMAT: Dialogue unmarked. Actions/interiority in *asterisks*.
-- STRICT LENGTH: max 150 words. Every word must earn its place.
-- OUTPUT ONLY the character's response. No disclaimers, no out-of-character commentary.`;
+Tone/style reference: "${characterGreeting}"
+User: ${activePersona ? activePersona.name : userDisplayName}.${activePersona?.description ? ` (${activePersona.description})` : ''} Use {{user}} for their name.
+Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaimers or out-of-character text.`;
 
         const recentHistory = (historyOverride !== undefined ? historyOverride : chatHistory).slice(-RECENT_KEEP);
         const messages = [{ role: 'system', content: systemPrompt }, ...recentHistory];
@@ -841,7 +892,7 @@ PROSE:
         if (toSummarize.length < SUMMARY_EVERY) return;
         const convoBlock    = toSummarize.map(m => `${m.role === 'user' ? 'User' : characterName}: ${m.content}`).join('\n');
         const prevNote      = memorySummary ? `Previous summary:\n"${memorySummary}"\n\n` : '';
-        const summaryPrompt = `${prevNote}New exchanges:\n${convoBlock}\n\nWrite a concise narrative summary (max 200 words) in third person, present tense. Focus on key events, dynamics, tone. Output only the summary text.`;
+        const summaryPrompt = `${prevNote}New exchanges:\n${convoBlock}\n\nSummarize these exchanges in max 200 words, third person, present tense. You MUST preserve: emotional state of each character, secrets or revelations, tension and conflicts, the exact dynamic between characters, and any significant shift in their relationship. Remove filler but keep subtext intact. Output only the summary text.`;
         try {
             const result = await callAIRaw(summaryPrompt);
             if (!result) return;
@@ -852,8 +903,9 @@ PROSE:
             }
             const { error: updateErr } = await _supabase.from('conversations').update({ memory_summary: finalSummary, summary_count: finalCount }).eq('id', conversationId);
             if (updateErr) return;
-            const { data: oldMessages } = await _supabase.from('messages').select('id').eq('conversation_id', conversationId).or('rating.is.null,rating.lt.3').order('created_at', { ascending: true }).limit(SUMMARY_EVERY);
-            if (oldMessages?.length > 0) await _supabase.from('messages').delete().in('id', oldMessages.map(m => m.id));
+            // Los mensajes se conservan en Supabase para que el usuario
+            // pueda releerlos desde cualquier dispositivo. Solo se recorta
+            // el historial en memoria para no saturar la ventana de contexto.
             memorySummary = finalSummary; summaryCount = finalCount;
             chatHistory   = chatHistory.slice(SUMMARY_EVERY);
         } catch (e) { console.warn('Summary failed:', e); }
