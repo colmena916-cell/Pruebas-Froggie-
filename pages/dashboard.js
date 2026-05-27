@@ -48,6 +48,9 @@ export function render() {
         .search-result-info h4 { font-size: 1rem; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .search-result-info span { font-size: 0.78rem; opacity: 0.45; }
         .search-result-title { font-size: 1rem; opacity: 0.55; font-style: italic; margin-bottom: 14px; }
+        .search-tab-btn { background: none; border: 1px solid rgba(62,83,43,0.2); border-radius: 20px; padding: 6px 16px; font-family: var(--font-serif); font-size: 0.88rem; color: var(--text-dark); cursor: pointer; opacity: 0.55; transition: all 0.2s; }
+        .search-tab-btn:hover { opacity: 0.85; }
+        .search-tab-btn.active-tab { background-color: var(--btn-color); color: #fff; border-color: var(--btn-color); opacity: 1; }
     </style>
 
     <header>
@@ -80,6 +83,10 @@ export function render() {
         </div>
         <!-- Resultados de búsqueda -->
         <div id="searchResultsWrapper" style="display:none;">
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+                <button id="tabCharacters" class="search-tab-btn active-tab">✨ Characters</button>
+                <button id="tabUsers" class="search-tab-btn">👤 Users</button>
+            </div>
             <p class="search-result-title" id="searchResultTitle">Results for ""</p>
             <div id="searchResults"></div>
         </div>
@@ -171,15 +178,40 @@ export async function init() {
 
     // ── Búsqueda ──────────────────────────────────────────────
     let searchTimeout = null;
+    let activeSearchTab = 'characters';
+
+    const setSearchTab = (tab) => {
+        activeSearchTab = tab;
+        document.getElementById('tabCharacters').classList.toggle('active-tab', tab === 'characters');
+        document.getElementById('tabUsers').classList.toggle('active-tab', tab === 'users');
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) {
+            if (tab === 'characters') searchCharacters(query);
+            else searchUsers(query);
+        }
+    };
+
+    document.getElementById('tabCharacters').onclick = () => setSearchTab('characters');
+    document.getElementById('tabUsers').onclick      = () => setSearchTab('users');
+
     document.getElementById('searchInput').addEventListener('input', function() {
         clearTimeout(searchTimeout);
         const query = this.value.trim();
+
+        // Si empieza con @, cambiar a tab de usuarios automáticamente
+        if (query.startsWith('@')) {
+            activeSearchTab = 'users';
+            document.getElementById('tabCharacters').classList.remove('active-tab');
+            document.getElementById('tabUsers').classList.add('active-tab');
+        }
+
         searchTimeout = setTimeout(() => {
             if (!query) {
                 document.getElementById('searchResultsWrapper').style.display = 'none';
                 document.getElementById('dashboardSections').style.display = 'block';
             } else {
-                searchCharacters(query);
+                if (activeSearchTab === 'users') searchUsers(query.replace(/^@/, ''));
+                else searchCharacters(query);
             }
         }, 350);
     });
@@ -262,10 +294,12 @@ async function searchCharacters(query) {
     container.innerHTML = '<p class="empty-state">Searching...</p>';
 
     try {
+        // Full Text Search — encuentra resultados similares, no solo exactos
         const { data: characters, error } = await _supabase
             .from('characters').select('id, name, subtitle, photo_url, creator_id')
-            .eq('visibility', 'public').ilike('name', `%${query}%`)
-            .order('created_at', { ascending: false });
+            .eq('visibility', 'public')
+            .textSearch('fts', query.trim().split(/\s+/).join(' | '))
+            .limit(30);
 
         if (error) throw error;
         if (!characters || characters.length === 0) {
@@ -299,5 +333,48 @@ async function searchCharacters(query) {
     } catch (err) {
         console.error(err);
         container.innerHTML = `<p class="empty-state">Search failed. Try again.</p>`;
+    }
+}
+
+async function searchUsers(query) {
+    document.getElementById('dashboardSections').style.display = 'none';
+    const wrapper   = document.getElementById('searchResultsWrapper');
+    const container = document.getElementById('searchResults');
+    wrapper.style.display = 'block';
+    document.getElementById('searchResultTitle').textContent = `Users matching "${query}"`;
+    container.innerHTML = '<p class="empty-state">Searching...</p>';
+
+    try {
+        const { data: users, error } = await _supabase
+            .from('profiles')
+            .select('id, username, display_name, avatar_url, bio')
+            .ilike('username', `%${query}%`)
+            .limit(20);
+
+        if (error) throw error;
+        if (!users || users.length === 0) {
+            container.innerHTML = `<p class="empty-state">No users found for "<em>@${query}</em>". Croac...</p>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        users.forEach(user => {
+            const name        = user.display_name || user.username || 'User';
+            const avatarStyle = user.avatar_url ? `background-image:url('${user.avatar_url}');background-size:cover;` : '';
+            const initials    = user.avatar_url ? '' : name.substring(0, 1).toUpperCase();
+            const card = document.createElement('div');
+            card.className = 'search-result-card';
+            card.onclick   = () => Router.go('user-profile', { id: user.id, from: 'dashboard' });
+            card.innerHTML = `
+                <div class="char-avatar" style="border-radius:50%;${avatarStyle}">${initials}</div>
+                <div class="search-result-info">
+                    <h4>${name}</h4>
+                    <span>@${user.username || ''} ${user.bio ? '· ' + user.bio.substring(0, 40) + (user.bio.length > 40 ? '...' : '') : ''}</span>
+                </div>`;
+            container.appendChild(card);
+        });
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="empty-state">User search failed. Try again.</p>`;
     }
 }
