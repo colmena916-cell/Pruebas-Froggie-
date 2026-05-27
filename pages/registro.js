@@ -7,7 +7,7 @@ import { _supabase } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
-const USER_LIMIT = 1000;
+const USER_LIMIT = 5000;
 
 export function render() {
     return `
