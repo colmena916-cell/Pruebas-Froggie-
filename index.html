@@ -39,34 +39,34 @@
         <div class="news-modal">
             <button class="news-modal-close" id="newsModalClose" aria-label="Close">✕</button>
             <div class="news-modal-frog">🐸</div>
-            <h2>¡Froggie AI se mudó!</h2>
-            <p class="news-tagline">...croac. Hay noticias importantes por aquí.</p>
+            <h2>¡Novedades en Froggie AI!</h2>
+            <p class="news-tagline">...croac. Hay algunas cositas nuevas por aquí.</p>
             <div class="news-item">
-                <span class="news-item-icon">🏠</span>
+                <span class="news-item-icon">⚡</span>
                 <div class="news-item-text">
-                    <strong>La página migró a un nuevo formato</strong>
-                    Froggie AI se renovó por dentro — pasamos de 15 páginas separadas a una sola aplicación más rápida y estable. Todo sigue igual por fuera, pero por dentro es un sapo completamente nuevo.
+                    <strong>Groq ya viene por defecto</strong>
+                    Ya no tienes que configurar un endpoint manualmente. Ve a Menú → API Key, selecciona <em>Groq</em>, pega tu key de <a href="https://console.groq.com/keys" target="_blank" style="color:var(--btn-color);">console.groq.com</a> y listo. El modelo ya viene seleccionado.
                 </div>
             </div>
             <div class="news-item">
                 <span class="news-item-icon">🔑</span>
                 <div class="news-item-text">
-                    <strong>Si te sacó de tu cuenta, es normal</strong>
-                    Las actualizaciones constantes que vinieron con la migración probablemente cerraron la sesión de muchos. No es un error — es el resultado natural de alguien que no siempre sabe bien qué está moviendo. ✌️ Solo vuelve a iniciar sesión y todo debería estar igual.
+                    <strong>Si te sacó de la página, es normal</strong>
+                    Las actualizaciones frecuentes pueden cerrar sesión como efecto secundario. No es un error — solo inicia sesión de nuevo y todo sigue igual. Tus chats, personajes y configuración están intactos.
                 </div>
             </div>
             <div class="news-item">
                 <span class="news-item-icon">💾</span>
                 <div class="news-item-text">
-                    <strong>Tus chats y personajes están intactos</strong>
-                    Nada se borró. Toda la información sigue guardada — personajes, conversaciones, favoritos, configuración de API.
+                    <strong>Tus datos están seguros</strong>
+                    Nada se borró. Personajes, conversaciones, favoritos y configuración de API siguen ahí.
                 </div>
             </div>
             <div class="news-item">
                 <span class="news-item-icon">🐸</span>
                 <div class="news-item-text">
-                    <strong>Gracias por la paciencia</strong>
-                    Froggie AI es un proyecto hecho con mucho cariño y muy pocas certezas técnicas. Gracias por seguir aquí mientras todo se va acomodando.
+                    <strong>Gracias por seguir aquí</strong>
+                    Froggie AI es un proyecto hecho con cariño por una sola persona. Cada mensaje que escriben, cada personaje que crean, significa mucho. Siguen llegando mejoras.
                 </div>
             </div>
             <hr class="news-modal-divider">
@@ -192,11 +192,20 @@
         };
 
         // News modal
-        const closeNews = () => {
+        const CURRENT_ANNOUNCEMENT = 'v4';
+
+        const closeNews = async () => {
             const m = document.getElementById('newsModal');
             m.classList.remove('visible');
             setTimeout(() => { m.style.display = 'none'; }, 250);
-            localStorage.setItem('froggie_news_v3', '1');
+            // Guardar en Supabase para que no vuelva a aparecer en ningún dispositivo
+            if (Auth.userId) {
+                await _supabase.from('profiles')
+                    .update({ last_announcement: CURRENT_ANNOUNCEMENT })
+                    .eq('id', Auth.userId);
+            }
+            // También guardar en localStorage como fallback para usuarios no logueados
+            localStorage.setItem('froggie_news_' + CURRENT_ANNOUNCEMENT, '1');
         };
         document.getElementById('newsModalClose').onclick = closeNews;
         document.getElementById('newsModalBtn').onclick   = closeNews;
@@ -268,6 +277,26 @@
             document.getElementById('createPopover').classList.remove('show');
         });
         document.getElementById('createPopover').onclick = (e) => e.stopPropagation();
+
+        // ── 4.5 Mostrar modal si el usuario no lo ha visto ─────────────
+        const CURRENT_ANNOUNCEMENT = 'v4';
+        const showNewsIfNeeded = async () => {
+            if (Auth.userId) {
+                const { data: profile } = await _supabase.from('profiles').select('last_announcement').eq('id', Auth.userId).single();
+                if (profile?.last_announcement !== CURRENT_ANNOUNCEMENT) {
+                    const modal = document.getElementById('newsModal');
+                    modal.style.display = 'flex';
+                    requestAnimationFrame(() => modal.classList.add('visible'));
+                }
+            } else {
+                if (!localStorage.getItem('froggie_news_' + CURRENT_ANNOUNCEMENT)) {
+                    const modal = document.getElementById('newsModal');
+                    modal.style.display = 'flex';
+                    requestAnimationFrame(() => modal.classList.add('visible'));
+                }
+            }
+        };
+        showNewsIfNeeded();
 
         // ── 4. Exponer Auth, Router, Theme globalmente ───────────────
         // (para que los onclick inline en páginas migradas aún funcionen)
