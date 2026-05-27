@@ -194,7 +194,23 @@ export async function init() {
     document.getElementById('tabCharacters').onclick = () => setSearchTab('characters');
     document.getElementById('tabUsers').onclick      = () => setSearchTab('users');
 
-    document.getElementById('searchInput').addEventListener('input', function() {
+    const searchInput = document.getElementById('searchInput');
+
+    // Al dar Enter: buscar y ocultar teclado
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.blur(); // oculta el teclado en móvil
+            const query = this.value.trim();
+            if (!query) return;
+            if (activeSearchTab === 'users') searchUsers(query.replace(/^@/, ''));
+            else searchCharacters(query);
+        }
+    });
+
+    // Al escribir: solo cambiar tab si empieza con @ y limpiar resultados si borra todo
+    // NO buscar hasta que el usuario presione Enter
+    searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
         const query = this.value.trim();
 
@@ -205,15 +221,22 @@ export async function init() {
             document.getElementById('tabUsers').classList.add('active-tab');
         }
 
-        searchTimeout = setTimeout(() => {
-            if (!query) {
-                document.getElementById('searchResultsWrapper').style.display = 'none';
-                document.getElementById('dashboardSections').style.display = 'block';
-            } else {
-                if (activeSearchTab === 'users') searchUsers(query.replace(/^@/, ''));
-                else searchCharacters(query);
-            }
-        }, 350);
+        // Si borraron todo, volver al dashboard
+        if (!query) {
+            document.getElementById('searchResultsWrapper').style.display = 'none';
+            document.getElementById('dashboardSections').style.display = 'block';
+            return;
+        }
+
+        // Mostrar el wrapper con las tabs pero sin resultados todavía
+        // así el usuario ve que hay algo esperando su búsqueda
+        const wrapper = document.getElementById('searchResultsWrapper');
+        if (wrapper.style.display === 'none') {
+            document.getElementById('dashboardSections').style.display = 'none';
+            wrapper.style.display = 'block';
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('searchResultTitle').textContent = '';
+        }
     });
 
     // ── Cargar secciones ──────────────────────────────────────
