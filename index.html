@@ -191,7 +191,8 @@
             document.getElementById('loginPopupOverlay').style.display = 'none';
         };
 
-        // News modal
+        // News modal — versión del anuncio actual
+        // Para un nuevo anuncio: cambia 'v4' por 'v5' aquí y solo aquí
         const CURRENT_ANNOUNCEMENT = 'v4';
 
         const closeNews = async () => {
@@ -279,7 +280,6 @@
         document.getElementById('createPopover').onclick = (e) => e.stopPropagation();
 
         // ── 4.5 Mostrar modal si el usuario no lo ha visto ─────────────
-        const CURRENT_ANNOUNCEMENT = 'v4';
         const showNewsIfNeeded = async () => {
             if (Auth.userId) {
                 const { data: profile } = await _supabase.from('profiles').select('last_announcement').eq('id', Auth.userId).single();
