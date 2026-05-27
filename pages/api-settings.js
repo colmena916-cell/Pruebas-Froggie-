@@ -12,7 +12,7 @@ const PROVIDERS = {
     openrouter:  { label: 'OpenRouter API Key',      placeholder: 'sk-or-v1-...',    hint: 'OpenRouter lets you access many models (MythoMax, Claude, Mistral and more). Get yours at <a href="https://openrouter.ai/keys" target="_blank" class="help-link">openrouter.ai ↗</a>' },
     anthropic:   { label: 'Anthropic API Key',       placeholder: 'sk-ant-...',      hint: 'Access Claude models. Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank" class="help-link">console.anthropic.com ↗</a>' },
     gemini:      { label: 'Google AI Studio API Key',placeholder: 'AIza...',         hint: 'Free tier available. Get your key at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="help-link">aistudio.google.com ↗</a>' },
-    other:       { label: 'API Key',                 placeholder: 'Your API key...', hint: 'Use any OpenAI-compatible endpoint. Provide the full URL and model name below.' }
+    groq:        { label: 'Groq API Key',            placeholder: 'gsk_...',         hint: '✨ <strong>Gratis y rápido</strong> — ideal para empezar. Crea tu cuenta y obtén tu key en <a href="https://console.groq.com/keys" target="_blank" class="help-link">console.groq.com ↗</a>. Solo necesitas la key y elegir un modelo abajo.' }
 };
 
 export function render() {
@@ -177,7 +177,7 @@ export function render() {
         </div>
         <div class="provider-grid" style="grid-template-columns:1fr 1fr;margin-bottom:24px;">
             <button class="provider-btn" id="provider-gemini"><span class="provider-icon">✦</span>Gemini</button>
-            <button class="provider-btn" id="provider-other"><span class="provider-icon">🔧</span>Custom</button>
+            <button class="provider-btn" id="provider-groq" style="border-color:rgba(62,83,43,0.35);"><span class="provider-icon">🐸</span>Groq <small style="font-size:0.72rem;opacity:0.6;margin-left:2px;">gratis</small></button>
         </div>
 
         <div class="settings-card">
@@ -248,16 +248,21 @@ export async function init() {
         document.getElementById('apiKeyField').placeholder   = cfg.placeholder;
         document.getElementById('providerHint').innerHTML    = cfg.hint;
 
-        const showModel  = ['openrouter', 'anthropic', 'gemini'].includes(provider);
-        const showCustom = provider === 'other';
+        const showModel = ['openrouter', 'anthropic', 'gemini', 'groq'].includes(provider);
         document.getElementById('modelField').classList.toggle('visible', showModel);
-        document.getElementById('customUrlField').classList.toggle('visible', showCustom);
-        document.getElementById('customModelField').classList.toggle('visible', showCustom);
+        document.getElementById('customUrlField').classList.remove('visible');
+        document.getElementById('customModelField').classList.remove('visible');
 
         const modelHint = document.getElementById('modelHint');
         if (provider === 'anthropic') modelHint.innerHTML = 'Available: claude-sonnet-4-5, claude-haiku-4-5, claude-opus-4-5';
         else if (provider === 'gemini') modelHint.innerHTML = 'Recommended: <strong>gemini-2.0-flash</strong> (free) · also: gemini-1.5-pro, gemini-1.5-flash';
+        else if (provider === 'groq') modelHint.innerHTML = 'Recommended: <strong>llama-3.1-8b-instant</strong> (free) · also: llama-3.3-70b-versatile, mixtral-8x7b-32768';
         else modelHint.innerHTML = 'Find model names at <a href="https://openrouter.ai/models" target="_blank" class="help-link">openrouter.ai/models ↗</a>';
+        
+        // Groq: precargar modelo por defecto
+        if (provider === 'groq' && !document.getElementById('modelInput').value) {
+            document.getElementById('modelInput').value = 'llama-3.1-8b-instant';
+        }
     };
 
     Object.keys(PROVIDERS).forEach(p => {
@@ -285,9 +290,9 @@ export async function init() {
         if (currentProvider === 'openrouter') payload.model = document.getElementById('modelInput').value.trim() || 'gryphe/mythomax-l2-13b';
         if (currentProvider === 'anthropic')  payload.model = document.getElementById('modelInput').value.trim() || 'claude-haiku-4-5';
         if (currentProvider === 'gemini')     payload.model = document.getElementById('modelInput').value.trim() || 'gemini-2.0-flash';
-        if (currentProvider === 'other') {
-            payload.custom_url = document.getElementById('customUrl').value.trim();
-            payload.model      = document.getElementById('customModel').value.trim();
+        if (currentProvider === 'groq') {
+            payload.custom_url = 'https://api.groq.com/openai/v1/chat/completions';
+            payload.model      = document.getElementById('modelInput').value.trim() || 'llama-3.1-8b-instant';
         }
 
         const { error } = await _supabase.from('user_settings').upsert(payload, { onConflict: 'user_id' });
@@ -295,12 +300,15 @@ export async function init() {
     };
 
     // ── Cargar settings guardados ─────────────────────────────
-    selectProvider('openai'); // default visual
+    selectProvider('groq'); // default visual — groq es la opción más fácil
     const { data } = await _supabase.from('user_settings').select('*').eq('user_id', Auth.userId).single();
     if (data) {
-        selectProvider(data.provider || 'openai');
+        // Si tenía 'other' configurado antes, mantenerlo como groq si el endpoint era de groq
+        const provider = data.provider === 'other' ? 
+            (data.custom_url?.includes('groq') ? 'groq' : 'openai') : 
+            (data.provider || 'groq');
+        selectProvider(provider);
         document.getElementById('apiKeyField').value = data.api_key || '';
-        if (data.model)      document.getElementById('modelInput').value = data.model;
-        if (data.custom_url) document.getElementById('customUrl').value  = data.custom_url;
+        if (data.model) document.getElementById('modelInput').value = data.model;
     }
 }

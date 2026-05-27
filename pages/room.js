@@ -353,7 +353,7 @@ export async function init(params) {
     let conversationId = null, currentBotBlockId = null, currentBotMessageId = null;
     let memorySummary = '', summaryCount = 0;
     const blockStateMap = new Map();
-    const SUMMARY_EVERY = 10, MAX_ALTERNATIVES = 15, RECENT_KEEP = 50, SUMMARIES_MERGE = 5, PAGE_SIZE = 30;
+    const SUMMARY_EVERY = 10, MAX_ALTERNATIVES = 15, RECENT_KEEP = 50, SUMMARIES_MERGE = 5;
 
     // ── Helpers ───────────────────────────────────────────────
     const escapeHTML = (str) => str.replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
@@ -561,79 +561,7 @@ export async function init(params) {
         btn.removeAttribute('disabled');
     };
 
-    // ── Cargar historial con paginación ──────────────────────
-    let allMessages = [];      // todos los mensajes de Supabase
-    let renderedUpTo = 0;      // cuántos se han renderizado ya
-
-    const renderMessages = (msgs) => {
-        const container = document.getElementById('chatScrollArea');
-        // Quitar botón de cargar más si existe
-        const oldBtn = document.getElementById('loadMoreBtn');
-        if (oldBtn) oldBtn.remove();
-
-        let lastUserText = '', historyAtPoint = [...chatHistory];
-        msgs.forEach(msg => {
-            const isBot = msg.sender_type === 'bot';
-            if (isBot) {
-                let alts = [{ text: msg.content, rating: msg.rating || 0 }], idx = 0;
-                try { if (msg.alternatives) { alts = typeof msg.alternatives === 'string' ? JSON.parse(msg.alternatives) : msg.alternatives; idx = Math.min(msg.alt_index || 0, alts.length - 1); } } catch {}
-                if (!blockStateMap.has(msg.id)) {
-                    blockStateMap.set(msg.id, { alternatives: alts, index: idx, userPrompt: lastUserText, historySnapshot: historyAtPoint.slice(), generating: false });
-                }
-                appendBotMessage(alts[idx].text, msg.id, true);
-            } else {
-                lastUserText = msg.content;
-                appendUserMessage(msg.content, msg.id);
-            }
-            chatHistory.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
-            historyAtPoint.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
-        });
-
-        // Ocultar tools de todos menos el último bloque bot
-        const allIds = [...blockStateMap.keys()];
-        allIds.slice(0, -1).forEach(bid => { const t = document.getElementById(`tools_${bid}`); if (t) t.style.display = 'none'; });
-        const lastId = allIds[allIds.length - 1];
-        if (lastId) { const t = document.getElementById(`tools_${lastId}`); if (t) t.style.display = 'flex'; }
-    };
-
-    const loadMoreMessages = () => {
-        const container = document.getElementById('chatScrollArea');
-        const oldBtn = document.getElementById('loadMoreBtn');
-        if (oldBtn) oldBtn.remove();
-
-        const start  = Math.max(0, renderedUpTo - PAGE_SIZE);
-        const batch  = allMessages.slice(start, renderedUpTo);
-        renderedUpTo = start;
-
-        // Guardar scroll position para no saltar al top
-        const prevHeight = container.scrollHeight;
-
-        // Insertar antes de los mensajes existentes
-        const tempDiv = document.createElement('div');
-        const savedHTML = container.innerHTML;
-        container.innerHTML = '';
-        chatHistory = [];
-        blockStateMap.clear();
-        renderMessages(allMessages.slice(renderedUpTo === 0 ? 0 : start, allMessages.length));
-        container.scrollTop = container.scrollHeight - prevHeight;
-
-        // Si hay más mensajes arriba, mostrar botón
-        if (renderedUpTo > 0) insertLoadMoreBtn();
-        updateEditableMarkers();
-    };
-
-    const insertLoadMoreBtn = () => {
-        const container = document.getElementById('chatScrollArea');
-        const btn = document.createElement('button');
-        btn.id = 'loadMoreBtn';
-        btn.textContent = '↑ Load earlier messages';
-        btn.style.cssText = 'display:block;width:100%;padding:10px;background:none;border:1px dashed rgba(62,83,43,0.25);border-radius:10px;font-family:var(--font-serif);font-size:0.85rem;color:var(--text-dark);opacity:0.6;cursor:pointer;margin-bottom:12px;transition:opacity 0.2s;';
-        btn.onmouseenter = () => btn.style.opacity = '1';
-        btn.onmouseleave = () => btn.style.opacity = '0.6';
-        btn.onclick = loadMoreMessages;
-        container.insertBefore(btn, container.firstChild);
-    };
-
+    // ── Cargar historial ──────────────────────────────────────
     const loadHistory = async () => {
         const container = document.getElementById('chatScrollArea');
         document.getElementById('loadingState').style.display = 'none';
@@ -658,13 +586,24 @@ export async function init(params) {
                 chatHistory.push({ role: 'assistant', content: characterGreeting });
                 await _supabase.from('messages').insert({ conversation_id: conversationId, sender_type: 'bot', sender_name: characterName, content: characterGreeting });
             } else {
-                allMessages  = messages;
-                // Mostrar solo los últimos PAGE_SIZE mensajes
-                const start  = Math.max(0, messages.length - PAGE_SIZE);
-                renderedUpTo = start;
-                renderMessages(messages.slice(start));
-                // Si hay mensajes anteriores, mostrar botón arriba
-                if (start > 0) insertLoadMoreBtn();
+                let lastUserText = '', historyAtPoint = [];
+                messages.forEach(msg => {
+                    const isBot = msg.sender_type === 'bot';
+                    if (isBot) {
+                        let alts = [{ text: msg.content, rating: msg.rating || 0 }], idx = 0;
+                        try { if (msg.alternatives) { alts = typeof msg.alternatives === 'string' ? JSON.parse(msg.alternatives) : msg.alternatives; idx = Math.min(msg.alt_index || 0, alts.length - 1); } } catch {}
+                        blockStateMap.set(msg.id, { alternatives: alts, index: idx, userPrompt: lastUserText, historySnapshot: historyAtPoint.slice(), generating: false });
+                        appendBotMessage(alts[idx].text, msg.id, true);
+                    } else {
+                        lastUserText = msg.content;
+                        appendUserMessage(msg.content, msg.id);
+                    }
+                    chatHistory.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
+                    historyAtPoint.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
+                });
+                // Ocultar tools de todos menos el último
+                const allIds = [...blockStateMap.keys()];
+                allIds.slice(0, -1).forEach(bid => { const t = document.getElementById(`tools_${bid}`); if (t) t.style.display = 'none'; });
             }
         } catch (e) {
             console.error('loadHistory error:', e);
@@ -718,6 +657,7 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
             const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiSettings.api_key}` };
             if (apiSettings.provider === 'openai')      { endpoint = 'https://api.openai.com/v1/chat/completions'; model = 'gpt-4o-mini'; }
             else if (apiSettings.provider === 'openrouter') { endpoint = 'https://openrouter.ai/api/v1/chat/completions'; model = apiSettings.model || 'gryphe/mythomax-l2-13b'; headers['HTTP-Referer'] = window.location.origin; headers['X-Title'] = 'Froggie AI'; }
+            else if (apiSettings.provider === 'groq')   { endpoint = 'https://api.groq.com/openai/v1/chat/completions'; model = apiSettings.model || 'llama-3.1-8b-instant'; }
             else if (apiSettings.provider === 'other')  { endpoint = apiSettings.custom_url; model = apiSettings.model || ''; }
             const response = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify({ model, messages, temperature: 0.85, max_tokens: 400 }) });
             if (!response.ok) { const e = await response.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${response.status}`); }
@@ -751,6 +691,7 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
             const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiSettings.api_key}` };
             if (apiSettings.provider === 'openai') { endpoint = 'https://api.openai.com/v1/chat/completions'; model = 'gpt-4o-mini'; }
             else if (apiSettings.provider === 'openrouter') { endpoint = 'https://openrouter.ai/api/v1/chat/completions'; model = apiSettings.model || 'gryphe/mythomax-l2-13b'; headers['HTTP-Referer'] = window.location.origin; headers['X-Title'] = 'Froggie AI'; }
+            else if (apiSettings.provider === 'groq')  { endpoint = 'https://api.groq.com/openai/v1/chat/completions'; model = apiSettings.model || 'llama-3.1-8b-instant'; }
             else if (apiSettings.provider === 'other') { endpoint = apiSettings.custom_url; model = apiSettings.model || ''; }
             const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify({ model, messages, max_tokens: 350 }) });
             const d = await res.json(); return d.choices?.[0]?.message?.content || null;
