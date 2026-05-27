@@ -77,9 +77,9 @@ export function render() {
     </header>
 
     <main>
-        <div id="reloadHint" style="display:none; background:rgba(62,83,43,0.06); border:1px solid rgba(62,83,43,0.15); border-radius:10px; padding:10px 16px; margin-bottom:16px; font-size:0.85rem; opacity:0.75; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <span>🐸 If any button is unresponsive, <a href="" style="color:var(--btn-color);">reload the page</a>.</span>
-            <button onclick="document.getElementById('reloadHint').style.display='none'" style="background:none;border:none;cursor:pointer;opacity:0.5;font-size:1rem;color:var(--text-dark);">✕</button>
+        <div id="supportBanner" style="display:none; background:rgba(62,83,43,0.06); border:1px dashed rgba(62,83,43,0.2); border-radius:12px; padding:12px 16px; margin-bottom:16px; align-items:center; justify-content:space-between; gap:10px;">
+            <span style="font-size:0.88rem; line-height:1.5;">🐸 Froggie AI es un proyecto independiente hecho con mucho cariño. Si disfrutas la plataforma y deseas apoyarla, <a href="https://ko-fi.com/beemena" target="_blank" style="color:var(--btn-color); font-weight:bold;">te lo agradecería muchísimo ✨</a></span>
+            <button onclick="document.getElementById('supportBanner').style.display='none'; localStorage.setItem('froggie_support_dismissed','1');" style="background:none;border:none;cursor:pointer;opacity:0.4;font-size:1rem;color:var(--text-dark);flex-shrink:0;">✕</button>
         </div>
         <!-- Resultados de búsqueda -->
         <div id="searchResultsWrapper" style="display:none;">
@@ -149,10 +149,9 @@ export async function init() {
     // Marcar Home activo en bottom nav
     document.querySelector('[data-route="dashboard"]')?.classList.add('active');
 
-    // Mostrar aviso de recarga en la primera visita de cada sesión
-    if (!sessionStorage.getItem('appLoaded')) {
-        document.getElementById('reloadHint').style.display = 'flex';
-        sessionStorage.setItem('appLoaded', '1');
+    // Mostrar banner de apoyo una vez (hasta que lo cierren)
+    if (!localStorage.getItem('froggie_support_dismissed')) {
+        document.getElementById('supportBanner').style.display = 'flex';
     }
 
     // Auth UI
