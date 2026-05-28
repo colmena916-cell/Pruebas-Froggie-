@@ -39,38 +39,31 @@
         <div class="news-modal">
             <button class="news-modal-close" id="newsModalClose" aria-label="Close">✕</button>
             <div class="news-modal-frog">🐸</div>
-            <h2>¡Novedades en Froggie AI!</h2>
-            <p class="news-tagline">...croac. Hay algunas cositas nuevas por aquí.</p>
+            <h2>Anuncio importante</h2>
+            <p class="news-tagline">...croac. Hay algo que quiero contarles.</p>
             <div class="news-item">
-                <span class="news-item-icon">⚡</span>
+                <span class="news-item-icon">🤍</span>
                 <div class="news-item-text">
-                    <strong>Groq ya viene por defecto</strong>
-                    Ya no tienes que configurar un endpoint manualmente. Ve a Menú → API Key, selecciona <em>Groq</em>, pega tu key de <a href="https://console.groq.com/keys" target="_blank" style="color:var(--btn-color);">console.groq.com</a> y listo. El modelo ya viene seleccionado.
+                    <strong>Gracias por estar aquí</strong>
+                    Nunca imaginé que Froggie AI llegaría tan lejos tan pronto. Cada persona que entró, cada historia que escribieron, cada personaje que crearon — todo eso importa más de lo que parece.
                 </div>
             </div>
             <div class="news-item">
-                <span class="news-item-icon">🔑</span>
+                <span class="news-item-icon">🕯️</span>
                 <div class="news-item-text">
-                    <strong>Si te sacó de la página, es normal</strong>
-                    Las actualizaciones frecuentes pueden cerrar sesión como efecto secundario. No es un error — solo inicia sesión de nuevo y todo sigue igual. Tus chats, personajes y configuración están intactos.
-                </div>
-            </div>
-            <div class="news-item">
-                <span class="news-item-icon">💾</span>
-                <div class="news-item-text">
-                    <strong>Tus datos están seguros</strong>
-                    Nada se borró. Personajes, conversaciones, favoritos y configuración de API siguen ahí.
+                    <strong>Una realidad que quiero compartir</strong>
+                    El crecimiento de la página fue hermoso e inesperado, y con él llegaron costos que no tenía contemplados. Por ahora estoy buscando la forma de resolverlo. No sé todavía cómo terminará esto, pero quiero ser honesta con ustedes en lugar de desaparecer sin decir nada.
                 </div>
             </div>
             <div class="news-item">
                 <span class="news-item-icon">🐸</span>
                 <div class="news-item-text">
-                    <strong>Gracias por seguir aquí</strong>
-                    Froggie AI es un proyecto hecho con cariño por una sola persona. Cada mensaje que escriben, cada personaje que crean, significa mucho. Siguen llegando mejoras.
+                    <strong>Seguimos aquí</strong>
+                    Mientras pueda, Froggie AI va a seguir funcionando. Y si en algún momento eso cambia, lo sabrán con tiempo.
                 </div>
             </div>
             <hr class="news-modal-divider">
-            <p class="news-modal-footer">Con cariño y algo de caos. 🐸<br>— El equipo de Froggie AI</p>
+            <p class="news-modal-footer">Gracias por darle vida a este proyecto. 🐸<br>— El equipo de Froggie AI</p>
             <button class="news-modal-btn" id="newsModalBtn">¡Entendido, croac! 🐸</button>
         </div>
     </div>
@@ -193,7 +186,7 @@
 
         // News modal — versión del anuncio actual
         // Para un nuevo anuncio: cambia 'v4' por 'v5' aquí y solo aquí
-        const CURRENT_ANNOUNCEMENT = 'v4';
+        const CURRENT_ANNOUNCEMENT = 'v5';
 
         const closeNews = async () => {
             const m = document.getElementById('newsModal');
