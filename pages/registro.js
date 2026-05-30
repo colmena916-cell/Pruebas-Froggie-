@@ -7,7 +7,7 @@ import { _supabase } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
-const USER_LIMIT = 5000;
+const USER_LIMIT = 50000;
 
 export function render() {
     return `
@@ -299,31 +299,8 @@ export async function init() {
         const password = document.getElementById('reg-password').value;
         const btn      = document.getElementById('registerBtn');
 
-        btn.textContent = 'Checking availability...';
-        btn.disabled = true;
-
-        const { count, error: countError } = await _supabase
-            .from('profiles')
-            .select('id', { count: 'exact', head: true });
-
-        if (countError) {
-            showMsg('registerMsg', 'Could not verify availability. Try again.', 'error');
-            btn.textContent = 'Create Account';
-            btn.disabled = false;
-            return;
-        }
-
-        if (count >= USER_LIMIT) {
-            const el = document.getElementById('registerMsg');
-            el.innerHTML = '🐸 Froggie AI is currently at full capacity. Follow us to know when spots open up! <a href="https://discord.gg/9GN3AEVb7V" target="_blank" style="color:inherit;font-weight:bold;">Discord</a> · <a href="https://www.tiktok.com/@beemena_" target="_blank" style="color:inherit;font-weight:bold;">TikTok</a>';
-            el.className = 'form-message error';
-            el.style.display = 'block';
-            btn.textContent = 'Create Account';
-            btn.disabled = false;
-            return;
-        }
-
         btn.textContent = 'Creating account...';
+        btn.disabled = true;
 
         const { error } = await _supabase.auth.signUp({ email, password });
 
