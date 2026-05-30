@@ -3,7 +3,7 @@
 //  Accesible sin sesión (modo invitado).
 // ============================================================
 
-import { _supabase } from '../supabase.js';
+import { _supabase, imgUrl } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
@@ -251,7 +251,7 @@ export async function init() {
 // ── Helpers ───────────────────────────────────────────────────
 function buildCard(char, creatorUsername) {
     const avatarStyle = char.photo_url
-        ? `background-image:url('${char.photo_url}');background-size:cover;background-position:center;border-radius:10px;`
+        ? `background-image:url('${imgUrl(char.photo_url)}');background-size:cover;background-position:center;border-radius:10px;`
         : '';
     const initials = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
     const creator  = creatorUsername ? `<span class="char-creator">@${creatorUsername}</span>` : '';
@@ -338,7 +338,7 @@ async function searchCharacters(query) {
 
         container.innerHTML = '';
         characters.forEach(char => {
-            const avatarStyle = char.photo_url ? `background-image:url('${char.photo_url}');background-size:cover;` : '';
+            const avatarStyle = char.photo_url ? `background-image:url('${imgUrl(char.photo_url)}');background-size:cover;` : '';
             const initials    = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
             const creator     = char.creator_id ? (creatorMap[char.creator_id] || 'creator') : 'creator';
             const card = document.createElement('div');

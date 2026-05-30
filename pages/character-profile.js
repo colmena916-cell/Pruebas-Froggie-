@@ -3,7 +3,7 @@
 //  Accesible sin sesión (modo lectura). Requiere sesión para likes/comentarios.
 // ============================================================
 
-import { _supabase } from '../supabase.js';
+import { _supabase, imgUrl } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
@@ -127,7 +127,7 @@ export async function init(params) {
         document.getElementById('botDescription').textContent = char.description || 'No context provided.';
 
         const avatar = document.getElementById('botAvatar');
-        if (char.photo_url) { avatar.style.backgroundImage = `url('${char.photo_url}')`; avatar.textContent = ''; }
+        if (char.photo_url) { avatar.style.backgroundImage = `url('${imgUrl(char.photo_url)}')`; avatar.textContent = ''; }
         else avatar.textContent = char.name.substring(0, 2).toUpperCase();
 
         if (char.creator_id) {

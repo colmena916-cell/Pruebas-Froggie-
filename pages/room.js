@@ -4,7 +4,7 @@
 //  memoria resumida, edición y borrado de mensajes.
 // ============================================================
 
-import { _supabase } from '../supabase.js';
+import { _supabase, imgUrl } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
@@ -370,7 +370,7 @@ export async function init(params) {
     const setAvatar = (elId, photoUrl, name) => {
         const el = document.getElementById(elId);
         if (!el) return;
-        if (photoUrl) { el.style.backgroundImage = `url('${photoUrl}')`; el.textContent = ''; }
+        if (photoUrl) { el.style.backgroundImage = `url('${imgUrl(photoUrl)}')`; el.textContent = ''; }
         else el.textContent = name.substring(0, 2).toUpperCase();
     };
 
@@ -484,7 +484,7 @@ export async function init(params) {
 
     const appendBotMessage = (text, blockId, isLoaded = false) => {
         const container   = document.getElementById('chatScrollArea');
-        const avatarStyle = botPhotoUrl ? `style="background-image:url('${botPhotoUrl}')"` : '';
+        const avatarStyle = botPhotoUrl ? `style="background-image:url('${imgUrl(botPhotoUrl)}')"` : '';
         const avatarText  = botPhotoUrl ? '' : characterName.substring(0, 2).toUpperCase();
         const div = document.createElement('div');
         div.className = 'msg-block bot';

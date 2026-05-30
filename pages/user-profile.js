@@ -3,7 +3,7 @@
 //  Accesible sin sesión. Sesión requerida para follow/unfollow.
 // ============================================================
 
-import { _supabase } from '../supabase.js';
+import { _supabase, imgUrl } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
@@ -256,7 +256,7 @@ export async function init(params) {
         document.getElementById('botCountLabel').textContent = characters.length;
         container.innerHTML = '';
         characters.forEach(char => {
-            const avatarStyle = char.photo_url ? `background-image:url('${char.photo_url}');background-size:cover;background-position:center;` : '';
+            const avatarStyle = char.photo_url ? `background-image:url('${imgUrl(char.photo_url)}');background-size:cover;background-position:center;` : '';
             const initials = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
             const card = document.createElement('div');
             card.className = 'char-card';
