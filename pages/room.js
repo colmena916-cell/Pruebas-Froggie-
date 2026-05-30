@@ -577,7 +577,7 @@ export async function init(params) {
             memorySummary  = conv.memory_summary || '';
             summaryCount   = conv.summary_count  || 0;
 
-            const { data: messages, error: msgErr } = await _supabase.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true });
+            const { data: messages, error: msgErr } = await _supabase.from('messages').select('id, sender_type, sender_name, content, rating, alternatives, alt_index').eq('conversation_id', conversationId).order('created_at', { ascending: true }).limit(100);
 
             if (msgErr || !messages || messages.length === 0) {
                 const gid = 'init_' + Date.now();

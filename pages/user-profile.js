@@ -180,7 +180,7 @@ export async function init(params) {
 
     // ── Cargar metadatos del perfil ───────────────────────────
     const loadProfile = async () => {
-        const { data: profile } = await _supabase.from('profiles').select('*').eq('id', targetUserId).single();
+        const { data: profile } = await _supabase.from('profiles').select('display_name, username, bio, avatar_url').eq('id', targetUserId).single();
         if (!profile) { document.getElementById('profileName').textContent = 'Unknown Author'; return; }
         const name = profile.display_name || profile.username || 'Author';
         document.getElementById('profileName').textContent     = name;
@@ -195,8 +195,8 @@ export async function init(params) {
     // ── Follow counts ─────────────────────────────────────────
     const loadFollowCounts = async () => {
         const [followersRes, followingRes] = await Promise.all([
-            _supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', targetUserId),
-            _supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', targetUserId)
+            _supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', targetUserId),
+            _supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', targetUserId)
         ]);
         document.getElementById('followersCountLabel').textContent = followersRes.count ?? 0;
         document.getElementById('followingCountLabel').textContent = followingRes.count ?? 0;

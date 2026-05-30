@@ -118,7 +118,7 @@ export async function init(params) {
 
     // ── Cargar personaje ──────────────────────────────────────
     try {
-        const { data: char, error } = await _supabase.from('characters').select('*').eq('id', characterId).single();
+        const { data: char, error } = await _supabase.from('characters').select('name, subtitle, description, photo_url, creator_id').eq('id', characterId).single();
         if (error || !char) throw new Error('Not found');
 
         botCreatorId = char.creator_id;
@@ -159,7 +159,7 @@ export async function init(params) {
     if (Auth.userId) {
         let likeData = null;
         try {
-            const { data } = await _supabase.from('favorites').select('*').eq('character_id', characterId).eq('user_id', Auth.userId).maybeSingle();
+            const { data } = await _supabase.from('favorites').select('id').eq('character_id', characterId).eq('user_id', Auth.userId).maybeSingle();
             likeData = data;
         } catch {}
         // fix: use try/catch instead
@@ -186,7 +186,7 @@ export async function init(params) {
     const loadComments = async () => {
         const container = document.getElementById('commentsContainer');
         try {
-            const { data: comments, error } = await _supabase.from('comments').select('*').eq('character_id', characterId).order('created_at', { ascending: false });
+            const { data: comments, error } = await _supabase.from('comments').select('id, user_id, username, content, created_at').eq('character_id', characterId).order('created_at', { ascending: false }).limit(20);
             if (error || !comments || comments.length === 0) { container.innerHTML = `<div class="empty-comments">No reviews yet. Be the first to leave a mark!</div>`; return; }
             container.innerHTML = '';
             comments.forEach(c => {

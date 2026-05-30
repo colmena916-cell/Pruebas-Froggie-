@@ -288,19 +288,18 @@ async function renderRow(containerId, characters) {
 async function loadDashboard() {
     const base = { select: 'id, name, subtitle, photo_url, tags, category, chat_count, creator_id', visibility: 'public' };
 
-    const [allPublic, popular, canon, oc] = await Promise.all([
-        // For You: traemos todos los públicos y los mezclamos aleatoriamente
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).limit(100),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count',  { ascending: false }).limit(31),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(31),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count',   { ascending: false }).limit(31),
+    // For You: random en DB — cada visita muestra una mezcla distinta sin bajar todos los registros
+    const forYouPromise = _supabase.rpc('get_random_characters', { lim: 25 });
+
+    const [forYouRes, popular, canon, oc] = await Promise.all([
+        forYouPromise,
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count', { ascending: false }).limit(25),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(25),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count', { ascending: false }).limit(25),
     ]);
 
-    // Mezcla aleatoria para "For You" — diferente cada vez que recargas
-    const shuffled = (allPublic.data || []).sort(() => Math.random() - 0.5);
-
     await Promise.all([
-        renderRow('forYouRow',  shuffled),
+        renderRow('forYouRow',  forYouRes.data),
         renderRow('popularRow', popular.data),
         renderRow('canonRow',   canon.data),
         renderRow('ocRow',      oc.data),
