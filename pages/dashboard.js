@@ -285,24 +285,35 @@ async function renderRow(containerId, characters) {
     characters.forEach(c => container.appendChild(buildCard(c, c.creator_id ? creatorMap[c.creator_id] : null)));
 }
 
+// ── Caché del dashboard (3 secciones fijas) ──────────────────
+const _shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+let _dashCache = null;
+let _dashCacheTime = 0;
+const DASH_TTL = 60 * 60 * 1000; // 1 hora — Popular, Canon, OC
+
 async function loadDashboard() {
     const base = { select: 'id, name, subtitle, photo_url, tags, category, chat_count, creator_id', visibility: 'public' };
 
-    // For You: random en DB — cada visita muestra una mezcla distinta sin bajar todos los registros
-    const forYouPromise = _supabase.rpc('get_random_characters', { lim: 25 });
+    // For You: siempre fresco (aleatorio real)
+    const forYouRes = await _supabase.rpc('get_random_characters', { lim: 25 });
 
-    const [forYouRes, popular, canon, oc] = await Promise.all([
-        forYouPromise,
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count', { ascending: false }).limit(25),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(25),
-        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count', { ascending: false }).limit(25),
-    ]);
+    // Las otras 3 secciones: usar caché si está vigente
+    const now = Date.now();
+    if (!_dashCache || (now - _dashCacheTime) > DASH_TTL) {
+        const [popular, canon, oc] = await Promise.all([
+            _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count', { ascending: false }).limit(25),
+            _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(25),
+            _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count', { ascending: false }).limit(25),
+        ]);
+        _dashCache = { ..._dashCache, popular: popular.data, canon: canon.data, oc: oc.data };
+        _dashCacheTime = now;
+    }
 
     await Promise.all([
-        renderRow('forYouRow',  forYouRes.data),
-        renderRow('popularRow', popular.data),
-        renderRow('canonRow',   canon.data),
-        renderRow('ocRow',      oc.data),
+        renderRow('forYouRow',  _shuffle(_dashCache.forYou)),
+        renderRow('popularRow', _dashCache.popular),
+        renderRow('canonRow',   _dashCache.canon),
+        renderRow('ocRow',      _dashCache.oc),
     ]);
 }
 
