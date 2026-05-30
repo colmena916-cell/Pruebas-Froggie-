@@ -298,6 +298,13 @@ export function render() {
         </div>
     </div>
 
+    <!-- Botón de historial archivado -->
+    <div id="archiveBanner" style="display:none; text-align:center; padding: 10px 14px 0;">
+        <button id="loadArchiveBtn" style="background:none; border:1px solid rgba(62,83,43,0.2); border-radius:20px; padding:7px 18px; font-family:var(--font-serif); font-size:0.85rem; color:var(--text-dark); cursor:pointer; opacity:0.6; transition:opacity 0.2s;">
+            ↑ ver mensajes anteriores
+        </button>
+    </div>
+
     <!-- Área de chat -->
     <div class="no-key-banner" id="noKeyBanner">
         No API key configured. <a href="#" id="noKeyLink">Set one up in Settings</a> to start chatting.
@@ -354,6 +361,7 @@ export async function init(params) {
     let memorySummary = '', summaryCount = 0;
     const blockStateMap = new Map();
     const SUMMARY_EVERY = 10, MAX_ALTERNATIVES = 15, RECENT_KEEP = 50, SUMMARIES_MERGE = 5;
+    const ARCHIVE_THRESHOLD = 80, ARCHIVE_BATCH = 10;
 
     // ── Helpers ───────────────────────────────────────────────
     const escapeHTML = (str) => str.replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
@@ -577,7 +585,20 @@ export async function init(params) {
             memorySummary  = conv.memory_summary || '';
             summaryCount   = conv.summary_count  || 0;
 
-            const { data: messages, error: msgErr } = await _supabase.from('messages').select('id, sender_type, sender_name, content, rating, alternatives, alt_index').eq('conversation_id', conversationId).order('created_at', { ascending: true }).limit(100);
+            // Cargar solo los últimos 80 mensajes
+            const { data: messages, error: msgErr } = await _supabase
+                .from('messages')
+                .select('id, sender_type, sender_name, content, rating, alternatives, alt_index')
+                .eq('conversation_id', conversationId)
+                .order('created_at', { ascending: false })
+                .limit(ARCHIVE_THRESHOLD);
+
+            // Verificar si hay mensajes archivados para mostrar el botón
+            const { count: archiveCount } = await _supabase
+                .from('messages_archive')
+                .select('id', { count: 'exact', head: true })
+                .eq('conversation_id', conversationId);
+            if (archiveCount > 0) document.getElementById('archiveBanner').style.display = 'block';
 
             if (msgErr || !messages || messages.length === 0) {
                 const gid = 'init_' + Date.now();
@@ -586,8 +607,10 @@ export async function init(params) {
                 chatHistory.push({ role: 'assistant', content: characterGreeting });
                 await _supabase.from('messages').insert({ conversation_id: conversationId, sender_type: 'bot', sender_name: characterName, content: characterGreeting });
             } else {
+                // Invertir para mostrar del más viejo al más nuevo
+                const ordered = [...messages].reverse();
                 let lastUserText = '', historyAtPoint = [];
-                messages.forEach(msg => {
+                ordered.forEach(msg => {
                     const isBot = msg.sender_type === 'bot';
                     if (isBot) {
                         let alts = [{ text: msg.content, rating: msg.rating || 0 }], idx = 0;
@@ -601,7 +624,6 @@ export async function init(params) {
                     chatHistory.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
                     historyAtPoint.push({ role: isBot ? 'assistant' : 'user', content: msg.content });
                 });
-                // Ocultar tools de todos menos el último
                 const allIds = [...blockStateMap.keys()];
                 allIds.slice(0, -1).forEach(bid => { const t = document.getElementById(`tools_${bid}`); if (t) t.style.display = 'none'; });
             }
@@ -610,6 +632,48 @@ export async function init(params) {
             appendBotMessage(characterGreeting, 'init_' + Date.now(), true);
         }
         enableInput(true); scrollToBottom();
+    };
+
+    // ── Cargar historial archivado ────────────────────────────
+    const loadArchivedMessages = async () => {
+        const btn = document.getElementById('loadArchiveBtn');
+        btn.textContent = 'Cargando...'; btn.disabled = true;
+        try {
+            const { data: archived } = await _supabase
+                .from('messages_archive')
+                .select('id, sender_type, sender_name, content, created_at')
+                .eq('conversation_id', conversationId)
+                .order('created_at', { ascending: true });
+
+            if (!archived || archived.length === 0) {
+                document.getElementById('archiveBanner').style.display = 'none'; return;
+            }
+
+            const container = document.getElementById('chatScrollArea');
+            const fragment  = document.createDocumentFragment();
+            archived.forEach(msg => {
+                const isBot = msg.sender_type === 'bot';
+                const div   = document.createElement('div');
+                div.className = `msg-block ${isBot ? 'bot' : 'user'} archived-msg`;
+                div.style.opacity = '0.65';
+                const avatarStyle = isBot && botPhotoUrl ? `style="background-image:url('${imgUrl(botPhotoUrl)}')"` : '';
+                const avatarText  = isBot ? (botPhotoUrl ? '' : characterName.substring(0, 2).toUpperCase()) : (userAvatarUrl ? '' : userDisplayName.substring(0, 2).toUpperCase());
+                div.innerHTML = `
+                    <div class="msg-avatar ${isBot ? '' : 'user-avatar'}" ${avatarStyle}>${avatarText}</div>
+                    <div class="msg-body">
+                        <span class="msg-sender-name">${isBot ? characterName : userDisplayName}</span>
+                        <p class="msg-text">${formatNarrative(escapeHTML(msg.content))}</p>
+                    </div>`;
+                fragment.appendChild(div);
+            });
+
+            const firstChild = container.firstChild;
+            container.insertBefore(fragment, firstChild);
+            document.getElementById('archiveBanner').style.display = 'none';
+        } catch (e) {
+            console.error('Archive load error:', e);
+            btn.textContent = '↑ ver mensajes anteriores'; btn.disabled = false;
+        }
     };
 
     // ── Favoritos ─────────────────────────────────────────────
@@ -741,6 +805,17 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
             }
             await _supabase.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
 
+            // ── Actualizar estadísticas de conversación ───────
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                await _supabase.rpc('increment_conversation_stats', {
+                    p_conversation_id: conversationId,
+                    p_user_id:         Auth.userId,
+                    p_character_id:    characterId,
+                    p_date:            today
+                });
+            } catch {}
+
             if (chatHistory.length > 60) await generateAndSaveSummary();
         }
         isSending = false; enableInput(true);
@@ -844,11 +919,46 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
             }
             const { error: updateErr } = await _supabase.from('conversations').update({ memory_summary: finalSummary, summary_count: finalCount }).eq('id', conversationId);
             if (updateErr) return;
-            // Los mensajes se conservan en Supabase para que el usuario
-            // pueda releerlos desde cualquier dispositivo. Solo se recorta
-            // el historial en memoria para no saturar la ventana de contexto.
             memorySummary = finalSummary; summaryCount = finalCount;
             chatHistory   = chatHistory.slice(SUMMARY_EVERY);
+
+            // ── Archivar y borrar mensajes viejos ─────────────
+            try {
+                const { data: totalMsgs } = await _supabase
+                    .from('messages')
+                    .select('id', { count: 'exact', head: false })
+                    .eq('conversation_id', conversationId);
+
+                if (totalMsgs && totalMsgs.length >= ARCHIVE_THRESHOLD) {
+                    // Tomar los más viejos
+                    const { data: oldMsgs } = await _supabase
+                        .from('messages')
+                        .select('id, sender_type, sender_name, content, created_at')
+                        .eq('conversation_id', conversationId)
+                        .order('created_at', { ascending: true })
+                        .limit(ARCHIVE_BATCH);
+
+                    if (oldMsgs && oldMsgs.length > 0) {
+                        // Copiar a messages_archive sin alternatives
+                        await _supabase.from('messages_archive').insert(
+                            oldMsgs.map(m => ({
+                                conversation_id: conversationId,
+                                sender_type:     m.sender_type,
+                                sender_name:     m.sender_name,
+                                content:         m.content,
+                                created_at:      m.created_at
+                            }))
+                        );
+                        // Borrar de messages
+                        const idsToDelete = oldMsgs.map(m => m.id);
+                        await _supabase.from('messages').delete().in('id', idsToDelete);
+
+                        // Mostrar botón de historial si aún no está visible
+                        document.getElementById('archiveBanner').style.display = 'block';
+                    }
+                }
+            } catch (archiveErr) { console.warn('Archive error:', archiveErr); }
+
         } catch (e) { console.warn('Summary failed:', e); }
     };
 
@@ -1072,6 +1182,7 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
     };
 
     document.getElementById('noKeyLink').onclick = (e) => { e.preventDefault(); Router.go('api-settings'); };
+    document.getElementById('loadArchiveBtn').onclick = loadArchivedMessages;
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('userInput').addEventListener('keydown', (e) => {
         const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
