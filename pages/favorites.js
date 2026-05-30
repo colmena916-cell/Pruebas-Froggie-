@@ -3,7 +3,7 @@
 //  Requiere sesión.
 // ============================================================
 
-import { _supabase } from '../supabase.js';
+import { _supabase, imgUrl } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
@@ -65,7 +65,6 @@ export function render() {
 export async function init() {
     if (!Auth.requireSession()) return;
 
-    // Botón logout
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.style.display = 'flex';
@@ -106,7 +105,7 @@ async function loadFavorites(userId) {
     container.innerHTML = '';
     characters.forEach(char => {
         const avatarStyle = char.photo_url
-            ? `background-image:url('${char.photo_url}');background-size:cover;background-position:center;`
+            ? `background-image:url('${imgUrl(char.photo_url)}');background-size:cover;background-position:center;`
             : '';
         const initials = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
 

@@ -3,7 +3,7 @@
 //  Requiere sesión.
 // ============================================================
 
-import { _supabase } from '../supabase.js';
+import { _supabase, imgUrl } from '../supabase.js';
 import { Auth }      from '../auth.js';
 import { Router }    from '../router.js';
 
@@ -102,7 +102,7 @@ async function fetchActiveChats(userId) {
         container.innerHTML = '';
         activeChats.forEach(chat => {
             const charName  = chat.characters?.name || 'Unknown';
-            const charPhoto = chat.characters?.photo_url || '';
+            const charPhoto = imgUrl(chat.characters?.photo_url || '');
             const timeStr   = new Date(chat.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const avatarStyle = charPhoto
                 ? `background-image:url('${charPhoto}');background-size:cover;background-position:center;`
