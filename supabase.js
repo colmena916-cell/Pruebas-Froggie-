@@ -8,3 +8,8 @@ const SUPABASE_URL = "https://asjrvkzigdtcwweounjp.supabase.co";
 const SUPABASE_KEY = "sb_publishable_iV0aCpKClYk4B5WUVWJxtA_NYfh_uen";
 
 export const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+export function imgUrl(url) {
+    return url || "";
+}
