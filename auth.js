@@ -11,6 +11,10 @@ export const Auth = {
     userId:  null,
     session: null,
 
+    // Datos de la cuenta cargados desde la base (cartera + cosméticos).
+    coins:   0,
+    equipped: { skin: null, frame: null, cover: null },
+
     // ── Inicializar: restaura sesión guardada en localStorage ──
     async init() {
         // Restaurar tokens guardados (tu patrón actual)
@@ -35,7 +39,49 @@ export const Auth = {
             Auth.userId  = null;
         }
 
+        // Cargar cartera + cosméticos en segundo plano (no frena el arranque).
+        // Cuando lleguen, se aplica la skin equipada en tu cuenta.
+        Auth.loadAccountData();
+
         return Auth.session;
+    },
+
+    // ── Cargar de la base: monedas (cartera) y qué tienes equipado ──
+    async loadAccountData() {
+        if (!Auth.userId) {
+            Auth.coins = 0;
+            Auth.equipped = { skin: null, frame: null, cover: null };
+            return;
+        }
+        try {
+            // Las dos consultas en paralelo (más rápido)
+            const [walletRes, profileRes] = await Promise.all([
+                _supabase.from('wallets')
+                    .select('coins')
+                    .eq('user_id', Auth.userId)
+                    .maybeSingle(),
+                _supabase.from('profiles')
+                    .select('equipped_skin_id, equipped_frame_id, equipped_cover_id')
+                    .eq('id', Auth.userId)
+                    .maybeSingle()
+            ]);
+
+            Auth.coins = walletRes.data?.coins ?? 0;
+            Auth.equipped = {
+                skin:  profileRes.data?.equipped_skin_id  ?? null,
+                frame: profileRes.data?.equipped_frame_id ?? null,
+                cover: profileRes.data?.equipped_cover_id ?? null
+            };
+
+            // La base manda: aplicamos tu skin equipada (sin volver a guardarla).
+            if (Auth.equipped.skin) Theme.applySkin(Auth.equipped.skin, { save: false });
+            else                    Theme.clearSkin({ save: false });
+
+            // Avisar a la app que ya hay monedas (por si hay un contador escuchando)
+            document.dispatchEvent(new CustomEvent('coins-updated', { detail: Auth.coins }));
+        } catch (e) {
+            console.warn('No se pudo cargar tu cartera/cosméticos:', e);
+        }
     },
 
     // ── Cerrar sesión ──────────────────────────────────────────
@@ -46,6 +92,8 @@ export const Auth = {
         localStorage.removeItem('froggie_uid');
         Auth.session = null;
         Auth.userId  = null;
+        Auth.coins   = 0;
+        Auth.equipped = { skin: null, frame: null, cover: null };
         Router.go('dashboard');
     },
 
@@ -74,30 +122,37 @@ export const Auth = {
 //  Theme.js  —  sistema de temas + skins (dentro de auth.js por tamaño)
 //  Classic / Dark / Custom + Skins (Jardín Dorado, etc.)
 //  Se aplica antes de renderizar.
+//
+//  NOTA sobre el parámetro { save }:
+//    - Las acciones del USUARIO (elegir skin/tema en el menú) GUARDAN
+//      el cambio en su cuenta (save: true, por defecto).
+//    - Cuando la app aplica algo cargado DESDE la base, usa save: false
+//      para no volver a escribir lo mismo.
 // ============================================================
 
 export const Theme = {
-    // Aplicar lo guardado en localStorage (llamar en init).
-    // La SKIN manda: si hay una skin equipada, esa gana sobre el tema.
+    // Aplicar lo guardado en localStorage (pintado instantáneo al arrancar).
+    // No guarda en la base: solo pinta rápido. La base se sincroniza aparte.
     restore() {
         const skin = localStorage.getItem('user-skin');
-        if (skin) { Theme.applySkin(skin); return; }
+        if (skin) { Theme.applySkin(skin, { save: false }); return; }
 
         const saved = localStorage.getItem('user-theme');
-        if (saved === 'dark')        Theme.apply('dark');
-        else if (saved === 'custom') Theme.applyCustom();
+        if (saved === 'dark')        Theme.apply('dark', { save: false });
+        else if (saved === 'custom') Theme.applyCustom({ save: false });
         // 'classic' o null → no hace nada (los CSS vars por defecto son classic)
     },
 
-    apply(name) {
+    apply(name, opts = {}) {
         Theme._removeSkinClasses();           // un tema normal quita cualquier skin
         localStorage.removeItem('user-skin');
         document.body.removeAttribute('style');
         document.body.classList.toggle('theme-dark', name === 'dark');
         localStorage.setItem('user-theme', name);
+        if (opts.save !== false) Theme._saveEquippedSkin(null);  // tema normal = sin skin
     },
 
-    applyCustom() {
+    applyCustom(opts = {}) {
         Theme._removeSkinClasses();
         localStorage.removeItem('user-skin');
         document.body.classList.remove('theme-dark');
@@ -113,6 +168,7 @@ export const Theme = {
         const txtInput = document.getElementById('customTextInput');
         if (bgInput)  bgInput.value  = bg;
         if (txtInput) txtInput.value = txt;
+        if (opts.save !== false) Theme._saveEquippedSkin(null);  // tema normal = sin skin
     },
 
     saveCustom(bg, txt) {
@@ -125,8 +181,8 @@ export const Theme = {
     // Una skin define un look COMPLETO (fondo, barras, marco, fuente).
     // Se activa poniendo la clase  body.skin-<id>  y el CSS de la skin
     // (que debes enlazar en index.html) hace el resto.
-    applySkin(id) {
-        if (!id) { Theme.clearSkin(); return; }
+    applySkin(id, opts = {}) {
+        if (!id) { Theme.clearSkin(opts); return; }
         Theme._removeSkinClasses();
         document.body.style.removeProperty('--bg-main');   // limpiar restos de "custom"
         document.body.style.removeProperty('--text-dark');
@@ -135,21 +191,37 @@ export const Theme = {
         document.body.classList.remove('theme-dark');      // la skin trae su propio look
         document.body.classList.add('skin-' + id);
         localStorage.setItem('user-skin', id);
+        if (opts.save !== false) Theme._saveEquippedSkin(id);   // guardar en la cuenta
     },
 
     // Quitar la skin y volver al tema guardado (classic / dark / custom)
-    clearSkin() {
+    clearSkin(opts = {}) {
         Theme._removeSkinClasses();
         localStorage.removeItem('user-skin');
         const saved = localStorage.getItem('user-theme');
-        if (saved === 'dark')        Theme.apply('dark');
-        else if (saved === 'custom') Theme.applyCustom();
+        // Restaurar el tema visual SIN reescribir la base (eso lo hace la línea de abajo)
+        if (saved === 'dark')        Theme.apply('dark', { save: false });
+        else if (saved === 'custom') Theme.applyCustom({ save: false });
+        if (opts.save !== false) Theme._saveEquippedSkin(null);  // dejar "sin skin" en la cuenta
     },
 
     _removeSkinClasses() {
         [...document.body.classList].forEach(c => {
             if (c.startsWith('skin-')) document.body.classList.remove(c);
         });
+    },
+
+    // Guarda en TU perfil qué skin tienes equipada (o null si ninguna).
+    // Si no hay sesión, no hace nada (queda solo en el navegador).
+    _saveEquippedSkin(id) {
+        if (!Auth.userId) return;
+        _supabase.from('profiles')
+            .update({ equipped_skin_id: id })
+            .eq('id', Auth.userId)
+            .then(({ error }) => {
+                if (error) console.warn('No se guardó la skin equipada:', error.message);
+                else Auth.equipped.skin = id;
+            });
     },
 
     _adjustBrightness(hex, pct) {
