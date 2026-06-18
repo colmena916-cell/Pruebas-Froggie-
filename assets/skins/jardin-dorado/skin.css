@@ -97,27 +97,29 @@ body.skin-jardin-dorado .char-avatar::after {
 }
 
 /* ════════ PERFIL ════════ */
-/* Portada por defecto (con opacidad) detrás de la cabecera del perfil */
+/* Portada por defecto detrás de la cabecera, con el avatar montado encima */
 body.skin-jardin-dorado .profile-card {
   position: relative;
   overflow: hidden;
-  padding-top: 128px;
+  padding-top: 0;                    /* la portada va pegada arriba */
 }
 body.skin-jardin-dorado .profile-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 108px;
+  height: 120px;
   background: url('portada.png') center/cover;
-  opacity: 0.7;                      /* la portada con un poco de opacidad */
+  opacity: 0.8;                      /* la portada con un poco de opacidad */
   z-index: 0;
 }
 body.skin-jardin-dorado .profile-card > * { position: relative; z-index: 1; }
-/* Marco de rosas alrededor del avatar del perfil */
+/* El avatar SUBE para montarse sobre la parte baja de la portada (como la demo) */
 body.skin-jardin-dorado .profile-avatar {
+  margin-top: 64px;
   border-radius: 50%;
   position: relative;
   overflow: visible;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
 }
 body.skin-jardin-dorado .profile-avatar::after {
   content: '';
