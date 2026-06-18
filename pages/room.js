@@ -174,15 +174,14 @@ export function render() {
         /* ── Selección y edición ─────────────────────────────── */
         .msg-select-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(201,113,113,0.5); background: var(--bg-main); display: none; align-items: center; justify-content: center; z-index: 5; pointer-events: none; position: absolute; top: 0; right: 0; }
         .msg-select-check svg { width: 11px; height: 11px; fill: white; display: none; }
-        body.delete-mode .msg-block.user { cursor: not-allowed; }
-        body.delete-mode .msg-block.user.deletable { cursor: pointer; }
-        body.delete-mode .msg-block.user.deletable .msg-select-check { display: flex; }
-        body.delete-mode .msg-block.bot.deletable-bot { cursor: pointer; }
-        body.delete-mode .msg-block.user.selected-pair .msg-select-check { background-color: #c97171; border-color: #c97171; }
-        body.delete-mode .msg-block.user.selected-pair .msg-select-check svg { display: block; }
-        body.delete-mode .msg-block.selected-pair::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; background-color: rgba(0,0,0,0.05); border: 2px solid rgba(201,113,113,0.35); pointer-events: none; }
-        body.delete-mode .msg-block.user.deletable:not(.selected-pair):hover::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; border: 2px dashed rgba(201,113,113,0.3); pointer-events: none; }
-        body.delete-mode .msg-block.bot.deletable-bot:not(.selected-pair):hover::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; border: 2px dashed rgba(201,113,113,0.3); pointer-events: none; }
+        body.delete-mode .msg-block { cursor: not-allowed; }
+        body.delete-mode .msg-block.deletable { cursor: pointer; }
+        body.delete-mode .msg-block.deletable .msg-select-check { display: flex; }
+        body.delete-mode .bot-tools { display: none !important; }
+        body.delete-mode .msg-block.selected .msg-select-check { background-color: #c97171; border-color: #c97171; }
+        body.delete-mode .msg-block.selected .msg-select-check svg { display: block; }
+        body.delete-mode .msg-block.selected::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; background-color: rgba(0,0,0,0.05); border: 2px solid rgba(201,113,113,0.35); pointer-events: none; }
+        body.delete-mode .msg-block.deletable:not(.selected):hover::after { content: ''; position: absolute; inset: -6px -4px; border-radius: 10px; border: 2px dashed rgba(201,113,113,0.3); pointer-events: none; }
 
         .msg-edit-btn { display: none; position: absolute; top: 0; right: 0; background: none; border: none; cursor: pointer; color: var(--text-dark); opacity: 0.35; padding: 2px; z-index: 5; transition: opacity 0.2s; }
         .msg-edit-btn:hover { opacity: 1; }
@@ -539,6 +538,7 @@ export async function init(params) {
         div.className = 'msg-block bot';
         div.id = blockId;
         div.innerHTML = `
+            <div class="msg-select-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
             <button class="msg-edit-btn" title="Edit message"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
             <div class="msg-avatar" ${avatarStyle}>${avatarText}</div>
             <div class="msg-body">
@@ -558,6 +558,7 @@ export async function init(params) {
 
         div.querySelector('.msg-edit-btn').onclick = (e) => { e.stopPropagation(); startEdit(div, 'bot'); };
         div.querySelectorAll('.star-btn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); rateBotMessage(blockId, parseInt(btn.dataset.n)); }; });
+        div.onclick = () => toggleSelectMessage(div);
         div.getElementById = (id) => div.querySelector(`#${id}`); // no existe en div, usamos document
 
         // Nav arrows
@@ -616,9 +617,9 @@ export async function init(params) {
         document.getElementById('loadingState').style.display = 'none';
         container.innerHTML = ''; chatHistory = [];
         try {
-            let { data: conv, error: convErr } = await _supabase.from('conversations').select('id, memory_summary, summary_count, story_context').eq('user_id', Auth.userId).eq('character_id', characterId).single();
+            let { data: conv, error: convErr } = await _supabase.from('conversations').select('id, memory_summary, summary_count, story_context, persona_id').eq('user_id', Auth.userId).eq('character_id', characterId).single();
             if (convErr || !conv) {
-                const { data: newConv, error: createErr } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id, memory_summary, summary_count, story_context').single();
+                const { data: newConv, error: createErr } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id, memory_summary, summary_count, story_context, persona_id').single();
                 if (createErr) throw createErr;
                 conv = newConv;
             }
@@ -626,6 +627,14 @@ export async function init(params) {
             memorySummary  = conv.memory_summary || '';
             summaryCount   = conv.summary_count  || 0;
             storyContext   = conv.story_context  || '';
+
+            // Persona guardada en ESTE chat manda sobre la default del perfil.
+            if (conv.persona_id) {
+                try {
+                    const { data: convPersona } = await _supabase.from('user_personas').select('id, name, description').eq('id', conv.persona_id).single();
+                    if (convPersona) { activePersona = convPersona; document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${convPersona.name}</em>`; }
+                } catch {}
+            }
 
             // Cargar solo los últimos 80 mensajes
             const { data: messages, error: msgErr } = await _supabase
@@ -806,12 +815,45 @@ ${ctxBlock}`;
     };
 
     // ── Enviar mensaje ────────────────────────────────────────
+    // Enviar vacío = el bot continúa la historia solo (como Chai/CAI).
+    const continueStory = async () => {
+        if (!Auth.userId) { UI.showLoginPopup('Join Froggie AI to start chatting!'); return; }
+        if (isSending) return;
+        if (!apiSettings) { document.getElementById('noKeyBanner').classList.add('show'); return; }
+
+        isSending = true; enableInput(false);
+        blockStateMap.forEach((_, bid) => { const t = document.getElementById(`tools_${bid}`); if (t) t.style.display = 'none'; });
+
+        // Turno sintético para que todo proveedor (incl. Gemini) reciba un turno de usuario al final.
+        const contHistory = [...chatHistory, { role: 'user', content: '(Continue the story from where it left off, in character. Do not repeat previous text.)' }];
+
+        document.getElementById('typingIndicator').classList.add('show'); scrollToBottom();
+        const botReply = await callAI('(continue)', contHistory);
+        document.getElementById('typingIndicator').classList.remove('show');
+
+        if (botReply) {
+            const blockId = 'msg_' + Math.random().toString(36).substring(2, 9);
+            blockStateMap.set(blockId, { alternatives: [{ text: botReply, rating: 0 }], index: 0, userPrompt: '(continue)', historySnapshot: contHistory.slice(), generating: false });
+            currentBotBlockId = blockId;
+            appendBotMessage(botReply, blockId, false);
+            chatHistory.push({ role: 'assistant', content: botReply });
+
+            const { data: savedBotMsg } = await _supabase.from('messages').insert({ conversation_id: conversationId, sender_type: 'bot', sender_name: characterName, content: botReply }).select('id').single();
+            currentBotMessageId = savedBotMsg?.id || null;
+            if (currentBotMessageId) { const bb = document.getElementById(blockId); if (bb) bb.dataset.msgid = currentBotMessageId; }
+            await _supabase.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
+
+            if (chatHistory.length > RECENT_KEEP + SUMMARY_EVERY) await generateAndSaveSummary();
+        }
+        isSending = false; enableInput(true);
+    };
+
     const sendMessage = async () => {
         if (!Auth.userId) { UI.showLoginPopup('Join Froggie AI to start chatting!'); return; }
         if (isSending) return;
         const input = document.getElementById('userInput');
         const text  = input.value.trim();
-        if (!text) { return; }
+        if (!text) { return continueStory(); }
         if (!apiSettings) { document.getElementById('noKeyBanner').classList.add('show'); return; }
 
         isSending = true; enableInput(false);
@@ -1002,34 +1044,39 @@ ${ctxBlock}`;
     };
 
     // ── Selección y borrado ───────────────────────────────────
-    let deletableUserBlock = null;
-    let deleteSelectedUserBlock = null, deleteSelectedBotBlock = null;
+    let deleteSelected = new Set();
 
     const updateDeleteConfirmBtn = () => {
         const btn  = document.getElementById('deleteConfirmBtn');
         const hint = document.getElementById('deleteHint');
-        if (deleteSelectedUserBlock) { btn.classList.add('ready'); hint.textContent = 'Exchange will be removed'; }
+        const n = deleteSelected.size;
+        if (n > 0) { btn.classList.add('ready'); hint.textContent = n === 1 ? '1 message will be removed' : `${n} messages will be removed`; }
         else { btn.classList.remove('ready'); hint.textContent = 'Select a message to delete'; }
     };
 
     const updateEditableMarkers = () => {
         document.querySelectorAll('.msg-block.editable-last').forEach(el => el.classList.remove('editable-last'));
-        const userBlocks = document.querySelectorAll('.msg-block.user');
+        const userBlocks = document.querySelectorAll('.msg-block.user:not(.archived-msg)');
         if (userBlocks.length > 0) userBlocks[userBlocks.length - 1].classList.add('editable-last');
-        const botBlocks = document.querySelectorAll('.msg-block.bot');
+        const botBlocks = document.querySelectorAll('.msg-block.bot:not(.archived-msg)');
         if (botBlocks.length > 0) botBlocks[botBlocks.length - 1].classList.add('editable-last');
+    };
+
+    // Los dos últimos mensajes visibles (no archivados) son los accionables.
+    const lastTwoBlocks = () => {
+        const all = [...document.querySelectorAll('.msg-block')].filter(b => !b.classList.contains('archived-msg'));
+        return all.slice(-2);
     };
 
     const enterDeleteMode = () => {
         toggleDropdown();
-        const allUser = document.querySelectorAll('.msg-block.user');
-        deletableUserBlock = allUser.length > 0 ? allUser[allUser.length - 1] : null;
-        if (!deletableUserBlock) return;
+        const targets = lastTwoBlocks();
+        if (targets.length === 0) return;
         document.body.classList.add('delete-mode');
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('deleteBar').classList.add('show');
-        deleteSelectedUserBlock = null; deleteSelectedBotBlock = null;
-        deletableUserBlock.classList.add('deletable');
+        deleteSelected = new Set();
+        targets.forEach(b => b.classList.add('deletable'));
         updateDeleteConfirmBtn();
     };
 
@@ -1037,30 +1084,22 @@ ${ctxBlock}`;
         document.body.classList.remove('delete-mode');
         document.getElementById('inputArea').style.display = '';
         document.getElementById('deleteBar').classList.remove('show');
-        document.querySelectorAll('.msg-block.selected-pair, .msg-block.deletable').forEach(el => el.classList.remove('selected-pair', 'deletable'));
-        deleteSelectedUserBlock = deleteSelectedBotBlock = deletableUserBlock = null;
+        document.querySelectorAll('.msg-block.selected, .msg-block.deletable').forEach(el => el.classList.remove('selected', 'deletable'));
+        deleteSelected = new Set();
     };
 
-    const toggleSelectMessage = (userBlock) => {
-        if (!document.body.classList.contains('delete-mode') || userBlock !== deletableUserBlock) return;
-        if (userBlock.classList.contains('selected-pair')) {
-            userBlock.classList.remove('selected-pair');
-            if (deleteSelectedBotBlock) deleteSelectedBotBlock.classList.remove('selected-pair');
-            deleteSelectedUserBlock = deleteSelectedBotBlock = null;
-            updateDeleteConfirmBtn(); return;
-        }
-        userBlock.classList.add('selected-pair'); deleteSelectedUserBlock = userBlock;
-        // También marcar el bot que sigue al usuario seleccionado
-        let next = userBlock.nextElementSibling;
-        while (next && !next.classList.contains('msg-block')) next = next.nextElementSibling;
-        if (next && next.classList.contains('bot')) { next.classList.add('selected-pair'); deleteSelectedBotBlock = next; }
-        else deleteSelectedBotBlock = null;
+    // Selección individual: marca exactamente el mensaje tocado, sin arrastrar al de al lado.
+    const toggleSelectMessage = (block) => {
+        if (!document.body.classList.contains('delete-mode') || !block.classList.contains('deletable')) return;
+        if (block.classList.contains('selected')) { block.classList.remove('selected'); deleteSelected.delete(block); }
+        else { block.classList.add('selected'); deleteSelected.add(block); }
         updateDeleteConfirmBtn();
     };
 
     const rebuildChatHistory = () => {
         chatHistory = [];
         document.querySelectorAll('.msg-block').forEach(block => {
+            if (block.classList.contains('archived-msg')) return;
             const txt = block.querySelector('.msg-text');
             if (!txt) return;
             if (block.classList.contains('user')) chatHistory.push({ role: 'user', content: txt.innerText });
@@ -1069,16 +1108,15 @@ ${ctxBlock}`;
     };
 
     const confirmDeleteSelected = async () => {
-        if (!deleteSelectedUserBlock) return;
+        if (deleteSelected.size === 0) return;
+        const blocks = [...deleteSelected];
         try {
-            const userMsgId = deleteSelectedUserBlock.dataset.msgid;
-            const botMsgId  = deleteSelectedBotBlock ? deleteSelectedBotBlock.dataset.msgid : null;
-            const botBlockId = deleteSelectedBotBlock ? deleteSelectedBotBlock.id : null;
-            if (userMsgId) await _supabase.from('messages').delete().eq('id', userMsgId);
-            if (botMsgId) await _supabase.from('messages').delete().eq('id', botMsgId);
-            else if (botBlockId && botBlockId === currentBotBlockId && currentBotMessageId) await _supabase.from('messages').delete().eq('id', currentBotMessageId);
-            deleteSelectedUserBlock.remove();
-            if (deleteSelectedBotBlock) deleteSelectedBotBlock.remove();
+            for (const block of blocks) {
+                const msgId = block.dataset.msgid;
+                if (msgId) await _supabase.from('messages').delete().eq('id', msgId);
+                if (block.id) blockStateMap.delete(block.id);
+                block.remove();
+            }
             rebuildChatHistory();
         } catch (err) { console.error('Error deleting:', err); }
         exitDeleteMode(); updateEditableMarkers();
@@ -1166,6 +1204,9 @@ ${ctxBlock}`;
                     activePersona = isNone ? null : p;
                     document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${isNone ? 'My Profile' : p.name}</em>`;
                     document.getElementById('personaModal').classList.remove('show');
+                    if (conversationId) {
+                        _supabase.from('conversations').update({ persona_id: isNone ? null : p.id }).eq('id', conversationId).then(() => {}, () => {});
+                    }
                 };
                 list.appendChild(btn);
             };
