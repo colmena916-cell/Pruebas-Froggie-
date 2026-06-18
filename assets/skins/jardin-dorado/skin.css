@@ -91,7 +91,7 @@ body.skin-jardin-dorado .char-avatar {
 body.skin-jardin-dorado .char-avatar::after {
   content: '';
   position: absolute;
-  inset: -9%;                       /* el marco asoma un poco por fuera del avatar */
+  inset: -2%;                       /* el marco asoma un poco por fuera del avatar */
   background: url('marcobots.png') center/contain no-repeat;
   pointer-events: none;
 }
@@ -134,7 +134,7 @@ body.skin-jardin-dorado .profile-avatar::after {
    pero tiene id="botAvatar". Lo apuntamos por id para darle SU marco. */
 body.skin-jardin-dorado #botAvatar::after {
   background: url('marcobots.png') center/contain no-repeat;
-  inset: -38%;
+  inset: -18%;
 }
 
 /* ════════ ROOM (chat) ════════ */
