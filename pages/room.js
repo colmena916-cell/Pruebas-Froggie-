@@ -647,9 +647,17 @@ export async function init(params) {
     // ── Cargar historial ──────────────────────────────────────
     const loadHistory = async (targetConvId = null) => {
         const container = document.getElementById('chatScrollArea');
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('archiveBanner').style.display = 'none';
-        container.innerHTML = ''; chatHistory = []; blockStateMap.clear();
+        // OJO: #loadingState vive DENTRO de #chatScrollArea, así que el primer
+        // container.innerHTML = '' lo borra para siempre. En la 2da llamada (al
+        // crear o cambiar de chat) getElementById devolvía null y .style reventaba
+        // con un TypeError ANTES del try → el cambio de chat se abortaba en silencio.
+        // Por eso "había que refrescar" y no se podía saltar a otro chat.
+        const loadingEl = document.getElementById('loadingState');
+        if (loadingEl) loadingEl.style.display = 'none';
+        const archiveEl = document.getElementById('archiveBanner');
+        if (archiveEl) archiveEl.style.display = 'none';
+        if (container) container.innerHTML = '';
+        chatHistory = []; blockStateMap.clear();
         currentBotBlockId = currentBotMessageId = null;
         const COLS = 'id, memory_summary, summary_count, story_context, persona_id';
         try {
