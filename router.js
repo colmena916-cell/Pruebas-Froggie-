@@ -30,6 +30,7 @@ import { Auth, Theme } from './auth.js';
 const ROUTES = {
     'index':              () => import('./pages/index.js'),
     'dashboard':          () => import('./pages/dashboard.js'),
+    'store':              () => import('./pages/store.js'),
     'registro':           () => import('./pages/registro.js'),
     'reset-password':     () => import('./pages/reset-password.js'),
     'myprofile':          () => import('./pages/myprofile.js'),

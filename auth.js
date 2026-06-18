@@ -73,9 +73,18 @@ export const Auth = {
                 cover: profileRes.data?.equipped_cover_id ?? null
             };
 
-            // La base manda: aplicamos tu skin equipada (sin volver a guardarla).
-            if (Auth.equipped.skin) Theme.applySkin(Auth.equipped.skin, { save: false });
-            else                    Theme.clearSkin({ save: false });
+            // Aplicar la skin equipada según la base.
+            if (Auth.equipped.skin) {
+                // La base manda: aplicamos tu skin (sin volver a guardarla).
+                Theme.applySkin(Auth.equipped.skin, { save: false });
+            } else {
+                // La base no tiene skin equipada. Si el navegador SÍ tiene una
+                // (la equipaste antes de que existiera esto), la subimos a la
+                // base y la dejamos puesta. Si tampoco hay, no tocamos nada.
+                // OJO: NO llamamos clearSkin aquí, para no borrar tu skin al refrescar.
+                const local = localStorage.getItem('user-skin');
+                if (local) Theme._saveEquippedSkin(local);
+            }
 
             // Avisar a la app que ya hay monedas (por si hay un contador escuchando)
             document.dispatchEvent(new CustomEvent('coins-updated', { detail: Auth.coins }));
