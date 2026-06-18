@@ -1,16 +1,17 @@
 /* ============================================================
-   skin.css — Skin "Jardín Dorado" para Froggie AI
-   Se activa cuando <body> tiene la clase  .skin-jardin-dorado
-   Carpeta sugerida:  assets/skins/jardin-dorado/
-   (este archivo + fondo.jpg + piedra.png + esquina.png viven aquí juntos,
-    por eso las url() de abajo son solo el nombre del archivo)
+   skin.css — Skin "Golden Garden" / Jardín Dorado para Froggie AI
+   Se activa con la clase  body.skin-jardin-dorado
+   Carpeta:  assets/skins/jardin-dorado/
 
-   IMPORTANTE: agrega también en el <head> de index.html el <link> de
-   Google Fonts con Cinzel + EB Garamond (ver instrucciones del chat).
+   ⚠️ Estos archivos DEBEN vivir aquí junto a este css, con ESTOS nombres:
+      fondo.png  ·  piedra.png  ·  esquina.png  ·
+      marcoavatar.png  ·  marcobots.png  ·  portada.png
+   (renombra los _transparente.png que te di: marcoavatar.png, marcobots.png, esquina.png)
+
+   Y en index.html ya deben estar los <link> de Cinzel + EB Garamond.
    ============================================================ */
 
 body.skin-jardin-dorado {
-  /* —— Paleta (sobrescribe la del tema) —— */
   --bg-main:    #F1E8CF;
   --bg-accent:  #E7DBBE;
   --text-dark:  #3b3122;
@@ -20,58 +21,108 @@ body.skin-jardin-dorado {
   --sk-gold:    #a9853f;
   --sk-line:    #9c884f;
 
-  /* —— Fondo de pergamino —— */
   background-image: url('fondo.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
 }
 
-/* —— Barras (header y bottom-nav) con textura de piedra —— */
+/* —— Barras (header + bottom-nav) con textura de piedra —— */
 body.skin-jardin-dorado header,
 body.skin-jardin-dorado .bottom-nav {
   background-image: url('piedra.png');
   background-size: cover;
   background-position: center;
 }
-body.skin-jardin-dorado header     { border-bottom: 2px solid var(--sk-gold); }
+body.skin-jardin-dorado header      { border-bottom: 2px solid var(--sk-gold); }
 body.skin-jardin-dorado .bottom-nav { border-top: 2px solid var(--sk-gold); }
-
-/* La barra de búsqueda se lee mejor con un velo claro sobre la piedra */
 body.skin-jardin-dorado .search-bar input {
   background-color: rgba(255,255,255,0.55);
   border-color: var(--sk-gold);
 }
 
-/* —— Marco "portada de libro" alrededor del contenido —— */
+/* —— Marco "portada de libro": dos líneas de dos tamaños —— */
 body.skin-jardin-dorado main {
   position: relative;
-  border: 2px solid var(--sk-gold);
+  border: 2px solid var(--sk-gold);                       /* línea gruesa */
   border-radius: 8px;
-  /* segunda línea fina por dentro (efecto portada) */
-  box-shadow: inset 0 0 0 6px var(--bg-main), inset 0 0 0 7px var(--sk-line);
+  box-shadow: inset 0 0 0 6px var(--bg-main),
+              inset 0 0 0 7px var(--sk-line);              /* línea fina interior */
 }
-/* Dos esquinas ornamentales en diagonal — una sola imagen, puro CSS */
+/* —— Dos esquinas florales en diagonal (una sola imagen) —— */
 body.skin-jardin-dorado main::before,
 body.skin-jardin-dorado main::after {
   content: '';
   position: absolute;
-  width: 48px; height: 48px;
-  background: url('esquina.png') center/contain no-repeat;
+  width:  clamp(90px, 24vw, 150px);
+  height: clamp(90px, 24vw, 150px);
+  background: url('esquina.png') no-repeat;
+  background-size: contain;
   pointer-events: none;
   z-index: 3;
 }
-body.skin-jardin-dorado main::before { top:6px; right:6px; transform:none; }
-body.skin-jardin-dorado main::after  { bottom:6px; left:6px; transform:rotate(180deg); }
+body.skin-jardin-dorado main::before { top: 0; right: 0; }                          /* superior derecha */
+body.skin-jardin-dorado main::after  { bottom: 0; left: 0; transform: rotate(180deg); } /* inferior izquierda */
 
-/* —— Títulos con Cinzel (grabado de portada de libro) —— */
+/* —— Títulos con Cinzel (grabado de portada) —— */
 body.skin-jardin-dorado h1,
 body.skin-jardin-dorado h2,
 body.skin-jardin-dorado h3,
 body.skin-jardin-dorado .section-title,
-body.skin-jardin-dorado .profile-name,
-body.skin-jardin-dorado .bot-header-title {
+body.skin-jardin-dorado .profile-name {
   font-family: 'Cinzel', Georgia, serif;
   font-style: normal;
   letter-spacing: 0.5px;
+}
+
+/* ════════ FICHAS DE PERSONAJE ════════ */
+/* Oscurecer las fichas con un velo cálido translúcido (en todas partes) */
+body.skin-jardin-dorado .char-card,
+body.skin-jardin-dorado .search-result-card {
+  background-color: rgba(59, 49, 34, 0.16);
+  border-color: rgba(124, 108, 79, 0.45);
+}
+/* Avatar redondo + marco de bot (parte de la skin) */
+body.skin-jardin-dorado .char-avatar {
+  border-radius: 50%;
+  position: relative;
+  overflow: visible;
+}
+body.skin-jardin-dorado .char-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -18%;                       /* el marco asoma un poco por fuera del avatar */
+  background: url('marcobots.png') center/contain no-repeat;
+  pointer-events: none;
+}
+
+/* ════════ PERFIL ════════ */
+/* Portada por defecto (con opacidad) detrás de la cabecera del perfil */
+body.skin-jardin-dorado .profile-card {
+  position: relative;
+  overflow: hidden;
+  padding-top: 128px;
+}
+body.skin-jardin-dorado .profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 108px;
+  background: url('portada.png') center/cover;
+  opacity: 0.7;                      /* la portada con un poco de opacidad */
+  z-index: 0;
+}
+body.skin-jardin-dorado .profile-card > * { position: relative; z-index: 1; }
+/* Marco de rosas alrededor del avatar del perfil */
+body.skin-jardin-dorado .profile-avatar {
+  border-radius: 50%;
+  position: relative;
+  overflow: visible;
+}
+body.skin-jardin-dorado .profile-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  background: url('marcoavatar.png') center/contain no-repeat;
+  pointer-events: none;
 }
