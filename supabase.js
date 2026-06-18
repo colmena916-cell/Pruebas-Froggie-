@@ -4,8 +4,8 @@
 //  NUNCA vuelvas a poner SUPABASE_URL o SUPABASE_KEY en otro lugar.
 // ============================================================
 
-const SUPABASE_URL = "https://jqfbrrbewdtmhjsaifhi.supabase.co";
-const SUPABASE_KEY = "sb_publishable_000Yr23ozkpp-ovO2a4S5Q_tTnj8bL8";
+const SUPABASE_URL = "https://asjrvkzigdtcwweounjp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_sb_publishable_iV0aCpKClYk4B5WUVWJxtA_NYfh_uen";
 
 export const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
