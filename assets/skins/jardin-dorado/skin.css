@@ -109,7 +109,7 @@ body.skin-jardin-dorado .profile-card::before {
   top: 0; left: 0; right: 0;
   height: 120px;
   background: url('portada.png') center/cover;
-  opacity: 0.8;                      /* la portada con un poco de opacidad */
+  opacity: 1.0;                      /* la portada con un poco de opacidad */
   z-index: 0;
 }
 body.skin-jardin-dorado .profile-card > * { position: relative; z-index: 1; }
@@ -124,7 +124,7 @@ body.skin-jardin-dorado .profile-avatar {
 body.skin-jardin-dorado .profile-avatar::after {
   content: '';
   position: absolute;
-  inset: -28%;
+  inset: -38%;
   background: url('marcoavatar.png') center/contain no-repeat;
   pointer-events: none;
 }
@@ -134,7 +134,7 @@ body.skin-jardin-dorado .profile-avatar::after {
    pero tiene id="botAvatar". Lo apuntamos por id para darle SU marco. */
 body.skin-jardin-dorado #botAvatar::after {
   background: url('marcobots.png') center/contain no-repeat;
-  inset: -28%;
+  inset: -38%;
 }
 
 /* ════════ ROOM (chat) ════════ */
