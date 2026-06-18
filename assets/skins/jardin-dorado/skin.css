@@ -1,0 +1,77 @@
+/* ============================================================
+   skin.css — Skin "Jardín Dorado" para Froggie AI
+   Se activa cuando <body> tiene la clase  .skin-jardin-dorado
+   Carpeta sugerida:  assets/skins/jardin-dorado/
+   (este archivo + fondo.jpg + piedra.png + esquina.png viven aquí juntos,
+    por eso las url() de abajo son solo el nombre del archivo)
+
+   IMPORTANTE: agrega también en el <head> de index.html el <link> de
+   Google Fonts con Cinzel + EB Garamond (ver instrucciones del chat).
+   ============================================================ */
+
+body.skin-jardin-dorado {
+  /* —— Paleta (sobrescribe la del tema) —— */
+  --bg-main:    #F1E8CF;
+  --bg-accent:  #E7DBBE;
+  --text-dark:  #3b3122;
+  --btn-color:  #a9853f;
+  --btn-hover:  #8a6c32;
+  --font-serif: 'EB Garamond', Georgia, serif;
+  --sk-gold:    #a9853f;
+  --sk-line:    #9c884f;
+
+  /* —— Fondo de pergamino —— */
+  background-image: url('fondo.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* —— Barras (header y bottom-nav) con textura de piedra —— */
+body.skin-jardin-dorado header,
+body.skin-jardin-dorado .bottom-nav {
+  background-image: url('piedra.png');
+  background-size: cover;
+  background-position: center;
+}
+body.skin-jardin-dorado header     { border-bottom: 2px solid var(--sk-gold); }
+body.skin-jardin-dorado .bottom-nav { border-top: 2px solid var(--sk-gold); }
+
+/* La barra de búsqueda se lee mejor con un velo claro sobre la piedra */
+body.skin-jardin-dorado .search-bar input {
+  background-color: rgba(255,255,255,0.55);
+  border-color: var(--sk-gold);
+}
+
+/* —— Marco "portada de libro" alrededor del contenido —— */
+body.skin-jardin-dorado main {
+  position: relative;
+  border: 2px solid var(--sk-gold);
+  border-radius: 8px;
+  /* segunda línea fina por dentro (efecto portada) */
+  box-shadow: inset 0 0 0 6px var(--bg-main), inset 0 0 0 7px var(--sk-line);
+}
+/* Dos esquinas ornamentales en diagonal — una sola imagen, puro CSS */
+body.skin-jardin-dorado main::before,
+body.skin-jardin-dorado main::after {
+  content: '';
+  position: absolute;
+  width: 48px; height: 48px;
+  background: url('esquina.png') center/contain no-repeat;
+  pointer-events: none;
+  z-index: 3;
+}
+body.skin-jardin-dorado main::before { top:6px; right:6px; transform:none; }
+body.skin-jardin-dorado main::after  { bottom:6px; left:6px; transform:rotate(180deg); }
+
+/* —— Títulos con Cinzel (grabado de portada de libro) —— */
+body.skin-jardin-dorado h1,
+body.skin-jardin-dorado h2,
+body.skin-jardin-dorado h3,
+body.skin-jardin-dorado .section-title,
+body.skin-jardin-dorado .profile-name,
+body.skin-jardin-dorado .bot-header-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-style: normal;
+  letter-spacing: 0.5px;
+}
