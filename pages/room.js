@@ -656,7 +656,8 @@ export async function init(params) {
                 blockStateMap.set(gid, { alternatives: [{ text: characterGreeting, rating: 0 }], index: 0, userPrompt: '', historySnapshot: [], generating: false });
                 appendBotMessage(characterGreeting, gid, true);
                 chatHistory.push({ role: 'assistant', content: characterGreeting });
-                await _supabase.from('messages').insert({ conversation_id: conversationId, sender_type: 'bot', sender_name: characterName, content: characterGreeting });
+                const { data: savedGreet } = await _supabase.from('messages').insert({ conversation_id: conversationId, sender_type: 'bot', sender_name: characterName, content: characterGreeting }).select('id').single();
+                if (savedGreet?.id) { const gb = document.getElementById(gid); if (gb) gb.dataset.msgid = savedGreet.id; }
             } else {
                 // Invertir para mostrar del más viejo al más nuevo
                 const ordered = [...messages].reverse();
@@ -1107,19 +1108,41 @@ ${ctxBlock}`;
         });
     };
 
+    // ID real de un bloque: dataset.msgid (nuevos) o block.id si es un UUID real (cargados).
+    const resolveMsgId = (block) => {
+        if (block.dataset && block.dataset.msgid) return block.dataset.msgid;
+        const id = block.id;
+        if (id && !id.startsWith('msg_') && !id.startsWith('init_') && !id.startsWith('guest_')) return id;
+        return null;
+    };
+
+    // Mostrar las herramientas (estrellas/flechas) solo en el último bot, y refrescarlas.
+    const updateBotToolsVisibility = () => {
+        const botBlocks = [...document.querySelectorAll('.msg-block.bot:not(.archived-msg)')];
+        botBlocks.forEach((b, i) => {
+            const tools = b.querySelector('.bot-tools');
+            if (tools) tools.style.display = (i === botBlocks.length - 1) ? '' : 'none';
+        });
+        const last = botBlocks[botBlocks.length - 1];
+        if (last && last.id) {
+            const st = blockStateMap.get(last.id);
+            if (st) { updateStars(last.id, st.alternatives[st.index]?.rating || 0); updateNavArrows(last.id); }
+        }
+    };
+
     const confirmDeleteSelected = async () => {
         if (deleteSelected.size === 0) return;
         const blocks = [...deleteSelected];
         try {
             for (const block of blocks) {
-                const msgId = block.dataset.msgid;
+                const msgId = resolveMsgId(block);
                 if (msgId) await _supabase.from('messages').delete().eq('id', msgId);
                 if (block.id) blockStateMap.delete(block.id);
                 block.remove();
             }
             rebuildChatHistory();
         } catch (err) { console.error('Error deleting:', err); }
-        exitDeleteMode(); updateEditableMarkers();
+        exitDeleteMode(); updateEditableMarkers(); updateBotToolsVisibility();
     };
 
     // ── Edición de mensajes ───────────────────────────────────
