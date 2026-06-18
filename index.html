@@ -41,6 +41,27 @@
         .skin-chip.active { border-color: var(--btn-color); border-width: 2px; padding: 7px 9px; }
         .skin-swatch { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
             border: 1px solid rgba(0,0,0,0.12); }
+
+        /* Modal de Skins */
+        .skins-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 600;
+            display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .skins-modal { background: var(--bg-main); border: 1px solid rgba(62,83,43,0.2); border-radius: 18px;
+            padding: 24px 22px; max-width: 420px; width: 100%; position: relative;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15); max-height: 86vh; overflow-y: auto; }
+        .skins-modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none;
+            cursor: pointer; color: var(--text-dark); opacity: 0.5; font-size: 1.2rem; line-height: 1; padding: 4px; }
+        .skins-modal-close:hover { opacity: 1; }
+        .skins-modal h2 { font-size: 1.2rem; font-weight: normal; text-align: center; margin-bottom: 4px; }
+        .skins-modal-sub { font-size: 0.82rem; opacity: 0.55; text-align: center; font-style: italic; margin-bottom: 18px; }
+        .skins-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .skin-tile { background: var(--bg-main); border: 1px solid rgba(62,83,43,0.2); border-radius: 12px;
+            padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            font-family: var(--font-serif); color: var(--text-dark); transition: border-color 0.2s, background-color 0.2s; }
+        .skin-tile:hover { background: var(--bg-accent); }
+        .skin-tile.active { border-color: var(--btn-color); border-width: 2px; padding: 9px; }
+        .skin-tile-img { width: 100%; aspect-ratio: 16 / 10; border-radius: 8px; background-size: cover;
+            background-position: center; border: 1px solid rgba(62,83,43,0.15); }
+        .skin-tile-name { font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -145,17 +166,9 @@
                         </label>
                     </div>
 
-                    <p class="skins-label">Skins</p>
-                    <div id="skinsList">
-                        <button class="skin-chip" data-skin="jardin-dorado">
-                            <span class="skin-swatch" style="background:linear-gradient(135deg,#a9853f 40%,#3b5a2a);"></span>
-                            Jardín Dorado
-                        </button>
-                        <button class="skin-chip" data-skin="">
-                            <span class="skin-swatch" style="background:var(--bg-accent);"></span>
-                            Ninguna (tema normal)
-                        </button>
-                    </div>
+                    <button class="theme-sub-btn" id="openSkinsBtn" style="margin-top:8px;">
+                        <svg class="sub-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg>Skins
+                    </button>
                 </div>
             </li>
             <li><button class="menu-btn" id="menuApiSettings">
@@ -201,6 +214,25 @@
             <span>Chats</span>
         </button>
     </nav>
+
+    <!-- Modal de Skins -->
+    <div class="skins-modal-overlay" id="skinsModal" style="display:none;">
+        <div class="skins-modal">
+            <button class="skins-modal-close" id="skinsModalClose" aria-label="Close">✕</button>
+            <h2>Your Skins</h2>
+            <p class="skins-modal-sub">Choose a look for your space.</p>
+            <div class="skins-grid" id="skinsGrid">
+                <button class="skin-tile" data-skin="">
+                    <span class="skin-tile-img" style="background:var(--bg-accent);"></span>
+                    <span class="skin-tile-name">Default</span>
+                </button>
+                <button class="skin-tile" data-skin="jardin-dorado">
+                    <span class="skin-tile-img" style="background-image:url('assets/skins/jardin-dorado/piedra.png');"></span>
+                    <span class="skin-tile-name">Golden Garden</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Aquí el router inyecta el contenido de cada página -->
     <div id="app"></div>
@@ -297,21 +329,30 @@
         document.getElementById('customBgInput').onchange   = saveCustomColors;
         document.getElementById('customTextInput').onchange = saveCustomColors;
 
-        // Skins — por ahora lista fija. Cuando exista la base de datos,
-        // aquí se mostrarán SOLO las skins que el usuario haya comprado.
+        // Skins — modal con las skins disponibles.
+        // Por ahora la lista es fija; cuando exista la base de datos aquí
+        // se mostrarán SOLO las skins que el usuario haya comprado.
         function refreshSkinActive() {
             const cur = localStorage.getItem('user-skin') || '';
-            document.querySelectorAll('#skinsList .skin-chip').forEach(c =>
-                c.classList.toggle('active', (c.dataset.skin || '') === cur));
+            document.querySelectorAll('#skinsGrid .skin-tile').forEach(t =>
+                t.classList.toggle('active', (t.dataset.skin || '') === cur));
         }
-        document.querySelectorAll('#skinsList .skin-chip').forEach(chip => {
-            chip.onclick = () => {
-                const id = chip.dataset.skin;
+        const skinsModal = document.getElementById('skinsModal');
+        document.getElementById('openSkinsBtn').onclick = () => {
+            refreshSkinActive();
+            skinsModal.style.display = 'flex';
+        };
+        const closeSkins = () => { skinsModal.style.display = 'none'; };
+        document.getElementById('skinsModalClose').onclick = closeSkins;
+        skinsModal.onclick = (e) => { if (e.target === skinsModal) closeSkins(); };
+        document.querySelectorAll('#skinsGrid .skin-tile').forEach(tile => {
+            tile.onclick = () => {
+                const id = tile.dataset.skin;
                 if (id) Theme.applySkin(id); else Theme.clearSkin();
                 refreshSkinActive();
+                closeSkins();
             };
         });
-        refreshSkinActive();
 
         // Bottom nav
         document.getElementById('navHome').onclick   = () => Router.go('dashboard');
