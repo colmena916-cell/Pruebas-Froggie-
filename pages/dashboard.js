@@ -251,7 +251,7 @@ export async function init() {
 // ── Helpers ───────────────────────────────────────────────────
 function buildCard(char, creatorUsername) {
     const avatarStyle = char.photo_url
-        ? `background-image:url('${imgUrl(char.photo_url)}');background-size:cover;background-position:center;border-radius:10px;`
+        ? `background-image:url('${imgUrl(char.photo_url)}');background-size:cover;background-position:center;`
         : '';
     const initials = char.photo_url ? '' : char.name.substring(0, 2).toUpperCase();
     const creator  = creatorUsername ? `<span class="char-creator">@${creatorUsername}</span>` : '';
@@ -285,39 +285,25 @@ async function renderRow(containerId, characters) {
     characters.forEach(c => container.appendChild(buildCard(c, c.creator_id ? creatorMap[c.creator_id] : null)));
 }
 
-// ── Caché del dashboard (3 secciones fijas) ──────────────────
-const _shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
-let _dashCache = null;
-let _dashCacheTime = 0;
-const DASH_TTL = 60 * 60 * 1000; // 1 hora — Popular, Canon, OC
-
 async function loadDashboard() {
     const base = { select: 'id, name, subtitle, photo_url, tags, category, chat_count, creator_id', visibility: 'public' };
 
-    const now = Date.now();
+    const [allPublic, popular, canon, oc] = await Promise.all([
+        // For You: traemos todos los públicos y los mezclamos aleatoriamente
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).limit(100),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count',  { ascending: false }).limit(31),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(31),
+        _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count',   { ascending: false }).limit(31),
+    ]);
 
-    // For You: caché de 5 minutos, mezclado en cliente cada visita
-    if (!_dashCache?.forYou || (now - (_dashCache.forYouTime||0)) > 5 * 60 * 1000) {
-        const forYouRes = await _supabase.rpc('get_random_characters', { lim: 25 });
-        _dashCache = { ..._dashCache, forYou: forYouRes.data || [], forYouTime: now };
-    }
-
-    // Popular, Canon, OC: caché de 1 hora
-    if (!_dashCache?.popular || (now - _dashCacheTime) > DASH_TTL) {
-        const [popular, canon, oc] = await Promise.all([
-            _supabase.from('characters').select(base.select).eq('visibility', base.visibility).order('chat_count', { ascending: false }).limit(25),
-            _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'canon').order('chat_count', { ascending: false }).limit(25),
-            _supabase.from('characters').select(base.select).eq('visibility', base.visibility).eq('category', 'oc').order('chat_count', { ascending: false }).limit(25),
-        ]);
-        _dashCache = { ..._dashCache, popular: popular.data, canon: canon.data, oc: oc.data };
-        _dashCacheTime = now;
-    }
+    // Mezcla aleatoria para "For You" — diferente cada vez que recargas
+    const shuffled = (allPublic.data || []).sort(() => Math.random() - 0.5);
 
     await Promise.all([
-        renderRow('forYouRow',  _shuffle(_dashCache.forYou || [])),
-        renderRow('popularRow', _dashCache.popular),
-        renderRow('canonRow',   _dashCache.canon),
-        renderRow('ocRow',      _dashCache.oc),
+        renderRow('forYouRow',  shuffled),
+        renderRow('popularRow', popular.data),
+        renderRow('canonRow',   canon.data),
+        renderRow('ocRow',      oc.data),
     ]);
 }
 
