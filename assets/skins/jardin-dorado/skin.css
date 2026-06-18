@@ -124,7 +124,7 @@ body.skin-jardin-dorado .profile-avatar {
 body.skin-jardin-dorado .profile-avatar::after {
   content: '';
   position: absolute;
-  inset: -38%;
+  inset: -70%;
   background: url('marcoavatar.png') center/contain no-repeat;
   pointer-events: none;
 }
