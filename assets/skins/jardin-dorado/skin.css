@@ -91,7 +91,7 @@ body.skin-jardin-dorado .char-avatar {
 body.skin-jardin-dorado .char-avatar::after {
   content: '';
   position: absolute;
-  inset: -2%;                       /* el marco asoma un poco por fuera del avatar */
+  inset: -5%;                       /* el marco asoma un poco por fuera del avatar */
   background: url('marcobots.png') center/contain no-repeat;
   pointer-events: none;
 }
