@@ -56,7 +56,7 @@ body.skin-jardin-dorado main::after {
   position: absolute;
   width:  clamp(90px, 24vw, 150px);
   height: clamp(90px, 24vw, 150px);
-  background: url('esquina_transparente.png') no-repeat;
+  background: url('esquina.png') no-repeat;
   background-size: contain;
   pointer-events: none;
   z-index: 3;
@@ -92,7 +92,7 @@ body.skin-jardin-dorado .char-avatar::after {
   content: '';
   position: absolute;
   inset: -18%;                       /* el marco asoma un poco por fuera del avatar */
-  background: url('marcobots_transparente.png') center/contain no-repeat;
+  background: url('marcobots.png') center/contain no-repeat;
   pointer-events: none;
 }
 
@@ -123,6 +123,6 @@ body.skin-jardin-dorado .profile-avatar::after {
   content: '';
   position: absolute;
   inset: -22%;
-  background: url('marcoavatar_transparente.png') center/contain no-repeat;
+  background: url('marcoavatar.png') center/contain no-repeat;
   pointer-events: none;
 }
