@@ -128,3 +128,30 @@ body.skin-jardin-dorado .profile-avatar::after {
   background: url('marcoavatar.png') center/contain no-repeat;
   pointer-events: none;
 }
+
+/* ════════ PERFIL DE BOT — marco de bots, no el de rosas ════════ */
+/* El avatar del bot usa la misma clase .profile-avatar que el usuario,
+   pero tiene id="botAvatar". Lo apuntamos por id para darle SU marco. */
+body.skin-jardin-dorado #botAvatar::after {
+  background: url('marcobots.png') center/contain no-repeat;
+  inset: -22%;
+}
+
+/* ════════ ROOM (chat) ════════ */
+/* El marco de libro y las esquinas son para páginas con principio y fin.
+   El chat hace scroll infinito: las esquinas se irían con el scroll y la
+   barra de mensaje tapa el borde inferior. Así que aquí lo quitamos y
+   dejamos un look limpio: pergamino + cabecera de piedra (ya heredada). */
+body.skin-jardin-dorado main.chat-scroll-area {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+body.skin-jardin-dorado main.chat-scroll-area::before,
+body.skin-jardin-dorado main.chat-scroll-area::after {
+  display: none;
+}
+/* Toque dorado: una línea arriba de la barra de mensaje para cerrar el chat */
+body.skin-jardin-dorado .chat-input-area {
+  border-top: 2px solid var(--sk-gold);
+}
