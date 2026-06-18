@@ -71,13 +71,18 @@ export const Auth = {
 
 
 // ============================================================
-//  Theme.js  —  sistema de temas (dentro de auth.js por tamaño)
-//  Classic / Dark / Custom. Se aplica antes de renderizar.
+//  Theme.js  —  sistema de temas + skins (dentro de auth.js por tamaño)
+//  Classic / Dark / Custom + Skins (Jardín Dorado, etc.)
+//  Se aplica antes de renderizar.
 // ============================================================
 
 export const Theme = {
-    // Aplicar el tema guardado en localStorage (llamar en init)
+    // Aplicar lo guardado en localStorage (llamar en init).
+    // La SKIN manda: si hay una skin equipada, esa gana sobre el tema.
     restore() {
+        const skin = localStorage.getItem('user-skin');
+        if (skin) { Theme.applySkin(skin); return; }
+
         const saved = localStorage.getItem('user-theme');
         if (saved === 'dark')        Theme.apply('dark');
         else if (saved === 'custom') Theme.applyCustom();
@@ -85,12 +90,16 @@ export const Theme = {
     },
 
     apply(name) {
+        Theme._removeSkinClasses();           // un tema normal quita cualquier skin
+        localStorage.removeItem('user-skin');
         document.body.removeAttribute('style');
         document.body.classList.toggle('theme-dark', name === 'dark');
         localStorage.setItem('user-theme', name);
     },
 
     applyCustom() {
+        Theme._removeSkinClasses();
+        localStorage.removeItem('user-skin');
         document.body.classList.remove('theme-dark');
         const bg  = localStorage.getItem('custom-bg')   || '#FFFDF9';
         const txt = localStorage.getItem('custom-text') || '#3E532B';
@@ -110,6 +119,37 @@ export const Theme = {
         localStorage.setItem('custom-bg',   bg);
         localStorage.setItem('custom-text', txt);
         Theme.applyCustom();
+    },
+
+    // ── SKINS ──────────────────────────────────────────────────
+    // Una skin define un look COMPLETO (fondo, barras, marco, fuente).
+    // Se activa poniendo la clase  body.skin-<id>  y el CSS de la skin
+    // (que debes enlazar en index.html) hace el resto.
+    applySkin(id) {
+        if (!id) { Theme.clearSkin(); return; }
+        Theme._removeSkinClasses();
+        document.body.style.removeProperty('--bg-main');   // limpiar restos de "custom"
+        document.body.style.removeProperty('--text-dark');
+        document.body.style.removeProperty('--btn-color');
+        document.body.style.removeProperty('--bg-accent');
+        document.body.classList.remove('theme-dark');      // la skin trae su propio look
+        document.body.classList.add('skin-' + id);
+        localStorage.setItem('user-skin', id);
+    },
+
+    // Quitar la skin y volver al tema guardado (classic / dark / custom)
+    clearSkin() {
+        Theme._removeSkinClasses();
+        localStorage.removeItem('user-skin');
+        const saved = localStorage.getItem('user-theme');
+        if (saved === 'dark')        Theme.apply('dark');
+        else if (saved === 'custom') Theme.applyCustom();
+    },
+
+    _removeSkinClasses() {
+        [...document.body.classList].forEach(c => {
+            if (c.startsWith('skin-')) document.body.classList.remove(c);
+        });
     },
 
     _adjustBrightness(hex, pct) {
