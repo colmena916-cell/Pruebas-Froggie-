@@ -209,6 +209,22 @@ export function render() {
         .memory-summary-edit { min-height:120px; }
         .memory-summary-view { font-family: var(--font-serif); font-size: 0.88rem; line-height: 1.55; opacity: 0.8; max-height: 170px; overflow-y: auto; white-space: pre-wrap; padding: 2px 0; }
         .memory-summary-view:empty::before { content: 'No summary yet — it builds itself as your story grows.'; opacity: 0.5; font-style: italic; }
+
+        /* Chats modal */
+        .new-chat-btn { background: var(--btn-color); color: #fff; border: none; border-radius: 20px; padding: 10px; font-family: var(--font-serif); font-size: 0.92rem; cursor: pointer; width: 100%; }
+        .new-chat-btn:hover { background: var(--btn-hover); }
+        #chatsList { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; margin-top: 4px; }
+        .chat-row { display: flex; align-items: stretch; border: 1px solid rgba(62,83,43,0.2); border-radius: 10px; overflow: hidden; }
+        .chat-row.current { border-color: var(--btn-color); background: rgba(93,112,56,0.10); }
+        .chat-row-open { flex: 1; text-align: left; background: none; border: none; padding: 10px 14px; cursor: pointer; font-family: var(--font-serif); color: var(--text-dark); }
+        .chat-row-open strong { font-size: 0.9rem; display: block; }
+        .chat-row-open span { font-size: 0.78rem; opacity: 0.6; display: block; margin-top: 2px; }
+        .chat-row-del { background: none; border: none; border-left: 1px solid rgba(62,83,43,0.15); padding: 0 14px; cursor: pointer; color: #8b2e2e; opacity: 0.6; font-size: 0.95rem; }
+        .chat-row-del:hover { opacity: 1; }
+        .chat-row-confirm { display: flex; align-items: center; gap: 8px; padding: 8px 12px; width: 100%; justify-content: space-between; }
+        .chat-row-confirm span { font-size: 0.82rem; opacity: 0.8; }
+        .chat-row-confirm button { font-family: var(--font-serif); font-size: 0.82rem; border-radius: 14px; padding: 5px 12px; cursor: pointer; border: 1px solid rgba(62,83,43,0.2); background: none; color: var(--text-dark); }
+        .chat-row-confirm .yes { background: #8b2e2e; color: #fff; border: none; }
     </style>
 
     <!-- Overlay del dropdown -->
@@ -257,6 +273,10 @@ export function render() {
         <button class="dropdown-btn" id="memoryBtn">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
             Memory
+        </button>
+        <button class="dropdown-btn" id="chatsBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+            Chats
         </button>
         <button class="dropdown-btn danger" id="deleteMsgBtn">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
@@ -337,6 +357,18 @@ export function render() {
         </div>
     </div>
 
+    <!-- Chats modal -->
+    <div class="modal-overlay" id="chatsModal">
+        <div class="modal-box" style="max-width:440px;">
+            <h3>Chats con este personaje</h3>
+            <button id="newChatBtn" class="new-chat-btn">+ Nuevo chat</button>
+            <div id="chatsList"></div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" id="chatsCancelBtn">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Botón de historial archivado -->
     <div id="archiveBanner" style="display:none; text-align:center; padding: 10px 14px 0;">
         <button id="loadArchiveBtn" style="background:none; border:1px solid rgba(62,83,43,0.2); border-radius:20px; padding:7px 18px; font-family:var(--font-serif); font-size:0.85rem; color:var(--text-dark); cursor:pointer; opacity:0.6; transition:opacity 0.2s;">
@@ -394,7 +426,7 @@ export async function init(params) {
     let characterName = '', characterDescription = '', characterDefinition = '';
     let characterGreeting = '', botPhotoUrl = '', botCreatorId = null;
     let isFavorite = false, userAvatarUrl = '', userDisplayName = 'Me';
-    let activePersona = null;
+    let activePersona = null, defaultPersona = null;
     let chatHistory = [], apiSettings = null, isSending = false;
     let conversationId = null, currentBotBlockId = null, currentBotMessageId = null;
     let memorySummary = '', summaryCount = 0, storyContext = '';
@@ -491,7 +523,7 @@ export async function init(params) {
         } catch {}
         try {
             const { data: persona } = await _supabase.from('user_personas').select('id, name, description').eq('user_id', Auth.userId).eq('is_default', true).single();
-            if (persona) { activePersona = persona; document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${persona.name}</em>`; }
+            if (persona) { activePersona = persona; defaultPersona = persona; document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${persona.name}</em>`; }
         } catch {}
     };
 
@@ -612,14 +644,25 @@ export async function init(params) {
     };
 
     // ── Cargar historial ──────────────────────────────────────
-    const loadHistory = async () => {
+    const loadHistory = async (targetConvId = null) => {
         const container = document.getElementById('chatScrollArea');
         document.getElementById('loadingState').style.display = 'none';
-        container.innerHTML = ''; chatHistory = [];
+        document.getElementById('archiveBanner').style.display = 'none';
+        container.innerHTML = ''; chatHistory = []; blockStateMap.clear();
+        currentBotBlockId = currentBotMessageId = null;
+        const COLS = 'id, memory_summary, summary_count, story_context, persona_id';
         try {
-            let { data: conv, error: convErr } = await _supabase.from('conversations').select('id, memory_summary, summary_count, story_context, persona_id').eq('user_id', Auth.userId).eq('character_id', characterId).single();
-            if (convErr || !conv) {
-                const { data: newConv, error: createErr } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id, memory_summary, summary_count, story_context, persona_id').single();
+            let conv = null;
+            if (targetConvId) {
+                const { data } = await _supabase.from('conversations').select(COLS).eq('id', targetConvId).single();
+                conv = data;
+            }
+            if (!conv) {
+                const { data } = await _supabase.from('conversations').select(COLS).eq('user_id', Auth.userId).eq('character_id', characterId).order('updated_at', { ascending: false }).limit(1).maybeSingle();
+                conv = data;
+            }
+            if (!conv) {
+                const { data: newConv, error: createErr } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select(COLS).single();
                 if (createErr) throw createErr;
                 conv = newConv;
             }
@@ -628,7 +671,9 @@ export async function init(params) {
             summaryCount   = conv.summary_count  || 0;
             storyContext   = conv.story_context  || '';
 
-            // Persona guardada en ESTE chat manda sobre la default del perfil.
+            // Persona: por defecto la del perfil; si este chat tiene una guardada, manda esa.
+            activePersona = defaultPersona;
+            document.getElementById('personaBtnTxt').innerHTML = `Persona: <em>${defaultPersona ? defaultPersona.name : 'My Profile'}</em>`;
             if (conv.persona_id) {
                 try {
                     const { data: convPersona } = await _supabase.from('user_personas').select('id, name, description').eq('id', conv.persona_id).single();
@@ -1285,6 +1330,77 @@ ${ctxBlock}`;
         document.getElementById('memoryModal').classList.remove('show');
     };
 
+    // ── Multichat: ventana de chats ────────────────────────────
+    const fmtChatDate = (iso) => {
+        try {
+            const d = new Date(iso);
+            return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        } catch { return 'Chat'; }
+    };
+
+    const renderChatsList = (convs) => {
+        const list = document.getElementById('chatsList');
+        list.innerHTML = '';
+        if (!convs || convs.length === 0) { list.innerHTML = '<p style="opacity:0.5;font-size:0.85rem;text-align:center;padding:8px;">Aún no hay chats.</p>'; return; }
+        convs.forEach(c => {
+            const row = document.createElement('div');
+            row.className = 'chat-row' + (c.id === conversationId ? ' current' : '');
+            const preview = (c.memory_summary || c.story_context || '').trim();
+            const previewTxt = preview ? (preview.length > 70 ? preview.substring(0, 70) + '…' : preview) : 'Chat nuevo';
+            const open = document.createElement('button');
+            open.className = 'chat-row-open';
+            open.innerHTML = `<strong>${fmtChatDate(c.created_at)}${c.id === conversationId ? ' · actual' : ''}</strong><span>${escapeHTML(previewTxt)}</span>`;
+            open.onclick = () => switchToConversation(c.id);
+            const del = document.createElement('button');
+            del.className = 'chat-row-del'; del.textContent = '🗑';
+            del.onclick = (e) => { e.stopPropagation(); promptDeleteChat(row, c.id); };
+            row.appendChild(open); row.appendChild(del);
+            list.appendChild(row);
+        });
+    };
+
+    const promptDeleteChat = (row, convId) => {
+        row.innerHTML = `<div class="chat-row-confirm"><span>¿Borrar este chat?</span><div><button class="no">No</button> <button class="yes">Sí</button></div></div>`;
+        row.querySelector('.no').onclick = () => openChatsModal(true);
+        row.querySelector('.yes').onclick = () => deleteChat(convId);
+    };
+
+    const deleteChat = async (convId) => {
+        const wasCurrent = (convId === conversationId);
+        try { await _supabase.from('conversations').delete().eq('id', convId); } catch (e) { console.error('delete chat error', e); }
+        if (wasCurrent) {
+            document.getElementById('chatsModal').classList.remove('show');
+            await loadHistory();   // carga el más reciente que quede, o crea uno
+        } else {
+            openChatsModal(true);  // refresca la lista sin cerrar
+        }
+    };
+
+    const switchToConversation = async (convId) => {
+        document.getElementById('chatsModal').classList.remove('show');
+        if (convId === conversationId) return;
+        await loadHistory(convId);
+    };
+
+    const createNewChat = async () => {
+        try {
+            const { data: newConv } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id').single();
+            if (newConv) { document.getElementById('chatsModal').classList.remove('show'); await loadHistory(newConv.id); }
+        } catch (e) { console.error('new chat error', e); }
+    };
+
+    const openChatsModal = async (keepOpen = false) => {
+        if (!keepOpen) toggleDropdown();
+        if (!Auth.userId) return;
+        const list = document.getElementById('chatsList');
+        list.innerHTML = '<p style="opacity:0.5;font-size:0.9rem;text-align:center;padding:8px;">Cargando...</p>';
+        document.getElementById('chatsModal').classList.add('show');
+        try {
+            const { data: convs } = await _supabase.from('conversations').select('id, created_at, memory_summary, story_context').eq('user_id', Auth.userId).eq('character_id', characterId).order('updated_at', { ascending: false });
+            renderChatsList(convs);
+        } catch (e) { list.innerHTML = '<p style="opacity:0.5;font-size:0.85rem;text-align:center;">No se pudieron cargar.</p>'; }
+    };
+
     // ═══════════════════════════════════════════════════════════
     //  CONECTAR TODOS LOS BOTONES Y EVENTOS
     // ═══════════════════════════════════════════════════════════
@@ -1311,6 +1427,9 @@ ${ctxBlock}`;
     document.getElementById('memorySaveBtn').onclick = saveMemory;
     document.getElementById('memorySummaryEditBtn').onclick = toggleSummaryEdit;
     document.getElementById('memoryContext').oninput = function() { document.getElementById('memoryContextCounter').textContent = `${this.value.length} / ${CONTEXT_MAX}`; };
+    document.getElementById('chatsBtn').onclick      = () => openChatsModal();
+    document.getElementById('chatsCancelBtn').onclick = () => document.getElementById('chatsModal').classList.remove('show');
+    document.getElementById('newChatBtn').onclick    = createNewChat;
     document.getElementById('personaCancelBtn').onclick = () => document.getElementById('personaModal').classList.remove('show');
     document.getElementById('deleteMsgBtn').onclick = enterDeleteMode;
     document.getElementById('deleteCancelBtn').onclick  = exitDeleteMode;
