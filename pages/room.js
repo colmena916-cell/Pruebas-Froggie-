@@ -203,6 +203,13 @@ export function render() {
         .persona-option.active { background: rgba(93,112,56,0.12); border-color: var(--btn-color); }
         .persona-option strong { font-size: 0.95rem; display: block; }
         .persona-option span   { font-size: 0.8rem; opacity: 0.6; display: block; margin-top: 2px; }
+
+        /* Memory modal */
+        #memoryContext, .memory-summary-edit { width:100%; min-height:70px; padding:10px; border:1px solid rgba(62,83,43,0.2); border-radius:8px; background:transparent; color:var(--text-dark); font-family:var(--font-serif); font-size:0.9rem; line-height:1.5; resize:none; outline:none; }
+        #memoryContext:focus, .memory-summary-edit:focus { border-color: var(--btn-color); }
+        .memory-summary-edit { min-height:120px; }
+        .memory-summary-view { font-family: var(--font-serif); font-size: 0.88rem; line-height: 1.55; opacity: 0.8; max-height: 170px; overflow-y: auto; white-space: pre-wrap; padding: 2px 0; }
+        .memory-summary-view:empty::before { content: 'No summary yet — it builds itself as your story grows.'; opacity: 0.5; font-style: italic; }
     </style>
 
     <!-- Overlay del dropdown -->
@@ -247,6 +254,10 @@ export function render() {
         <button class="dropdown-btn" id="personaBtn">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
             <span id="personaBtnTxt">Persona: <em>My Profile</em></span>
+        </button>
+        <button class="dropdown-btn" id="memoryBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            Memory
         </button>
         <button class="dropdown-btn danger" id="deleteMsgBtn">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
@@ -294,6 +305,35 @@ export function render() {
             <div id="personaList"></div>
             <div class="modal-actions" style="margin-top:10px;">
                 <button class="btn-modal-cancel" id="personaCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memory modal -->
+    <div class="modal-overlay" id="memoryModal">
+        <div class="modal-box" style="max-width:440px;">
+            <h3>Memory</h3>
+
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <strong style="font-size:0.9rem;font-family:var(--font-serif);">Story context</strong>
+                <p style="font-size:0.82rem;opacity:0.65;line-height:1.45;margin:0;">What should this character never forget? Premise, secrets, relationships. This is always sent to the AI.</p>
+                <textarea id="memoryContext" maxlength="500" placeholder="e.g. {{user}} and Aria are secret lovers; she hides that the curse is killing her."></textarea>
+                <div class="char-counter-modal" id="memoryContextCounter">0 / 500</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <strong style="font-size:0.9rem;font-family:var(--font-serif);">Memory summary</strong>
+                    <button id="memorySummaryEditBtn" style="background:none;border:none;color:var(--btn-color);font-family:var(--font-serif);font-size:0.82rem;cursor:pointer;padding:0;">Edit</button>
+                </div>
+                <p style="font-size:0.78rem;opacity:0.55;line-height:1.45;margin:0;">The AI keeps this on its own. It uses some tokens, but it keeps your story's memory without letting the cost grow.</p>
+                <div id="memorySummaryView" class="memory-summary-view"></div>
+                <textarea id="memorySummaryEdit" class="memory-summary-edit" style="display:none;" placeholder="Story so far..."></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" id="memoryCancelBtn">Close</button>
+                <button class="btn-modal-confirm green" id="memorySaveBtn">Save</button>
             </div>
         </div>
     </div>
@@ -358,9 +398,10 @@ export async function init(params) {
     let activePersona = null;
     let chatHistory = [], apiSettings = null, isSending = false;
     let conversationId = null, currentBotBlockId = null, currentBotMessageId = null;
-    let memorySummary = '', summaryCount = 0;
+    let memorySummary = '', summaryCount = 0, storyContext = '';
     const blockStateMap = new Map();
-    const SUMMARY_EVERY = 10, MAX_ALTERNATIVES = 15, RECENT_KEEP = 50, SUMMARIES_MERGE = 5;
+    const SUMMARY_EVERY = 8, MAX_ALTERNATIVES = 15, RECENT_KEEP = 14;
+    const CONTEXT_MAX = 500;
     const ARCHIVE_THRESHOLD = 80, ARCHIVE_BATCH = 10;
 
     // ── Helpers ───────────────────────────────────────────────
@@ -575,15 +616,16 @@ export async function init(params) {
         document.getElementById('loadingState').style.display = 'none';
         container.innerHTML = ''; chatHistory = [];
         try {
-            let { data: conv, error: convErr } = await _supabase.from('conversations').select('id, memory_summary, summary_count').eq('user_id', Auth.userId).eq('character_id', characterId).single();
+            let { data: conv, error: convErr } = await _supabase.from('conversations').select('id, memory_summary, summary_count, story_context').eq('user_id', Auth.userId).eq('character_id', characterId).single();
             if (convErr || !conv) {
-                const { data: newConv, error: createErr } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id, memory_summary, summary_count').single();
+                const { data: newConv, error: createErr } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id, memory_summary, summary_count, story_context').single();
                 if (createErr) throw createErr;
                 conv = newConv;
             }
             conversationId = conv.id;
             memorySummary  = conv.memory_summary || '';
             summaryCount   = conv.summary_count  || 0;
+            storyContext   = conv.story_context  || '';
 
             // Cargar solo los últimos 80 mensajes
             const { data: messages, error: msgErr } = await _supabase
@@ -687,12 +729,13 @@ export async function init(params) {
     // ── callAI ────────────────────────────────────────────────
     const callAI = async (userText, historyOverride) => {
         const memBlock = memorySummary ? `\nSTORY SO FAR:\n"${memorySummary}"\n` : '';
+        const ctxBlock = storyContext ? `\nKEY CONTEXT (always true — never contradict this):\n"${storyContext}"\n` : '';
         const systemPrompt = `You are ${characterName}. Stay in character at all times.
 ${characterDefinition}
 ${memBlock}
-Tone/style reference: "${characterGreeting}"
 User: ${activePersona ? activePersona.name : userDisplayName}.${activePersona?.description ? ` (${activePersona.description})` : ''} Use {{user}} for their name.
-Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaimers or out-of-character text.`;
+Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaimers or out-of-character text.
+${ctxBlock}`;
 
         const recentHistory = (historyOverride !== undefined ? historyOverride : chatHistory).slice(-RECENT_KEEP);
         const messages = [{ role: 'system', content: systemPrompt }, ...recentHistory];
@@ -816,7 +859,7 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
                 });
             } catch {}
 
-            if (chatHistory.length > 60) await generateAndSaveSummary();
+            if (chatHistory.length > RECENT_KEEP + SUMMARY_EVERY) await generateAndSaveSummary();
         }
         isSending = false; enableInput(true);
     };
@@ -908,15 +951,11 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
         if (toSummarize.length < SUMMARY_EVERY) return;
         const convoBlock    = toSummarize.map(m => `${m.role === 'user' ? 'User' : characterName}: ${m.content}`).join('\n');
         const prevNote      = memorySummary ? `Previous summary:\n"${memorySummary}"\n\n` : '';
-        const summaryPrompt = `${prevNote}New exchanges:\n${convoBlock}\n\nSummarize these exchanges in max 200 words, third person, present tense. You MUST preserve: emotional state of each character, secrets or revelations, tension and conflicts, the exact dynamic between characters, and any significant shift in their relationship. Remove filler but keep subtext intact. Output only the summary text.`;
+        const summaryPrompt = `${prevNote}New exchanges:\n${convoBlock}\n\nSummarize the story so far in max 300 words, third person, present tense. You MUST preserve: emotional state of each character, secrets or revelations, tension and conflicts, the exact dynamic between characters, any significant shift in their relationship, and unresolved threads or pending promises. Remove filler but keep subtext intact. Output only the summary text.`;
         try {
             const result = await callAIRaw(summaryPrompt);
             if (!result) return;
             let finalSummary = result.trim(), finalCount = summaryCount + 1;
-            if (finalCount >= SUMMARIES_MERGE) {
-                const merged = await callAIRaw(`Condense this into a single summary (max 200 words), third person, present tense:\n"${finalSummary}"\nOutput only the summary text.`);
-                if (merged) { finalSummary = merged.trim(); finalCount = 0; }
-            }
             const { error: updateErr } = await _supabase.from('conversations').update({ memory_summary: finalSummary, summary_count: finalCount }).eq('id', conversationId);
             if (updateErr) return;
             memorySummary = finalSummary; summaryCount = finalCount;
@@ -1142,6 +1181,46 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
         } catch { list.innerHTML = '<p style="opacity:0.5;font-size:0.85rem;text-align:center;">Could not load personas.</p>'; }
     };
 
+    // ── Ventana de memoria ────────────────────────────────────
+    const openMemoryModal = () => {
+        toggleDropdown();
+        if (!conversationId) { showSystemMsg('Start chatting to set up memory.', false); return; }
+        const ctxEl  = document.getElementById('memoryContext');
+        const viewEl = document.getElementById('memorySummaryView');
+        const editEl = document.getElementById('memorySummaryEdit');
+        ctxEl.value = storyContext || '';
+        document.getElementById('memoryContextCounter').textContent = `${(storyContext || '').length} / ${CONTEXT_MAX}`;
+        viewEl.textContent = memorySummary || '';
+        viewEl.style.display = 'block';
+        editEl.style.display = 'none';
+        editEl.value = memorySummary || '';
+        document.getElementById('memorySummaryEditBtn').textContent = 'Edit';
+        document.getElementById('memoryModal').classList.add('show');
+    };
+
+    const toggleSummaryEdit = () => {
+        const viewEl = document.getElementById('memorySummaryView');
+        const editEl = document.getElementById('memorySummaryEdit');
+        const btn    = document.getElementById('memorySummaryEditBtn');
+        const editing = editEl.style.display !== 'none';
+        if (editing) { editEl.style.display = 'none'; viewEl.style.display = 'block'; btn.textContent = 'Edit'; }
+        else { editEl.value = memorySummary || ''; editEl.style.display = 'block'; viewEl.style.display = 'none'; btn.textContent = 'Cancel'; }
+    };
+
+    const saveMemory = async () => {
+        const newContext = document.getElementById('memoryContext').value.trim();
+        const editEl = document.getElementById('memorySummaryEdit');
+        const editingSummary = editEl.style.display !== 'none';
+        const updates = { story_context: newContext };
+        if (editingSummary) updates.memory_summary = editEl.value.trim();
+        try {
+            await _supabase.from('conversations').update(updates).eq('id', conversationId);
+            storyContext = newContext;
+            if (editingSummary) memorySummary = editEl.value.trim();
+        } catch (e) { console.error('Memory save error:', e); }
+        document.getElementById('memoryModal').classList.remove('show');
+    };
+
     // ═══════════════════════════════════════════════════════════
     //  CONECTAR TODOS LOS BOTONES Y EVENTOS
     // ═══════════════════════════════════════════════════════════
@@ -1163,6 +1242,11 @@ Rules: Show don't tell. Use *asterisks* for actions. Max 150 words. No disclaime
 
     document.getElementById('editBotBtn').onclick   = () => { toggleDropdown(); Router.go('edit-character', { id: characterId }); };
     document.getElementById('personaBtn').onclick   = openPersonaSelector;
+    document.getElementById('memoryBtn').onclick     = openMemoryModal;
+    document.getElementById('memoryCancelBtn').onclick = () => document.getElementById('memoryModal').classList.remove('show');
+    document.getElementById('memorySaveBtn').onclick = saveMemory;
+    document.getElementById('memorySummaryEditBtn').onclick = toggleSummaryEdit;
+    document.getElementById('memoryContext').oninput = function() { document.getElementById('memoryContextCounter').textContent = `${this.value.length} / ${CONTEXT_MAX}`; };
     document.getElementById('personaCancelBtn').onclick = () => document.getElementById('personaModal').classList.remove('show');
     document.getElementById('deleteMsgBtn').onclick = enterDeleteMode;
     document.getElementById('deleteCancelBtn').onclick  = exitDeleteMode;
