@@ -219,7 +219,8 @@ export function render() {
         .chat-row-open { flex: 1; text-align: left; background: none; border: none; padding: 10px 14px; cursor: pointer; font-family: var(--font-serif); color: var(--text-dark); }
         .chat-row-open strong { font-size: 0.9rem; display: block; }
         .chat-row-open span { font-size: 0.78rem; opacity: 0.6; display: block; margin-top: 2px; }
-        .chat-row-del { background: none; border: none; border-left: 1px solid rgba(62,83,43,0.15); padding: 0 14px; cursor: pointer; color: #8b2e2e; opacity: 0.6; font-size: 0.95rem; }
+        .chat-row-del { background: none; border: none; border-left: 1px solid rgba(62,83,43,0.15); padding: 0 14px; cursor: pointer; color: #8b2e2e; opacity: 0.6; display: flex; align-items: center; }
+        .chat-row-del svg { width: 16px; height: 16px; fill: currentColor; }
         .chat-row-del:hover { opacity: 1; }
         .chat-row-confirm { display: flex; align-items: center; gap: 8px; padding: 8px 12px; width: 100%; justify-content: space-between; }
         .chat-row-confirm span { font-size: 0.82rem; opacity: 0.8; }
@@ -1352,7 +1353,8 @@ ${ctxBlock}`;
             open.innerHTML = `<strong>${fmtChatDate(c.created_at)}${c.id === conversationId ? ' · actual' : ''}</strong><span>${escapeHTML(previewTxt)}</span>`;
             open.onclick = () => switchToConversation(c.id);
             const del = document.createElement('button');
-            del.className = 'chat-row-del'; del.textContent = '🗑';
+            del.className = 'chat-row-del';
+            del.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
             del.onclick = (e) => { e.stopPropagation(); promptDeleteChat(row, c.id); };
             row.appendChild(open); row.appendChild(del);
             list.appendChild(row);
@@ -1365,27 +1367,34 @@ ${ctxBlock}`;
         row.querySelector('.yes').onclick = () => deleteChat(convId);
     };
 
+    const closeAllOverlays = () => {
+        document.getElementById('chatsModal').classList.remove('show');
+        document.getElementById('optionsDropdown').classList.remove('show');
+        document.getElementById('dropdownOverlay').classList.remove('show');
+    };
+
+    const goToChat = async (convId) => {
+        closeAllOverlays();
+        await loadHistory(convId);
+    };
+
     const deleteChat = async (convId) => {
         const wasCurrent = (convId === conversationId);
         try { await _supabase.from('conversations').delete().eq('id', convId); } catch (e) { console.error('delete chat error', e); }
-        if (wasCurrent) {
-            document.getElementById('chatsModal').classList.remove('show');
-            await loadHistory();   // carga el más reciente que quede, o crea uno
-        } else {
-            openChatsModal(true);  // refresca la lista sin cerrar
-        }
+        if (wasCurrent) { await goToChat(null); }   // carga el más reciente que quede, o crea uno
+        else { openChatsModal(true); }              // refresca la lista sin cerrar
     };
 
     const switchToConversation = async (convId) => {
-        document.getElementById('chatsModal').classList.remove('show');
-        if (convId === conversationId) return;
-        await loadHistory(convId);
+        if (convId === conversationId) { closeAllOverlays(); return; }
+        await goToChat(convId);
     };
 
     const createNewChat = async () => {
         try {
-            const { data: newConv } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id').single();
-            if (newConv) { document.getElementById('chatsModal').classList.remove('show'); await loadHistory(newConv.id); }
+            const { data: newConv, error } = await _supabase.from('conversations').insert({ user_id: Auth.userId, character_id: characterId }).select('id').single();
+            if (error || !newConv) { console.error('new chat error', error); return; }
+            await goToChat(newConv.id);
         } catch (e) { console.error('new chat error', e); }
     };
 
